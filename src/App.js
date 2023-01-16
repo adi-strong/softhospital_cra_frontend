@@ -1,57 +1,65 @@
-import React from 'react';
-import logo from './logo.svg';
-import { Counter } from './features/counter/Counter';
-import './App.css';
+import React, {useEffect} from 'react';
+import AOS from 'aos';
+import AppContent from "./components/AppContent";
+import {useDispatch, useSelector} from "react-redux";
+import {selectCurrentToken, setCredentials} from "./features/auth/authSlice";
+import toast, {Toaster, ToastBar} from "react-hot-toast";
 
 function App() {
+  const token = useSelector(selectCurrentToken)
+  const dispatch = useDispatch()
+
+  useEffect(() => {
+    AOS.init({
+      animatedClassName: 'aos-animate',
+      duration: 1000,
+    }) // Init AOSPureCounter
+  }, [])
+
+  useEffect(() => {
+    if (!token && localStorage.getItem('authToken'))
+      dispatch(setCredentials(localStorage.getItem('authToken')))
+  }, [token, dispatch])
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <Counter />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <span>
-          <span>Learn </span>
-          <a
-            className="App-link"
-            href="https://reactjs.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            React
-          </a>
-          <span>, </span>
-          <a
-            className="App-link"
-            href="https://redux.js.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Redux
-          </a>
-          <span>, </span>
-          <a
-            className="App-link"
-            href="https://redux-toolkit.js.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Redux Toolkit
-          </a>
-          ,<span> and </span>
-          <a
-            className="App-link"
-            href="https://react-redux.js.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            React Redux
-          </a>
-        </span>
-      </header>
-    </div>
+    <>
+      <AppContent/>
+      <Toaster
+        position="top-center"
+        reverseOrder={false}
+        gutter={8}
+        containerStyle={{}}
+        toastOptions={{
+          duration: 2000,
+          style: {
+            background: '#363636',
+            color: '#fff',
+          },
+
+          success: {
+            theme: {
+              primary: 'blue',
+              secondary: 'black'
+            }
+          }
+        }}>
+        {(t) => (
+          <ToastBar toast={t}>
+            {({icon, message}) => (
+              <>
+                {icon}
+                {message}
+                {t.type !== 'loading' && (
+                  <button onClick={() => toast.dismiss(t.id)} className='btn border-0'>
+                    <i className='bi bi-x text-light'/>
+                  </button>
+                )}
+              </>
+            )}
+          </ToastBar>
+        )}
+      </Toaster>
+    </>
   );
 }
 
