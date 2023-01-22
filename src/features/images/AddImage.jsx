@@ -26,10 +26,25 @@ export const AddImage = ({onHide, show = false}) => {
       for (const key in images) {
         const formData = new FormData()
         formData.append('file', images[key].file)
-        await addNewImage(formData)
-        files = files.filter(file => file.file !== images[key].file)
-        setImages(files)
-        toast.success('Action efféctuée avec succès.')
+        const data = await addNewImage(formData)
+        if (!data.error) {
+          files = files.filter(file => file.file !== images[key].file)
+          setImages(files)
+          toast.success('Enregistreement bien efféctué.')
+        }
+        else {
+          const violations = data.error.data.violations
+          if (violations) {
+            violations.forEach(({propertyPath, message}) => {
+              toast.error(`${propertyPath}: ${message}`, {
+                style: {
+                  background: 'red',
+                  color: '#fff',
+                }
+              })
+            })
+          }
+        }
       }
     } else alert('Veuillez insérer une ou plusieurs images !')
   }
@@ -119,7 +134,7 @@ export const AddImage = ({onHide, show = false}) => {
       </Modal.Body>
       <Modal.Footer>
         <Button disabled={isLoading} type='button' variant='light' onClick={onHide}>
-          <i className='bi bi-x'/> Annuler
+          <i className='bi bi-x'/> Fermer
         </Button>
         <Button disabled={isLoading} type='button' onClick={onSubmit}>
           {isLoading

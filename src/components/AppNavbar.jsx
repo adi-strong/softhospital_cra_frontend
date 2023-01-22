@@ -1,12 +1,14 @@
-import {memo} from "react";
+import {memo, useEffect, useState} from "react";
 import {Dropdown} from "react-bootstrap";
 import {useNavigate} from "react-router-dom";
-import profile from '../assets/app/img/profile-img.jpg';
+import profile from '../assets/app/img/default_profile.jpg';
 import PropTypes from "prop-types";
-import {useDispatch} from "react-redux";
-import {logOut} from "../features/auth/authSlice";
+import {useDispatch, useSelector} from "react-redux";
+import {logOut, selectCurrentUser} from "../features/auth/authSlice";
 import toast from "react-hot-toast";
-import {api} from "../app/store";
+import {api, entrypoint} from "../app/store";
+import {onSetCurrency, onSetHospital, onSetRate, onSetSecondCurrency} from "../features/parameters/parametersSlice";
+import {useGetSingleUserQuery} from "../features/users/userApiSlice";
 
 const dropdownDivider = <li><hr className="dropdown-divider"/></li>
 const profileItems = [
@@ -19,6 +21,15 @@ const profileItems = [
 const AppNavbar = ({onToggleSearch}) => {
   const navigate = useNavigate()
   const dispatch = useDispatch()
+  const user = useSelector(selectCurrentUser)
+  const {data: singleUser, isSuccess} = useGetSingleUserQuery(user)
+  const [file, setFile] = useState(null)
+
+  useEffect(() => {
+    if (isSuccess && singleUser && singleUser?.profile) {
+      setFile(`${entrypoint}${singleUser.profile.contentUrl}`)
+    }
+  }, [isSuccess, singleUser])
 
   function onRedirect(event, path: string) {
     event.preventDefault()
@@ -41,6 +52,10 @@ const AppNavbar = ({onToggleSearch}) => {
           }
         })
         dispatch(api.util.resetApiState())
+        dispatch(onSetRate(null))
+        dispatch(onSetHospital(null))
+        dispatch(onSetCurrency(null))
+        dispatch(onSetSecondCurrency(null))
         dispatch(logOut())
         break
     }
@@ -63,13 +78,13 @@ const AppNavbar = ({onToggleSearch}) => {
               className='nav-link nav-profile d-flex align-items-center pe-0'
               style={{ cursor: 'pointer' }}>
               {/*<i className='bi bi-person'/>*/}
-              <img src={profile} alt="Profile" className="rounded-circle" />
-              <span className="d-none d-md-block ps-2 fw-bold">A. Lifwa</span>
+              <img src={file ? file : profile} alt="Profile" className="rounded-circle" width={30} height={30} />
+              <span className="d-none d-md-block ps-2 fw-bold text-capitalize">{user ? user.username : '❓'}</span>
             </Dropdown.Toggle>
             <Dropdown.Menu as='ul' className='dropdown-menu dropdown-menu-end dropdown-menu-arrow profile border-0'>
               <li className="dropdown-header">
-                <h6>Adivin Lifwa</h6>
-                <span>Ceo</span>
+                <h6 className='text-uppercase'>{user ? user.username : '❓'}</h6>
+                <span className='text-uppercase'>Ceo</span>
               </li>
               {dropdownDivider}
               {profileItems.map((item, idx) =>

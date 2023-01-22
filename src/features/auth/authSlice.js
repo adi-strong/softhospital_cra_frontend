@@ -6,8 +6,8 @@ const authSlice = createSlice({
   initialState: { user: null, token: null },
   reducers: {
     setCredentials: (state, action) => {
-      const {username, roles} = jwtDecode(action.payload)
-      state.user = {username, roles}
+      const {username, roles, email, tel, id} = jwtDecode(action.payload)
+      state.user = {username, roles, email, tel, id}
       state.token = action.payload
       localStorage.setItem('authToken', state.token)
     },

@@ -6,11 +6,14 @@ export const style = {
   color: 'rgba(1, 41, 112, 0.6)',
 }
 
-export const RowContent = ({label, body, className = 'text-uppercase'}) => {
+export const RowContent = ({label, body, error = null, className = 'text-uppercase'}) => {
   return (
     <Row className='mb-3'>
       <Col md={4} lg={3} className='label' style={style}>{label}</Col>
-      <Col md={8} lg={9} className={className}>{body}</Col>
+      <Col md={8} lg={9} className={className}>
+        {body ? body : ''}
+        {error && <div className='text-danger text-capitalize'>{error}</div>}
+      </Col>
     </Row>
   )
 }

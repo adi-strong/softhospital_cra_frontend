@@ -50,7 +50,6 @@ const AddPatient = () => {
       birthDate: '',
       tel: '',
       birthPlace: '',
-      email: '',
       father: '',
       firstName: '',
       lastName: '',

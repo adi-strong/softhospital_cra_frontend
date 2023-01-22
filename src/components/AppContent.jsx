@@ -6,6 +6,7 @@ import {BlankLayout} from "../layouts/BlankLayout";
 import {AppLazyLoading} from "./AppLazyLoading";
 import {App404Error} from "./index";
 import Register from "../features/login/register";
+import Parameters from "../features/parameters/parameters";
 
 const
   Login = lazy(() => import('../features/login/login')),
@@ -33,6 +34,7 @@ function AppContent() {
         </Route>
         <Route path='/' element={<AuthLayout/>}>
           <Route path='profile' element={<Suspense fallback={<AppLazyLoading/>}><Profile/></Suspense>}/>
+          <Route path='parameters' element={<Suspense fallback={<AppLazyLoading/>}><Parameters/></Suspense>}/>
         </Route>
         <Route path='*' element={<App404Error/>}/>
       </Routes>

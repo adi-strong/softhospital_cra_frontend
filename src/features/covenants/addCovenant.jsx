@@ -28,7 +28,6 @@ const AddCovenant = () => {
       tel: '',
       address: '',
       focal: '',
-      email: '',
       logo: '',
       denomination: '',
       contract: '',

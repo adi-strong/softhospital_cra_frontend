@@ -3,7 +3,7 @@ import {totalPersonalImages, useDeletePersonalImageMutation, useGetPersonalImage
 import toast from "react-hot-toast";
 import {Button, Col, Form, InputGroup, Row, Spinner} from "react-bootstrap";
 import {entrypoint} from "../../app/store";
-import {limitStrTo} from "../../services/str_handlerService";
+import {limitStrTo} from "../../services";
 import {ImageGridLoader} from "../ImageGridLoader";
 import {style} from "./MainGalleryList";
 import {handleChange} from "../../services/handleFormsFieldsServices";

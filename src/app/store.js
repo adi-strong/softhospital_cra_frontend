@@ -2,9 +2,14 @@ import { configureStore } from '@reduxjs/toolkit';
 import {createApi, fetchBaseQuery, setupListeners} from "@reduxjs/toolkit/dist/query/react";
 import navigationSlice from "../features/navigation/navigationSlice";
 import authReducer from '../features/auth/authSlice';
+import parametersReducer from '../features/parameters/parametersSlice';
 
 export const entrypoint = 'https://localhost:8000'
 export const pathToApi = '/api'
+export const patchHeaders = {
+  'Accept': 'application/json',
+  'Content-Type': 'application/merge-patch+json',
+}
 
 const baseQuery = fetchBaseQuery({
   baseUrl: entrypoint,
@@ -29,6 +34,8 @@ export const api = createApi({
   tagTypes: [
     'Images',
     'PersonalImages',
+    'Users',
+    'Parameters',
   ],
   endpoints: build => ({}),
 })
@@ -37,6 +44,7 @@ export const store = configureStore({
   reducer: {
     [navigationSlice.name]: navigationSlice.reducer,
     auth: authReducer,
+    parameters: parametersReducer,
     [api.reducerPath]: api.reducer,
   },
   middleware: gDM => gDM().concat(api.middleware),

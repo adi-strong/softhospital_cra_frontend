@@ -14,8 +14,10 @@ import AppFloatingInputField from "./forms/AppFloatingInputField";
 import AppFloatingAreaField from "./forms/AppFloatingAreaField";
 import App404Error from "./errors/App404Error";
 import AppDelModal from "./AppDelModal";
+import AppChooseField from "./forms/AppChooseField";
 
 export {
+  AppChooseField,
   AppDelModal,
   App404Error,
   AppFloatingAreaField,

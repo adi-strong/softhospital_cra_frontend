@@ -19,7 +19,11 @@ const
   AddConsultation = lazy(() => import('./features/consultations/addConsultation')),
   Appointments = lazy(() => import('./features/appointments/appointments')),
   Lab = lazy(() => import('./features/lab/lab')),
-  Galleries = lazy(() => import('./features/images/galleries'))
+  Galleries = lazy(() => import('./features/images/galleries')),
+  Staff = lazy(() => import('./features/staff/staff')),
+  Offices = lazy(() => import('./features/staff/offices')),
+  Departments = lazy(() => import('./features/staff/departments')),
+  Users = lazy(() => import('./features/users/users'))
 
 const routes = [
   {
@@ -75,6 +79,18 @@ const routes = [
     ]
   },
   // End PICTURES *************************************************************************
+
+  // STAFF *****************************************************************************
+  {
+    path: '/member/staff/',
+    outlets: [
+      {path: 'agents', element: <Staff/>},
+      {path: 'departments', element: <Departments/>},
+      {path: 'offices', element: <Offices/>},
+      {path: 'users', element: <Users/>},
+    ]
+  },
+  // End STAFF *************************************************************************
 ]
 
 export default routes

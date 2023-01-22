@@ -22,10 +22,12 @@ export const AddPersonalImage = ({onHide, show = false}) => {
       for (const key in images) {
         const formData = new FormData()
         formData.append('file', images[key].file)
-        await addNewPersonalImage(formData)
-        files = files.filter(file => file.file !== images[key].file)
-        setImages(files)
-        toast.success('Action efféctuée avec succès.')
+        const data = await addNewPersonalImage(formData)
+        if (!data.error) {
+          files = files.filter(file => file.file !== images[key].file)
+          setImages(files)
+          toast.success('Enregistreement bien efféctué.')
+        }
       }
     } else alert('Veuillez insérer une ou plusieurs images !')
   }

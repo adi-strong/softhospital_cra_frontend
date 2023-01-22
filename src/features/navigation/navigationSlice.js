@@ -78,7 +78,7 @@ const initialState = {
       isOpened: false,
       items: [
         {id: 6, label: 'Départements', path: '/member/staff/departments'},
-        {id: 6, label: 'Fonctions (Titres)', path: '/member/staff/jobs'},
+        {id: 6, label: 'Fonctions (Titres)', path: '/member/staff/offices'},
         {id: 6, label: 'Agents', path: '/member/staff/agents'},
         {id: 6, label: 'Utilisateurs', path: '/member/staff/users'},
       ]

@@ -5,11 +5,12 @@ import {selectCurrentUser} from "../auth/authSlice";
 import {UserProfile} from "./UserProfile";
 import {UserProfileOverview} from "./UserProfileOverview";
 import {useState} from "react";
+import {EditUserProfile} from "./EditUserProfile";
+import {ChangeUserProfilePassword} from "./ChangeUserProfilePassword";
 
 const tabs = [
   {title: 'Profil Utilisateur', eventKey: 'profile'},
   {title: 'Modification du profil', eventKey: 'edits'},
-  {title: 'Paramètres', eventKey: 'settings'},
   {title: 'Changer le mot de passe', eventKey: 'pass'},
 ]
 
@@ -21,13 +22,10 @@ const Profile = () => {
     let element
     switch (key) {
       case 'edits':
-        element = <p>edits</p>
-        break
-      case 'settings':
-        element = <p>settings</p>
+        element = <EditUserProfile/>
         break
       case 'pass':
-        element = <p>pass</p>
+        element = <ChangeUserProfilePassword user={user}/>
         break
       default:
         element = <UserProfileOverview user={user} />

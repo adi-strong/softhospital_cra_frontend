@@ -6,24 +6,53 @@ import '../assets/app/vendor/simple-datatables/style.css';
 import {Navigate, Outlet, useLocation} from "react-router-dom";
 import {AppHeader, AppSideMenu} from "../components";
 import {useDispatch, useSelector} from "react-redux";
-import {setup} from "../features/auth/authSlice";
+import {selectCurrentToken} from "../features/auth/authSlice";
+import {useGetParametersQuery} from "../features/parameters/parametersApiSlice";
+import {currencies} from "../app/config";
 import {useEffect} from "react";
+import {onSetCurrency, onSetHospital, onSetRate, onSetSecondCurrency} from "../features/parameters/parametersSlice";
 
 export const cardTitleStyle = {
   padding: '2px 0 1px 0',
 }
 
 const AuthLayout = () => {
-  const location = useLocation()
-  const dispatch = useDispatch()
-  const { token } = useSelector(state => state.auth)
+  const location = useLocation(), dispatch = useDispatch()
+  const token = useSelector(selectCurrentToken)
+  const {data: parameters, isSuccess} = useGetParametersQuery('Parameters')
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      dispatch(setup())
-    }, 10000)
-    return () => clearInterval(timer)
-  }, [dispatch])
+      if (isSuccess) {
+        if (parameters) {
+          const target = parameters.ids[0]
+          if (target) {
+            let currency, secondCurrency
+            dispatch(onSetHospital(parameters.entities[target]?.hospital
+              ? parameters.entities[target].hospital
+              : null))
+            dispatch(onSetRate(parameters.entities[target]?.rate
+              ? parameters.entities[target].rate
+              : null))
+            for (const key in currencies) {
+              if (currencies[key].code === parameters.entities[target].code)
+                currency = currencies[key]
+            }
+            dispatch(onSetCurrency(currency))
+
+            for (const key in currencies) {
+              if (currencies[key].code === parameters.entities[target].secondCode)
+                secondCurrency = currencies[key]
+            }
+            dispatch(onSetSecondCurrency(secondCurrency))
+          }
+        }
+      }
+      else {
+        dispatch(onSetRate(null))
+        dispatch(onSetCurrency(null))
+        dispatch(onSetCurrency(null))
+      }
+    }, [isSuccess, parameters, dispatch]) // handle currencies parameters
 
   return token || localStorage.getItem('authToken') ? (
     <main id='main' className='main'>

@@ -33,6 +33,7 @@ const Login = () => {
         icon: '😊',
         style: {
           background: 'green',
+          color: '#fff'
         }
       })
       navigate(from, {replace: true})
@@ -78,7 +79,7 @@ const Login = () => {
               </p><hr/>
               <p>Veuillez également vous assurer que vous êtes bien connecté ❗</p>
             </Alert>}
-          <form onSubmit={onSubmit}>
+          <Form onSubmit={onSubmit}>
             <Form.Label id='username'>Username</Form.Label>
             <InputGroup className='mb-3'>
               <InputGroup.Text>@</InputGroup.Text>
@@ -109,7 +110,7 @@ const Login = () => {
                 Créer un compte
               </Link>
             </p>
-          </form>
+          </Form>
         </Card.Body>
       </Card>
     </>

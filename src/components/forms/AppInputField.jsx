@@ -13,6 +13,7 @@ const AppInputField = (
     disabled = false,
     required = false,
     autofocus = false,
+    error = null,
   }) => {
   return (
     <>
@@ -27,6 +28,7 @@ const AppInputField = (
         placeholder={placeholder}
         autoFocus={autofocus}
         required={required} />
+      {error && <div className='text-danger'>{error}</div>}
     </>
   )
 }

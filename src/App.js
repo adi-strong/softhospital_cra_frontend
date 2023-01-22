@@ -31,10 +31,6 @@ function App() {
         containerStyle={{}}
         toastOptions={{
           duration: 2000,
-          style: {
-            background: '#363636',
-            color: '#fff',
-          },
 
           success: {
             theme: {
@@ -51,7 +47,7 @@ function App() {
                 {message}
                 {t.type !== 'loading' && (
                   <button onClick={() => toast.dismiss(t.id)} className='btn border-0'>
-                    <i className='bi bi-x text-light'/>
+                    <i className='bi bi-x'/>
                   </button>
                 )}
               </>
