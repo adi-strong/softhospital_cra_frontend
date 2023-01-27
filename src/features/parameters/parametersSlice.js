@@ -14,10 +14,17 @@ export const parametersSlice = createSlice({
     onSetCurrency: (state, action) => { state.fCurrency = action.payload },
     onSetSecondCurrency: (state, action) => { state.sCurrency = action.payload },
     onSetHospital: (state, action) => { state.hospital = action.payload },
-    onSetRate: (state, action) => { state.rate = action.payload }
+    onSetRate: (state, action) => { state.rate = action.payload },
+    resetParameters: () => initialState,
   },
 })
 
-export const { onSetCurrency, onSetSecondCurrency, onSetHospital, onSetRate } = parametersSlice.actions
+export const {
+  onSetCurrency,
+  onSetSecondCurrency,
+  onSetHospital,
+  onSetRate,
+  resetParameters,
+} = parametersSlice.actions
 
 export default parametersSlice.reducer

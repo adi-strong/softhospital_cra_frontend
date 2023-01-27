@@ -1,9 +1,9 @@
 import img from '../../assets/app/img/default_hospital_img.jpg';
-import {getUserRoles} from "../../services/handleUserRolesService";
 import {useEffect, useState} from "react";
 import {entrypoint} from "../../app/store";
 import {useGetSingleUserQuery} from "../users/userApiSlice";
 import {Alert} from "react-bootstrap";
+import {role} from "../../app/config";
 
 export const UserProfile = ({user}) => {
   const {data: singleUser, isSuccess, isLoading, isError, isFetching} = useGetSingleUserQuery(user)
@@ -33,8 +33,10 @@ export const UserProfile = ({user}) => {
         width={120}
         height={120}/>
       {content}
-      <h2 className='text-capitalize'>{user && user.username}</h2>
-      <h3 className='text-capitalize'>{user && getUserRoles(user.roles)}</h3>
+      <h2 className='text-capitalize'>
+        {user && <>{user?.name ? user.name : user.username}</>}
+      </h2>
+      <h3 className='text-capitalize'>{user && role(user.roles[0])}</h3>
     </>
   )
 }

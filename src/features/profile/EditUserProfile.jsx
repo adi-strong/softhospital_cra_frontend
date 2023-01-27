@@ -133,7 +133,7 @@ export function EditUserProfile() {
               placeholder='Email' />
           } />
         <RowContent
-          label='Username'
+          label={<>Username <i className='text-danger'>*</i></>}
           error={apiErrors.username}
           body={
             <AppInputField
@@ -145,7 +145,7 @@ export function EditUserProfile() {
               placeholder='Username' />
           } />
         <RowContent
-          label='n° Tél'
+          label={<>n° Tél <i className='text-danger'>*</i></>}
           error={apiErrors.tel}
           body={
             <AppInputField

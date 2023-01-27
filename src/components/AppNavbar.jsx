@@ -7,8 +7,33 @@ import {useDispatch, useSelector} from "react-redux";
 import {logOut, selectCurrentUser} from "../features/auth/authSlice";
 import toast from "react-hot-toast";
 import {api, entrypoint} from "../app/store";
-import {onSetCurrency, onSetHospital, onSetRate, onSetSecondCurrency} from "../features/parameters/parametersSlice";
+import {resetParameters} from "../features/parameters/parametersSlice";
 import {useGetSingleUserQuery} from "../features/users/userApiSlice";
+import {role} from "../app/config";
+
+export function usernameFiltered(str: string) {
+  if (str) {
+    let splitStr
+    switch (str) {
+      case str.split('-'):
+        splitStr = str.split('-')[1]
+        break
+      case str.split('_'):
+        splitStr = str.split('_')[1]
+        break
+      case str.split('.'):
+        splitStr = str.split('.')[1]
+        break
+      default:
+        splitStr = str.split(' ')[1]
+        break
+    }
+
+    if (splitStr.length > 0)
+      return str.substring(0, 1)+'. '+str.split(' ')[1]
+    else return str
+  }
+}
 
 const dropdownDivider = <li><hr className="dropdown-divider"/></li>
 const profileItems = [
@@ -52,10 +77,7 @@ const AppNavbar = ({onToggleSearch}) => {
           }
         })
         dispatch(api.util.resetApiState())
-        dispatch(onSetRate(null))
-        dispatch(onSetHospital(null))
-        dispatch(onSetCurrency(null))
-        dispatch(onSetSecondCurrency(null))
+        dispatch(resetParameters())
         dispatch(logOut())
         break
     }
@@ -79,12 +101,16 @@ const AppNavbar = ({onToggleSearch}) => {
               style={{ cursor: 'pointer' }}>
               {/*<i className='bi bi-person'/>*/}
               <img src={file ? file : profile} alt="Profile" className="rounded-circle" width={30} height={30} />
-              <span className="d-none d-md-block ps-2 fw-bold text-capitalize">{user ? user.username : '❓'}</span>
+              <span className="d-none d-md-block ps-2 fw-bold text-capitalize">
+                {user ? user?.name ? usernameFiltered(user.name) : user.username : '❓'}
+              </span>
             </Dropdown.Toggle>
             <Dropdown.Menu as='ul' className='dropdown-menu dropdown-menu-end dropdown-menu-arrow profile border-0'>
               <li className="dropdown-header">
-                <h6 className='text-uppercase'>{user ? user.username : '❓'}</h6>
-                <span className='text-uppercase'>Ceo</span>
+                <h6 className='text-uppercase'>
+                  {user ? user?.name ? usernameFiltered(user.name) : user.username : '❓'}
+                </h6>
+                <span className='text-capitalize'>{user && role(user.roles[0])}</span>
               </li>
               {dropdownDivider}
               {profileItems.map((item, idx) =>

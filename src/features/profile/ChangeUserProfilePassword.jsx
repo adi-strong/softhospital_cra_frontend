@@ -7,7 +7,7 @@ import {useDispatch} from "react-redux";
 import {logOut} from "../auth/authSlice";
 import {api} from "../../app/store";
 import toast from "react-hot-toast";
-import {onSetCurrency, onSetRate, onSetSecondCurrency} from "../parameters/parametersSlice";
+import {resetParameters} from "../parameters/parametersSlice";
 
 export function FormRowContent({label, body, error = null, className = ''}) {
   return (
@@ -103,9 +103,7 @@ export const ChangeUserProfilePassword = ({user}) => {
   useEffect(() => {
     if (counter.seconds <= 0) {
       dispatch(api.util.resetApiState())
-      dispatch(onSetRate(null))
-      dispatch(onSetCurrency(null))
-      dispatch(onSetSecondCurrency(null))
+      dispatch(resetParameters())
       dispatch(logOut())
     }
   }, [counter.seconds, dispatch])

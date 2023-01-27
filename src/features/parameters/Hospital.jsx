@@ -37,7 +37,7 @@ export function Hospital({user}) {
         tel: hospital?.tel ? hospital.tel : '',
         email: hospital?.email ? hospital.email : '',
         address: hospital?.address ? hospital.address : '',
-        logo: hospital?.logo ? {id: hospital.logo.id, contentUrl: hospital.logo.contentUrl} : null
+        logo: hospital?.logo ? {id: `/api/image_objects/${hospital.logo.id}`, contentUrl: hospital.logo.contentUrl} : null,
       })
     }
   }, [hospital, user]) // handle get hospital data

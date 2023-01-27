@@ -8,15 +8,18 @@ const AppInputField = (
     value,
     onChange,
     placeholder,
+    className = '',
     type = 'text',
     autoComplete = 'off',
     disabled = false,
     required = false,
     autofocus = false,
+    label,
     error = null,
   }) => {
   return (
-    <>
+    <div className={`mb-3 ${className}`}>
+      {label && <Form.Label htmlFor={name}>{label}</Form.Label>}
       <Form.Control
         id={name}
         type={type}
@@ -29,7 +32,7 @@ const AppInputField = (
         autoFocus={autofocus}
         required={required} />
       {error && <div className='text-danger'>{error}</div>}
-    </>
+    </div>
   )
 }
 
@@ -39,10 +42,12 @@ AppInputField.propTypes = {
   onChange: PropTypes.func.isRequired,
   type: PropTypes.string,
   placeholder: PropTypes.string,
+  className: PropTypes.string,
   autoComplete: PropTypes.bool,
   disabled: PropTypes.bool,
   required: PropTypes.bool,
   autofocus: PropTypes.bool,
+  label: PropTypes.any,
 }
 
 export default memo(AppInputField)

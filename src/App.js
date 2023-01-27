@@ -1,13 +1,10 @@
 import React, {useEffect} from 'react';
 import AOS from 'aos';
 import AppContent from "./components/AppContent";
-import {useDispatch, useSelector} from "react-redux";
-import {selectCurrentToken, setCredentials} from "./features/auth/authSlice";
+import {setup} from "./features/auth/authSlice";
 import toast, {Toaster, ToastBar} from "react-hot-toast";
 
 function App() {
-  const token = useSelector(selectCurrentToken)
-  const dispatch = useDispatch()
 
   useEffect(() => {
     AOS.init({
@@ -16,10 +13,7 @@ function App() {
     }) // Init AOSPureCounter
   }, [])
 
-  useEffect(() => {
-    if (!token && localStorage.getItem('authToken'))
-      dispatch(setCredentials(localStorage.getItem('authToken')))
-  }, [token, dispatch])
+  useEffect(() => { setup() }, [])
 
   return (
     <>

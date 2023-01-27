@@ -6,8 +6,8 @@ const authSlice = createSlice({
   initialState: { user: null, token: null },
   reducers: {
     setCredentials: (state, action) => {
-      const {username, roles, email, tel, id} = jwtDecode(action.payload)
-      state.user = {username, roles, email, tel, id}
+      const {username, name, roles, email, tel, id} = jwtDecode(action.payload)
+      state.user = {username, name, roles, email, tel, id}
       state.token = action.payload
       localStorage.setItem('authToken', state.token)
     },
@@ -19,7 +19,11 @@ const authSlice = createSlice({
     setup: state => {
       if (state.token) {
         const { exp } = jwtDecode(state.token)
-        if (Date.now() < (exp * 1000)) logOut()
+        if (Date.now() < (exp * 1000)) {
+          state.user = null
+          state.token = null
+          localStorage.removeItem('authToken')
+        }
       }
     },
   }

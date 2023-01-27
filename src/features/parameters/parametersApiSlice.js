@@ -44,7 +44,7 @@ export const parametersApiSlice = api.injectEndpoints({
         headers: patchHeaders,
         url: pathToApi+`/hospitals/${hospital.id}`,
         method: 'PATCH',
-        body: JSON.stringify({...hospital, logo: hospital?.logo ? `/api/image_objects/${hospital.logo.id}` : null})
+        body: JSON.stringify({...hospital, logo: hospital?.logo ? hospital.logo.id : null})
       }),
       invalidatesTags: ['Parameters']
     }), // Update Hospital

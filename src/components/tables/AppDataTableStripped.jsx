@@ -7,8 +7,19 @@ const AppDataTableStripped = (
     thead,
     tbody,
     overview,
+    loader = false
   }) => {
-  return <AppDataTableContents overview={overview} title={title} tbody={tbody} thead={thead} isStriped />
+  return (
+    <>
+      <AppDataTableContents
+        overview={overview}
+        title={title}
+        tbody={tbody}
+        thead={thead}
+        loader={loader}
+        isStriped />
+    </>
+  )
 }
 
 export default memo(AppDataTableStripped)

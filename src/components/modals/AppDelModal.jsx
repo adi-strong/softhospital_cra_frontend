@@ -17,7 +17,8 @@ const AppDelModal = (
             <i className='bi bi-trash3'/> Suppresion
           </Modal.Title>
         </Modal.Header>
-        <Modal.Body>
+        <Modal.Body className='text-center'>
+          <small><code>Cette action est irréversible <i className='bi bi-exclamation-circle-fill'/></code></small>
           {text && text}
         </Modal.Body>
         <Modal.Footer>

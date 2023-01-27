@@ -79,8 +79,9 @@ export const onRemoveArrayClick = (index, state = [], setState) => {
  * @param name
  * @param state
  * @param setState
- * @param isValueExists
  */
-export const onSelectChange = (event, name, state, setState, isValueExists = false) => {
+export const onSelectChange = (event, name, state, setState) => {
   setState({...state, [name]: event})
 }
+
+export const onSelectAsyncOption = (event, setState) => setState(event)

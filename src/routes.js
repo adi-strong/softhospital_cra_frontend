@@ -20,10 +20,13 @@ const
   Appointments = lazy(() => import('./features/appointments/appointments')),
   Lab = lazy(() => import('./features/lab/lab')),
   Galleries = lazy(() => import('./features/images/galleries')),
-  Staff = lazy(() => import('./features/staff/staff')),
   Offices = lazy(() => import('./features/staff/offices')),
+  Users = lazy(() => import('./features/users/users')),
   Departments = lazy(() => import('./features/staff/departments')),
-  Users = lazy(() => import('./features/users/users'))
+  Services = lazy(() => import('./features/staff/services')),
+  Staff = lazy(() => import('./features/staff/staff')),
+  AddAgent = lazy(() => import('./features/staff/addAgent')),
+  EditAgent = lazy(() => import('./features/staff/editAgent'))
 
 const routes = [
   {
@@ -34,6 +37,7 @@ const routes = [
       {path: 'reception', element: <Reception/>},
     ]
   },
+
   {
     path: '/member/patients/',
     outlets: [
@@ -85,7 +89,10 @@ const routes = [
     path: '/member/staff/',
     outlets: [
       {path: 'agents', element: <Staff/>},
+      {path: 'agents/add', element: <AddAgent/>},
+      {path: 'agents/edit/:agentId/:slug', element: <EditAgent/>},
       {path: 'departments', element: <Departments/>},
+      {path: 'services', element: <Services/>},
       {path: 'offices', element: <Offices/>},
       {path: 'users', element: <Users/>},
     ]

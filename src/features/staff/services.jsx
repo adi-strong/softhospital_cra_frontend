@@ -2,19 +2,19 @@ import {useState} from "react";
 import {AppBreadcrumb, AppDataTableStripped, AppDelModal, AppHeadTitle, AppTHead} from "../../components";
 import {Alert, Button, ButtonGroup, Card, Col, Form, InputGroup, Row} from "react-bootstrap";
 import {ParametersOverView} from "../parameters/ParametersOverView";
-import {useDeleteOfficeMutation, useGetOfficesQuery} from "./officeApiSlice";
+import {totalServices, useDeleteServiceMutation, useGetServicesQuery} from "./serviceApiSlice";
 import {handleChange} from "../../services/handleFormsFieldsServices";
-import {AddOffice} from "./AddOffice";
-import {EditOffice} from "./EditOffice";
+import {AddService} from "./AddService";
+import {EditService} from "./EditService";
 import toast from "react-hot-toast";
 
-function OfficeItem({id}) {
-  const {office} = useGetOfficesQuery('Offices', {
-    selectFromResult: ({ data }) => ({ office: data.entities[id] })
+const ServiceItem = ({id}) => {
+  const { service } = useGetServicesQuery('Services', {
+    selectFromResult: ({ data }) => ({ service: data.entities[id] })
   })
   const [show, setShow] = useState(false)
   const [show2, setShow2] = useState(false)
-  const [deleteOffice, {isLoading}] = useDeleteOfficeMutation()
+  const [deleteService, {isLoading}] = useDeleteServiceMutation()
 
   const toggleEditModal = () => setShow(!show)
   const toggleDelModal = () => setShow2(!show2)
@@ -22,21 +22,21 @@ function OfficeItem({id}) {
   const onDelete = async () => {
     toggleDelModal()
     try {
-      const data = await deleteOffice(office)
-      if (!data.error) toast.custom('Suppression bien efféctuée.', { icon: '😶' })
+      await deleteService(service)
     } catch (e) { toast.error(e.message) }
   }
 
   return (
     <>
       <tr>
-        <th/>
-        <th scope='row'>#{office.id}</th>
-        <td className='text-uppercase'>{office.title}</td>
-        <td>{office?.createdAt ? office.createdAt : '❓'}</td>
+        <th><i className='bi bi-hdd-network'/></th>
+        <th scope='row'>#{service.id}</th>
+        <td className='text-uppercase'>{service.name}</td>
+        <td className='text-uppercase'>{service?.department ? service.department.name : '❓'}</td>
+        <td>{service?.createdAt ? service.createdAt : '❓'}</td>
         <td className='text-end'>
           <ButtonGroup size='sm'>
-            <Button type='button' variant='light' onClick={toggleEditModal} disabled={isLoading}>
+            <Button type='button' variant='light' disabled={isLoading} onClick={toggleEditModal}>
               <i className='bi bi-pencil-square text-primary'/>
             </Button>
             <Button type='button' variant='light' disabled={isLoading} onClick={toggleDelModal}>
@@ -51,36 +51,35 @@ function OfficeItem({id}) {
         onHide={toggleDelModal}
         text={
           <p>
-            Êtes-vous certain de vouloir supprimer la fonction <br/>
+            Êtes-vous certain(e) de vouloir supprimer le service <br/>
             <i className='bi bi-quote me-1'/>
-            <span className='text-uppercase fw-bold'>{office.title}</span>
+            <span className='text-uppercase fw-bold'>{service.name}</span>
             <i className='bi bi-quote mx-1'/>
           </p>
         }
         onDelete={onDelete} />
-      <EditOffice data={office} show={show} onHide={toggleEditModal} />
+      <EditService show={show} onHide={toggleEditModal} data={service} />
     </>
   )
 }
 
-function Offices() {
-  const {data: offices = [], isLoading, isSuccess, isFetching, isError, refetch} = useGetOfficesQuery('Offices')
+const Services = () => {
+  const {data: services = [], isLoading, isFetching, isSuccess, isError, refetch} = useGetServicesQuery('Services')
   const [keywords, setKeywords] = useState({search: ''})
   const [showNew, setShowNew] = useState(false)
 
   let content, error
-  if (isSuccess) content = offices ? offices.ids.map(id => <OfficeItem key={id} id={id}/>) : []
-  else if (isError) error =
+  if (isSuccess) content = services && services?.ids.map(id => <ServiceItem key={id} id={id}/>)
+
+  if (isError) error =
     <Alert variant='danger'>
-      <p>
-        Une erreur est survenue. <br/>
-        Veuillez soit recharger la page soit vous reconnecter <i className='bi bi-exclamation-triangle-fill'/>
-      </p>
+      <p>Une erreur s'est produite.</p>
+      <p>Veuillez soit recharger la page soit vous reconnecter <i className='bi bi-exclamation-triangle-fill'/></p>
     </Alert>
 
   const onRefresh = async () => await refetch()
 
-  const toggleModal = () => setShowNew(!showNew)
+  const toggleNewServiceModal = () => setShowNew(!showNew)
 
   function handleSubmit(e) {
     e.preventDefault()
@@ -88,8 +87,8 @@ function Offices() {
 
   return (
     <>
-      <AppHeadTitle title='Fonctions' />
-      <AppBreadcrumb title='Fonctions' />
+      <AppHeadTitle title='Services' />
+      <AppBreadcrumb title='Services' />
       <section className='section profile'>
         <Row>
           <Col xl={4}>
@@ -105,17 +104,21 @@ function Offices() {
                 <AppDataTableStripped
                   overview={
                     <>
+                      <p>{totalServices < 1
+                        ? 'Aucun service enregistré pour le moment 🎈'
+                        : <>Il y a au total <code>{totalServices.toLocaleString()}</code> services(s) :</>}
+                      </p>
                       <Col md={8} className='mb-2'>
                         <form onSubmit={handleSubmit}>
                           <InputGroup>
-                            <Button type='submit' variant='light' disabled={offices.length < 1}>
+                            <Button type='submit' variant='light' disabled={services.length < 1}>
                               <i className='bi bi-search'/>
                             </Button>
                             <Form.Control
                               placeholder='Votre recherche ici...'
                               aria-label='Votre recherche ici...'
                               autoComplete='off'
-                              disabled={offices.length < 1 || isFetching}
+                              disabled={services.length < 1 || isFetching}
                               name='search'
                               value={keywords.search}
                               onChange={(e) => handleChange(e, keywords, setKeywords)} />
@@ -125,22 +128,28 @@ function Offices() {
                       <Col md={4} className='text-md-end mb-2'>
                         <Button
                           type='button'
-                          title='Ajouter une fonction'
+                          title='Ajouter un service'
                           className='mb-1 me-1'
-                          onClick={toggleModal}>
-                          <i className='bi bi-plus'/> Ajouter une fonction
+                          onClick={toggleNewServiceModal}>
+                          <i className='bi bi-plus'/> Ajouter un service
                         </Button>
                       </Col>
                     </>
                   }
-                  loader={isLoading}
-                  title='Liste de fonctions (Titres)'
-                  thead={<AppTHead isImg loader={isLoading} isFetching={isFetching} onRefresh={onRefresh} items={[
+                  thead={<AppTHead
+                    isImg loader={isLoading || isFetching}
+                    isFetching={isFetching}
+                    onRefresh={onRefresh} items={[
                     {label: '#'},
-                    {label: 'Fonction (Titre)'},
-                    {label: 'Date d\'enregistrement'},
+                    {label: 'Service'},
+                    {label: 'Département'},
+                    {label: 'Date'},
                   ]} />}
-                  tbody={<tbody>{content}</tbody>} />
+                  tbody={
+                    <tbody>{content}</tbody>
+                  }
+                  loader={isLoading}
+                  title='Liste de services' />
                 {error && error}
               </Card.Body>
             </Card>
@@ -148,9 +157,9 @@ function Offices() {
         </Row>
       </section>
 
-      <AddOffice show={showNew} onHide={toggleModal} />
+      <AddService show={showNew} onHide={toggleNewServiceModal} />
     </>
   )
 }
 
-export default Offices
+export default Services

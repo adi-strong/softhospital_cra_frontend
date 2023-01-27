@@ -13,10 +13,20 @@ import AppSSelectField from "./forms/AppSelectField";
 import AppFloatingInputField from "./forms/AppFloatingInputField";
 import AppFloatingAreaField from "./forms/AppFloatingAreaField";
 import App404Error from "./errors/App404Error";
-import AppDelModal from "./AppDelModal";
+import AppDelModal from "./modals/AppDelModal";
 import AppChooseField from "./forms/AppChooseField";
+import AppEditModal from "./modals/AppEditModal";
+import AppAddModal from "./modals/AppAddModal";
+import AppAsyncSelectOptions from "./forms/AppAsyncSelectOptions";
+import AppSelectOptions from "./forms/AppSelectOptions";
+import AppMainError from "./AppMainError";
 
 export {
+  AppMainError,
+  AppSelectOptions,
+  AppAsyncSelectOptions,
+  AppAddModal,
+  AppEditModal,
   AppChooseField,
   AppDelModal,
   App404Error,

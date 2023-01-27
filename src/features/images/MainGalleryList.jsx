@@ -1,6 +1,6 @@
 import {useState} from "react";
 import {totalImages, useDeleteImageMutation, useGetImagesQuery} from "./imageApiSlice";
-import {ImageGridLoader} from "../ImageGridLoader";
+import {ImageGridLoader} from "../../loaders/ImageGridLoader";
 import {Button, Col, Form, InputGroup, Row, Spinner} from "react-bootstrap";
 import {entrypoint} from "../../app/store";
 import {limitStrTo} from "../../services";
@@ -26,14 +26,16 @@ const ImageItem = ({id}) => {
   async function onDelete(id) {
     toggleShow()
     try {
-      await deleteImage(id)
-      toast.success('Suppression bien efféctuée.', {
-        icon: '👌',
-        style: {
-          background: '#142db7',
-          color: '#fff',
-        }
-      })
+      const data = await deleteImage(id)
+      if (!data.error) {
+        toast.success('Suppression bien efféctuée.', {
+          icon: '👌',
+          style: {
+            background: '#142db7',
+            color: '#fff',
+          }
+        })
+      }
     } catch (e) {
       toast.error(e.message, {
         icon: '🤕',
@@ -53,7 +55,7 @@ const ImageItem = ({id}) => {
           <div className='bed-content'>
             <h4 className='pt-2'>{limitStrTo(20, image.filePath)}</h4>
             <span>{image?.createdAt ? image.createdAt : '-'}</span>
-            <div className='pt-0 mt-2'>
+            <div className='pt-0 &mt-2'>
               <Button
                 style={{ borderRadius: 0 }}
                 type='button'

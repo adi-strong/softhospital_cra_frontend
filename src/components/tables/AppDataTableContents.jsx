@@ -2,6 +2,7 @@ import {memo} from "react";
 import {cardTitleStyle} from "../../layouts/AuthLayout";
 import {Row, Table} from "react-bootstrap";
 import PropTypes from "prop-types";
+import {RepeatableTableRows} from "../../loaders";
 
 const AppDataTableContents = (
   {
@@ -12,6 +13,7 @@ const AppDataTableContents = (
     isStriped = false,
     isBorderless = false,
     isHover = false,
+    loader = false,
   }) => {
   return (
     <>
@@ -19,8 +21,9 @@ const AppDataTableContents = (
       <Row className='mb-3'>{overview && overview}</Row>
       <Table striped={isStriped} borderless={isBorderless} hover={isHover} responsive>
         {thead}
-        {tbody}
+        {!loader && tbody}
       </Table>
+      {loader && <RepeatableTableRows/>}
     </>
   )
 }

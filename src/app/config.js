@@ -24,20 +24,24 @@ export const currencies = countries.map(currency => {
 export const role = (str: string = null) => {
   switch (str) {
     case 'ROLE_SUPER_ADMIN':
-      return 'ROLE_SUPER_ADMIN'
+      return 'Super Admin'
     case 'ROLE_OWNER_ADMIN':
-      return 'ROLE_OWNER_ADMIN'
+      return 'Super Admin'
     case 'ROLE_ADMIN':
-      return 'ROLE_ADMIN'
+      return 'Administrateur'
     case 'ROLE_DOCTOR':
-      return 'ROLE_DOCTOR'
+      return 'Docteur'
     case 'ROLE_MEDIC':
-      return 'ROLE_MEDIC'
+      return 'Médecin'
     case 'ROLE_CASHIER':
-      return 'ROLE_CASHIER'
+      return 'Caissier'
     case 'ROLE_DRUGGIST':
-      return 'ROLE_DRUGGIST'
+      return 'Pharmacien(ne)'
+    case 'ROLE_LAB':
+      return 'Laborantin'
+    case 'ROLE_RECEPTIONIST':
+      return 'Réceptioniste'
     default:
-      return ROLE_USER
+      return 'Simple utilisateur'
   }
 }
