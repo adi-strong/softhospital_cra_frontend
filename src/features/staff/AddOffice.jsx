@@ -13,32 +13,22 @@ export const AddOffice = ({show = false, onHide}) => {
 
   async function onSubmit(e) {
     e.preventDefault()
-    if (offices.length >= 1) {
-      let data
+    if (offices.length > 0) {
+      let values = [...offices]
       for (const key in offices) {
-        const office = await addNewOffice(offices[key])
-        if (!office.error) {
-          data = offices.filter(item => item !== offices[key])
-          if (data.length < 1) {
-            onReset()
-            onHide()
-          }
-          else setOffices(data)
-          toast.success('Ajout bien efféctué.')
-        }
-        else {
-          const violations = office.error.data.violations
-          if (violations) {
-            violations.forEach(({propertyPath, message}) => {
-              toast.error(`${propertyPath}: ${message}`, {
-                style: {
-                  background: 'red',
-                  color: '#fff',
-                }
-              })
-            })
+        try {
+          const formData = await addNewOffice(offices[key])
+          if (!formData.error) {
+            values = values.filter(item => item !== offices[key])
+            setOffices(values)
+            toast.success('Fonction bien enregistrée.')
+            if (values.length < 1) {
+              onHide()
+              setOffices([{title: ''}])
+            }
           }
         }
+        catch (e) { }
       }
     }
     else alert('Aucune fonction renseignée !')

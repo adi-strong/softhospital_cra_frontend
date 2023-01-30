@@ -40,6 +40,11 @@ export const api = createApi({
     'Services',
     'Offices',
     'Agents',
+    'Box',
+    'Expense',
+    'ExpenseCategories',
+    'Input',
+    'Output',
   ],
   endpoints: build => ({}),
 })

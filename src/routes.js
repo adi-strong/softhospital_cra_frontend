@@ -26,7 +26,11 @@ const
   Services = lazy(() => import('./features/staff/services')),
   Staff = lazy(() => import('./features/staff/staff')),
   AddAgent = lazy(() => import('./features/staff/addAgent')),
-  EditAgent = lazy(() => import('./features/staff/editAgent'))
+  EditAgent = lazy(() => import('./features/staff/editAgent')),
+  Invoices = lazy(() => import('./features/finance/invoices')),
+  Expenses = lazy(() => import('./features/finance/expenses')),
+  Entries = lazy(() => import('./features/finance/entries')),
+  Outputs = lazy(() => import('./features/finance/outputs'))
 
 const routes = [
   {
@@ -95,6 +99,18 @@ const routes = [
       {path: 'services', element: <Services/>},
       {path: 'offices', element: <Offices/>},
       {path: 'users', element: <Users/>},
+    ]
+  },
+  // End STAFF *************************************************************************
+
+  // STAFF *****************************************************************************
+  {
+    path: '/member/finance/',
+    outlets: [
+      {path: 'invoices', element: <Invoices/>},
+      {path: 'expenses', element: <Expenses/>},
+      {path: 'entries', element: <Entries/>},
+      {path: 'outputs', element: <Outputs/>},
     ]
   },
   // End STAFF *************************************************************************

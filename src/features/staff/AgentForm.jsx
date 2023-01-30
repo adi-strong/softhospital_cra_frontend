@@ -141,7 +141,7 @@ export const AgentForm = (
 
         <div className="text-center">
           {!agentId &&
-            <Button type='button' variant='secondary' onClick={onReset} className='me-1'>
+            <Button type='button' variant='secondary' onClick={onReset} className='me-1' disabled={loading}>
               <i className='bi bi-arrow-clockwise'/> Effacer
             </Button>}
           <Button type='submit' disabled={loading}>

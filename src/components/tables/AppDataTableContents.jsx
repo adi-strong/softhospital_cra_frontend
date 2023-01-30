@@ -17,7 +17,7 @@ const AppDataTableContents = (
   }) => {
   return (
     <>
-      <h5 className="card-title" style={cardTitleStyle}>{title}</h5>
+      {title && <h5 className="card-title" style={cardTitleStyle}>{title}</h5>}
       <Row className='mb-3'>{overview && overview}</Row>
       <Table striped={isStriped} borderless={isBorderless} hover={isHover} responsive>
         {thead}

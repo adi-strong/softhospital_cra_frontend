@@ -52,33 +52,38 @@ export const AddService = ({show = false, onHide}) => {
     catch (e) { toast.error(e.message) }
   }
 
+  // {...services[key], department: department ? department.value : null}
   async function onSubmit() {
-    if (services.length >= 1) {
-      let data
+    if (services.length > 0) {
+      let values = [...services]
       for (const key in services) {
-        const service = await addNewService({...services[key], department: department ? department.value : null})
-        if (!service.error) {
-          data = services.filter(item => item !== services[key])
-          if (data.length < 1) {
-            onReset()
-            onHide()
+        try {
+          const formData = await addNewService({...services[key], department: department ? department.value : null})
+          if (!formData.error) {
+            values = values.filter(item => item !== services[key])
+            setServices(values)
+            toast.success('Service bien enregistré.')
+            if (values.length < 1) {
+              onHide()
+              setServices([{name: ''}])
+              setDepartment(null)
+            }
           }
-          else setServices(data)
-          toast.success('Ajout bien efféctué.')
-        }
-        else {
-          const violations = service.error.data.violations
-          if (violations) {
-            violations.forEach(({propertyPath, message}) => {
-              toast.error(`${propertyPath}: ${message}`, {
-                style: {
-                  background: 'red',
-                  color: '#fff',
-                }
+          else {
+            const violations = formData.error.data.violations
+            if (violations) {
+              violations.forEach(({propertyPath, message}) => {
+                toast.error(`${propertyPath}: ${message}`, {
+                  style: {
+                    background: 'red',
+                    color: '#fff',
+                  }
+                })
               })
-            })
+            }
           }
         }
+        catch (e) { }
       }
     }
     else alert('Aucun service renseigné !')
@@ -97,7 +102,7 @@ export const AddService = ({show = false, onHide}) => {
             isClearable
             placeholder='-- Département --'
             className='text-uppercase'
-            isDisabled={loader || isFetching}
+            isDisabled={loader || isFetching || isLoading}
             defaultOptions={departments}
             onChange={(e) => onSelectAsyncOption(e, setDepartment)}
             loadOptions={onLoadDepartmentsOptions}

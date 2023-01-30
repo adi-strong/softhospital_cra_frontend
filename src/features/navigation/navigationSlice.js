@@ -20,7 +20,7 @@ const initialState = {
       path: '#tasks',
       isOpened: false,
       items: [
-        {id: 2, label: 'Types de fiches médicales', path: '/member/tasks/files'},
+        {id: 2, label: 'Fiches médicales', path: '/member/tasks/files'},
         {id: 2, label: 'Actes médicaux', path: '/member/tasks/acts'},
         {id: 2, label: 'Examens', path: '/member/tasks/exams'},
         {id: 2, label: 'Traitements', path: '/member/tasks/treatments'},
@@ -64,10 +64,10 @@ const initialState = {
       path: '#finances',
       isOpened: false,
       items: [
-        {id: 5, label: 'Factures', path: '/member/finances/invoices'},
-        {id: 5, label: 'Dépenses', path: '/member/finances/expenses'},
-        {id: 5, label: 'Entrées', path: '/member/finances/entries'},
-        {id: 5, label: 'Sorties', path: '/member/finances/outputs'},
+        {id: 5, label: 'Factures', path: '/member/finance/invoices'},
+        {id: 5, label: 'Dépenses', path: '/member/finance/expenses'},
+        {id: 5, label: 'Entrées', path: '/member/finance/entries'},
+        {id: 5, label: 'Sorties', path: '/member/finance/outputs'},
       ]
     },
     {

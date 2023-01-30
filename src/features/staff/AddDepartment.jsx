@@ -12,36 +12,38 @@ export const AddDepartment = ({onHide, show = false}) => {
   const onReset = () => setDepartments([{name: ''}])
 
   async function onSubmit(e) {
-    e.preventDefault()
-    if (departments.length >= 1) {
-      let data
+    if (departments.length > 0) {
+      let values = [...departments]
       for (const key in departments) {
-        const department = await addNewDepartment(departments[key])
-        if (!department.error) {
-          data = departments.filter(item => item !== departments[key])
-          if (data.length < 1) {
-            onReset()
-            onHide()
+        try {
+          const formData = await addNewDepartment(departments[key])
+          if (!formData.error) {
+            values = values.filter(item => item !== departments[key])
+            setDepartments(values)
+            toast.success('Département bien enregistré.')
+            if (values.length < 1) {
+              onHide()
+              setDepartments([{name: ''}])
+            }
           }
-          else setDepartments(data)
-          toast.success('Ajout bien efféctué.')
-        }
-        else {
-          const violations = department.error.data.violations
-          if (violations) {
-            violations.forEach(({propertyPath, message}) => {
-              toast.error(`${propertyPath}: ${message}`, {
-                style: {
-                  background: 'red',
-                  color: '#fff',
-                }
+          else {
+            const violations = formData.error.data.violations
+            if (violations) {
+              violations.forEach(({propertyPath, message}) => {
+                toast.error(`${propertyPath}: ${message}`, {
+                  style: {
+                    background: 'red',
+                    color: '#fff',
+                  }
+                })
               })
-            })
+            }
           }
         }
+        catch (e) { }
       }
     }
-    else alert('Aucun département renseigné !')
+    else alert('Aucune information renseignée !')
   }
 
   return (

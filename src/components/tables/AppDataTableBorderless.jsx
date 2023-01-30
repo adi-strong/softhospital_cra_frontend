@@ -3,6 +3,7 @@ import {AppDataTableContents} from "../index";
 
 const AppDataTableBorderless = (
   {
+    loader = false,
     title,
     thead,
     tbody,
@@ -10,6 +11,7 @@ const AppDataTableBorderless = (
     isStriped = false,
   }) => {
   return <AppDataTableContents
+    loader={loader}
     title={title}
     thead={thead}
     tbody={tbody}
