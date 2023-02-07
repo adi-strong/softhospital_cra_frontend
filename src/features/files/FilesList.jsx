@@ -1,44 +1,81 @@
 import {useState} from "react";
-import {AppDataTableStripped, AppTHead} from "../../components";
+import {AppDataTableStripped, AppDelModal, AppMainError, AppTHead} from "../../components";
 import {Button, ButtonGroup, Col, Form, InputGroup} from "react-bootstrap";
 import {handleChange} from "../../services/handleFormsFieldsServices";
+import {useDeleteConsultationTypeMutation, useGetConsultationTypesQuery} from "./consultationTypeApiSlice";
+import {EditFileType} from "./EditFileType";
+import toast from "react-hot-toast";
+import {useSelector} from "react-redux";
 
-const files = [
-  {id: 3, name: 'Consultation prénatale'},
-  {id: 2, name: 'Elèctro-phoreuse'},
-  {id: 1, name: 'Badaboum'},
-]
+const FileItem = ({id, currency, onDelete}) => {
+  const [showEdit, setShowEdit] = useState(false)
+  const [showDelete, setShowDelete] = useState(false)
+  const [deleteConsultationType, {isLoading}] = useDeleteConsultationTypeMutation()
+  const { file } = useGetConsultationTypesQuery('ConsultationType', {
+    selectFromResult: ({ data }) => ({ file: data.entities[id] })
+  })
 
-const FileItem = ({file}) => {
+  const toggleEditModal = () => setShowEdit(!showEdit)
+  const toggleDeleteModal = () => setShowDelete(!showDelete)
+
   return (
     <>
       <tr>
         <td><i className='bi bi-file-medical'/></td>
-        <th scope='row'>{file.id}</th>
-        <td className='text-capitalize'>{file.name}</td>
+        <th scope='row'>#{file.id}</th>
+        <td className='text-uppercase'>{file.wording}</td>
+        <td className='text-capitalize fw-bolder'>
+          <span className='text-secondary me-1'>{currency && currency.value}</span>
+          {parseFloat(file.price).toFixed(2).toLocaleString()}
+        </td>
         <td className='text-end'>
-          <ButtonGroup>
-            <Button type='button' variant='light' className='p-0 px-1 pe-1' title='Modifier'>
-              <i className='bi bi-pencil'/>
+          <ButtonGroup size='sm'>
+            <Button type='button' variant='light' title='Modifier' disabled={isLoading} onClick={toggleEditModal}>
+              <i className='bi bi-pencil-square text-primary'/>
             </Button>
-            <Button type='button' variant='light' className='p-0 px-1 pe-1' title='Supprimer'>
-              <i className='bi bi-trash text-danger'/>
+            <Button type='button' variant='light' title='Supprimer' disabled={isLoading} onClick={toggleDeleteModal}>
+              <i className='bi bi-trash3 text-danger'/>
             </Button>
           </ButtonGroup>
         </td>
       </tr>
+
+      <EditFileType onHide={toggleEditModal} show={showEdit} data={file} currency={currency} />
+      <AppDelModal
+        onHide={toggleDeleteModal}
+        show={showDelete}
+        onDelete={() => onDelete(file, deleteConsultationType, toggleDeleteModal)}
+        text={
+          <p>
+            Êtes-vous certain(e) de vouloir supprimer ce type de fiche <br/>
+            <i className='bi bi-quote me-1'/>
+            <span className="fw-bold text-uppercase">{file.wording}</span>
+            <i className='bi bi-quote mx-1'/>
+          </p>
+        } />
     </>
   )
 }
 
 export const FilesList = () => {
   const [keywords, setKeywords] = useState({search: ''})
-  // const [show, setShow] = useState(false)
+  const { fCurrency } = useSelector(state => state.parameters)
+  const {data: fileTypes = [], isLoading, isFetching, isSuccess, isError, refetch} = useGetConsultationTypesQuery('ConsultationType')
 
-  // const onToggleShow = () => setShow(!show)
-
-  function onRefresh() {
+  const onDelete = async (file, func, onHide) => {
+    onHide()
+    try {
+      await func(file)
+    }
+    catch (e) { toast.error(e.message) }
   }
+
+  let content, errors
+  if (isError) errors = <AppMainError/>
+  else if (isSuccess) content = fileTypes && fileTypes.ids.map(id =>
+    <FileItem key={id} id={id} onDelete={onDelete} currency={fCurrency}/>)
+
+  const onRefresh = async () => await refetch()
 
   function handleSubmit(e) {
     e.preventDefault()
@@ -47,14 +84,10 @@ export const FilesList = () => {
   return (
     <>
       <AppDataTableStripped
+        loader={isLoading}
         title='Liste de types des fiches'
         overview={
           <>
-            <p>
-              {files.length < 1
-                ? 'Aucun(e) patient(e) enregistré(e).'
-                : <>Il y a au total <code>{files.length.toLocaleString()}</code> types de fiches(s) enregistré(s) :</>}
-            </p>
             <Col className='text-md-end'>
               <form onSubmit={handleSubmit}>
                 <InputGroup>
@@ -62,11 +95,11 @@ export const FilesList = () => {
                     placeholder='Votre recherche ici...'
                     aria-label='Votre recherche ici...'
                     autoComplete='off'
-                    disabled={files.length < 1}
+                    disabled={fileTypes.length < 1}
                     name='search'
                     value={keywords.search}
                     onChange={(e) => handleChange(e, keywords, setKeywords)} />
-                  <Button type='submit' variant='light' disabled={files.length < 1}>
+                  <Button type='submit' variant='light' disabled={fileTypes.length < 1}>
                     <i className='bi bi-search'/>
                   </Button>
                 </InputGroup>
@@ -74,12 +107,11 @@ export const FilesList = () => {
             </Col> {/* search form for patients */}
           </>
         }
-        thead={<AppTHead isImg onRefresh={onRefresh} items={[{label: '#'}, {label: 'Libellé'}]}/>}
-        tbody={
-          <tbody>
-          {files && files?.map(file => <FileItem key={file.id} file={file}/>)}
-          </tbody>
-        } />
+        thead={<AppTHead isImg loader={isLoading} isFetching={isFetching} onRefresh={onRefresh} items={[
+          {label: '#'}, {label: 'Libellé'}, {label: 'Prix'}
+        ]}/>}
+        tbody={<tbody>{content}</tbody>} />
+      {errors && errors}
     </>
   )
 }

@@ -33,7 +33,7 @@ function EditAgent() {
   const {data: departmentData = [], isLoading: departmentLoading, isSuccess: success} =
     useGetDepartmentsQuery('Departments')
   const [agent, setAgent] = useState({
-    name: '',
+    wording: '',
     lastName: '',
     firstName: '',
     sex: 'none',
@@ -177,7 +177,7 @@ function EditAgent() {
   async function onSubmit(e) {
     e.preventDefault()
     e.stopPropagation()
-    apiErrors = {office: null, name: null, lastName: null, firstName: null, sex: null, phone: null, email: null}
+    apiErrors = {office: null, wording: null, lastName: null, firstName: null, sex: null, phone: null, email: null}
     const form = e.currentTarget
     if (form.checkValidity() === false || canSave) {
       try {

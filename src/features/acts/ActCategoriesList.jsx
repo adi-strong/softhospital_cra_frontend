@@ -1,39 +1,66 @@
 import {useState} from "react";
-import {AppDataTableStripped, AppTHead} from "../../components";
-import moment from "moment";
-import {Button, ButtonGroup, Col, Form, InputGroup} from "react-bootstrap";
+import {AppDataTableStripped, AppDelModal, AppMainError, AppTHead} from "../../components";
+import {Button, ButtonGroup, Form, InputGroup} from "react-bootstrap";
 import {handleChange} from "../../services/handleFormsFieldsServices";
 import {AddActCategories} from "./AddActCategories";
-import {Link} from "react-router-dom";
+import {totalActCategories, useDeleteActCategoryMutation, useGetActCategoriesQuery} from "./actCategoriesApiSlice";
+import BarLoaderSpinner from "../../loaders/BarLoaderSpinner";
+import {limitStrTo} from "../../services";
+import toast from "react-hot-toast";
+import {EditActCategory} from "./EditActCategory";
 
-const categories = [
-  {id: 2, name: 'Lorem', createdAt: '2022-12-25 09:18'},
-  {id: 1, name: 'Ipsum', createdAt: '2023-01-04 16:26'},
-]
+const CategoryActItem = ({id}) => {
+  const [showEdit, setShowEdit] = useState(false)
+  const [showDelete, setShowDelete] = useState(false)
+  const [deleteActCategory, {isLoading}] = useDeleteActCategoryMutation()
+  const { category } = useGetActCategoriesQuery('ActCategories', {
+    selectFromResult: ({ data }) => ({ category: data.entities[id] })
+  })
 
-const CategoryActItem = ({category}) => {
+  const toggleEditModal = () => setShowEdit(!showEdit)
+  const toggleDeleteModal = () => setShowDelete(!showDelete)
+
+  const onDelete = async () => {
+    toggleDeleteModal()
+    try {
+      await deleteActCategory(category)
+    }
+    catch (e) { toast.error(e.message) }
+  }
+
   return (
     <>
       <tr>
         <td><i className='bi bi-tags'/></td>
-        <th scope='row'>{category.id}</th>
-        <td className='text-capitalize'>
-          <Link to={`#!`} className='text-decoration-none'>
-            {category.name}
-          </Link>
+        <td className='text-uppercase' title={category.name}>
+          {limitStrTo(18, category.name)}
         </td>
-        <td>{category?.createdAt ? moment(category.createdAt).calendar() : '-'}</td>
+        <td>{category?.createdAt ? category.createdAt : '❓'}</td>
         <td className='text-md-end'>
           <ButtonGroup size='sm'>
-            <Button type='button' variant='light' className='p-0 pe-1 px-1' title='Modification'>
-              <i className='bi bi-pencil'/>
+            <Button type='button' variant='light' title='Modification' disabled={isLoading} onClick={toggleEditModal}>
+              <i className='bi bi-pencil-square text-primary'/>
             </Button>
-            <Button type='button' variant='light' className='p-0 pe-1 px-1' title='Suppression'>
-              <i className='bi bi-trash text-danger'/>
+            <Button type='button' variant='light' title='Suppression' disabled={isLoading} onClick={toggleDeleteModal}>
+              <i className='bi bi-trash3 text-danger'/>
             </Button>
           </ButtonGroup>
         </td>
       </tr>
+
+      <EditActCategory show={showEdit} onHide={toggleEditModal} data={category} />
+      <AppDelModal
+        onDelete={onDelete}
+        show={showDelete}
+        onHide={toggleDeleteModal}
+        text={
+          <p>
+            Êtes-vous certain(e) de vouloir supprimer la catégorie <br/>
+            <i className='bi bi-quote me-1'/>
+            <span className="fw-bold text-uppercase">{category.name}</span>
+            <i className='bi bi-quote mx-1'/>
+          </p>
+        } />
     </>
   )
 }
@@ -41,6 +68,11 @@ const CategoryActItem = ({category}) => {
 export const ActCategoriesList = () => {
   const [keywords, setKeywords] = useState({search: ''})
   const [showNew, setShowNew] = useState(false)
+  const {data: categories = [], isLoading, isFetching, isSuccess, isError, refetch} = useGetActCategoriesQuery('ActCategories')
+
+  let content, errors
+  if (isError) errors = <AppMainError/>
+  else if (isSuccess) content = categories && categories.ids.map(id => <CategoryActItem key={id} id={id}/>)
 
   const handleToggleNewCategory = () => setShowNew(!showNew)
 
@@ -48,8 +80,7 @@ export const ActCategoriesList = () => {
     e.preventDefault()
   } // submit search keywords
 
-  function onRefresh() {
-  }
+  const onRefresh = async () => await refetch()
 
   return (
     <>
@@ -60,21 +91,18 @@ export const ActCategoriesList = () => {
             <p>
               {categories.length < 1
                 ? 'Aucun(e) patient(e) enregistré(e).'
-                : <>Au total, <code>{categories.length.toLocaleString()}</code> catégorie(s) enregistrée(s) :</>}
+                : <>Au total, <code>{totalActCategories.toLocaleString()}</code> catégorie(s) enregistrée(s) :</>}
             </p>
-            <Col md={6}>
+            <div className='text-md-end'>
               <Button
                 type='button'
                 title='Enregistrer un acte médical'
-                className='mb-1 me-1'
+                className='mb-2 me-1'
                 onClick={handleToggleNewCategory}>
                 <i className='bi bi-plus'/> Enregistrer
               </Button>
-              <Button type="button" variant='info' className='mb-1' disabled={categories.length < 1}>
-                <i className='bi bi-printer'/> Impression
-              </Button>
-            </Col> {/* add new patient and printing's launch button */}
-            <Col className='text-md-end'>
+            </div> {/* add new patient and printing's launch button */}
+            <div className='text-md-end'>
               <form onSubmit={handleSubmit}>
                 <InputGroup>
                   <Form.Control
@@ -90,19 +118,18 @@ export const ActCategoriesList = () => {
                   </Button>
                 </InputGroup>
               </form>
-            </Col> {/* search form for patients */}
+            </div> {/* search form for patients */}
           </>
         }
-        thead={<AppTHead isImg onRefresh={onRefresh} items={[
-          {label: '#'},
+        thead={<AppTHead isImg loader={isLoading} isFetching={isFetching} onRefresh={onRefresh} items={[
           {label: 'Libéllé'},
           {label: "Date d'enregistrement"},
         ]} />}
-        tbody={
-          <tbody>
-          {categories && categories?.map(category => <CategoryActItem key={category.id} category={category}/>)}
-          </tbody>
-        } />
+        tbody={<tbody>{content}</tbody>} />
+
+      {isLoading && <BarLoaderSpinner loading={isLoading} />}
+
+      {errors && errors}
 
       <AddActCategories onHide={handleToggleNewCategory} show={showNew} />
     </>

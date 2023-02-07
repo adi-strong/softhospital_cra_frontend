@@ -54,9 +54,9 @@ const Login = () => {
   useEffect(() => {
     if (token) {
       dispatch(setCredentials(token))
-      navigate(from, {replace: true})
+      navigate('/member/reception', {replace: true})
     }
-  }, [token, dispatch, navigate, from])
+  }, [token, dispatch, navigate])
 
   return (
     <>

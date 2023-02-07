@@ -1,42 +1,76 @@
 import {useState} from "react";
-import {AppDataTableStripped, AppTHead} from "../../components";
-import {Button, ButtonGroup, Col, Form, InputGroup} from "react-bootstrap";
-import {Link} from "react-router-dom";
+import {AppDataTableStripped, AppDelModal, AppMainError, AppTHead} from "../../components";
+import {Badge, Button, ButtonGroup, Col, Form, InputGroup} from "react-bootstrap";
 import {handleChange} from "../../services/handleFormsFieldsServices";
 import {AddActs} from "./AddActs";
+import {useDeleteActMutation, useGetActsQuery} from "./actApiSlice";
+import {useSelector} from "react-redux";
+import {limitStrTo} from "../../services";
+import toast from "react-hot-toast";
+import {EditAct} from "./EditAct";
 
-const acts = [
-  {id: 3, name: 'Rendez-vous simple', category: 'Rendez-vous', price: null},
-  {id: 2, name: 'Examen général', category: 'Consultation', price: 0.2},
-  {id: 1, name: 'Rencontre', price: null},
-]
+const ActItem = ({id, currency}) => {
+  const [showEdit, setShowEdit] = useState(false)
+  const [showDelete, setShowDelete] = useState(false)
+  const [deleteAct, {isLoading}] = useDeleteActMutation()
+  const { act } = useGetActsQuery('Act', {
+    selectFromResult: ({ data }) => ({ act: data.entities[id] })
+  })
 
-const ActItem = ({act}) => {
+  const toggleEditModal = () => setShowEdit(!showEdit)
+  const toggleDeleteModal = () => setShowDelete(!showDelete)
+
+  async function onDelete() {
+    toggleDeleteModal()
+    try {
+      const formData = await deleteAct(act)
+      if (!formData.error) toast.success('Suppression bien efféctuée.', {icon: '😶'})
+    }
+    catch (e) { toast.error(e.message) }
+  }
+
   return (
     <>
       <tr>
-        <td><i className='bi bi-person-rolodex'/></td>
-        <th>{act.id}</th>
-        <td>{act.name}</td>
+        <td><i className='bi bi-file-earmark-medical'/></td>
+        <th>#{act.id}</th>
+        <td className='text-uppercase' title={act.wording}>{limitStrTo(30, act.wording)}</td>
         <td className='fw-bold'>
           {act.price
-            ? <>{act.price.toFixed(2).toLocaleString()}<span className='text-secondary mx-1'>USD</span></>
-            : '-'}
+            ? <><span className='text-secondary me-1'>{currency && currency.value}</span>
+              {parseFloat(act.price).toFixed(2).toLocaleString()}</>
+            : '❓'}
         </td>
-        <td>
-          {act?.category ? <Link to={`#!`} className='text-decoration-none'>{act.category}</Link> : '-'}
+        <td className='text-uppercase' title={act?.category ? act.category.name : ''}>
+          {act?.category
+            ? <Badge>{limitStrTo(18, act.category.name)}</Badge>
+            : '❓'}
         </td>
         <td className='text-md-end'>
-          <ButtonGroup>
-            <Link to={`/tasks/acts/${act.id}`} className='btn btn-sm btn-light p-0 pe-1 px-1' title='Modification'>
-              <i className='bi bi-pencil'/>
-            </Link>
-            <Button size='sm' variant='light' type='button' className='p-0 pe-1 px-1' title='Suppression'>
-              <i className='bi bi-trash text-danger'/>
+          <ButtonGroup size='sm'>
+            <Button type='button' variant='light' title='Modification' disabled={isLoading} onClick={toggleEditModal}>
+              <i className='bi bi-pencil-square text-primary'/>
+            </Button>
+            <Button size='sm' variant='light' type='button' title='Suppression' disabled={isLoading} onClick={toggleDeleteModal}>
+              <i className='bi bi-trash3 text-danger'/>
             </Button>
           </ButtonGroup>
         </td>
       </tr>
+
+      <EditAct onHide={toggleEditModal} show={showEdit} data={act} currency={currency} />
+      <AppDelModal
+        show={showDelete}
+        onHide={toggleDeleteModal}
+        onDelete={onDelete}
+        text={
+          <p>
+            Êtes-vous certain(e) de vouloir supprimer l'acte médical <br/>
+            <i className='bi bi-quote me-1'/>
+            <span className="fw-bold text-uppercase">{act.wording}</span>
+            <i className='bi bi-quote mx-1'/>
+          </p>
+        } />
     </>
   )
 }
@@ -44,11 +78,16 @@ const ActItem = ({act}) => {
 export const ActsList = () => {
   const [keywords, setKeywords] = useState({search: ''})
   const [showNew, setShowNew] = useState(false)
+  const { fCurrency } = useSelector(state => state.parameters)
+  const {data: acts = [], isLoading, isFetching, isSuccess, isError, refetch} = useGetActsQuery('Act')
+
+  let content, errors
+  if (isError) errors = <AppMainError/>
+  else if (isSuccess) content = acts && acts.ids.map(id => <ActItem key={id} id={id} currency={fCurrency}/>)
 
   const handleToggleNewAct = () => setShowNew(!showNew)
 
-  function onRefresh() {
-  }
+  const onRefresh = async () => await refetch()
 
   function handleSubmit(e) {
     e.preventDefault()
@@ -57,24 +96,17 @@ export const ActsList = () => {
   return (
     <>
       <AppDataTableStripped
+        loader={isLoading}
         title='Liste des actes médicaux'
         overview={
           <>
-            <p>
-              {acts.length < 1
-                ? 'Aucun(e) patient(e) enregistré(e).'
-                : <>Au total, <code>{acts.length.toLocaleString()}</code> acte(s) enregistré(s) :</>}
-            </p>
-            <Col md={6}>
+            <Col md={3}>
               <Button
                 type='button'
                 title='Enregistrer un acte médical'
                 className='mb-1 me-1'
                 onClick={handleToggleNewAct}>
                 <i className='bi bi-plus'/> Enregistrer
-              </Button>
-              <Button type="button" variant='info' className='mb-1' disabled={acts.length < 1}>
-                <i className='bi bi-printer'/> Impression
               </Button>
             </Col> {/* add new patient and printing's launch button */}
             <Col className='text-md-end'>
@@ -96,19 +128,17 @@ export const ActsList = () => {
             </Col> {/* search form for patients */}
           </>
         }
-        thead={<AppTHead onRefresh={onRefresh} isImg items={[
+        thead={<AppTHead onRefresh={onRefresh} loader={isLoading} isFetching={isFetching} isImg items={[
           {label: '#'},
           {label: "Libéllé"},
           {label: 'Prix'},
           {label: 'Catégorie'},
         ]}/>}
-        tbody={
-          <tbody>
-          {acts && acts?.map(act => <ActItem key={act.id} act={act}/>)}
-          </tbody>
-        } />
+        tbody={<tbody>{content}</tbody>} />
 
-      <AddActs show={showNew} onHide={handleToggleNewAct} />
+      {errors && errors}
+
+      <AddActs show={showNew} onHide={handleToggleNewAct} currency={fCurrency} />
     </>
   )
 }

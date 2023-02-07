@@ -10,6 +10,7 @@ const AppFloatingInputField = (
     onChange,
     placeholder,
     text,
+    error = null,
     maxLength = undefined,
     type = 'text',
     autoComplete = 'off',
@@ -33,6 +34,7 @@ const AppFloatingInputField = (
         placeholder={placeholder}
         autoFocus={autofocus}
         required={required} />
+      {error && <div className='text-danger'>{error}</div>}
       {text && <Form.Text muted>{text}</Form.Text>}
     </FloatingLabel>
   )

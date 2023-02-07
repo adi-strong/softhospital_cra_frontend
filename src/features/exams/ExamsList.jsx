@@ -1,47 +1,76 @@
 import {useState} from "react";
-import {AppDataTableStripped, AppTHead} from "../../components";
-import {Link} from "react-router-dom";
-import {Button, ButtonGroup, Col, Form, InputGroup} from "react-bootstrap";
+import {AppDataTableStripped, AppDelModal, AppMainError, AppTHead} from "../../components";
+import {Badge, Button, ButtonGroup, Col, Form, InputGroup} from "react-bootstrap";
 import {handleChange} from "../../services/handleFormsFieldsServices";
 import {AddExams} from "./AddExams";
+import {useDeleteExamMutation, useGetExamsQuery} from "./examApiSlice";
+import {limitStrTo} from "../../services";
+import {useSelector} from "react-redux";
+import toast from "react-hot-toast";
+import {EditExam} from "./EditExam";
 
-const exams = [
-  {id: 3, name: 'Meares stamey (EPS et URO) + Prélèvement', category: 'Microbiologie', cost: 40, price: 50},
-  {id: 2, name: 'B-HCG', category: 'Hormonologie', cost: 64, price: 65},
-  {id: 1, name: 'Selles après colloration', category: 'Parasitologie', cost: 2, price: 3},
-]
+const ExamItem = ({id, currency}) => {
+  const [showEdit, setShowEdit] = useState(false)
+  const [showDelete, setShowDelete] = useState(false)
+  const [deleteExam, {isLoading}] = useDeleteExamMutation()
+  const { exam } = useGetExamsQuery('Exam', {
+    selectFromResult: ({ data }) => ({ exam: data.entities[id] })
+  })
 
-const ExamItem = ({exam}) => {
+  const toggleEditModal = () => setShowEdit(!showEdit)
+  const toggleDeleteModal = () => setShowDelete(!showDelete)
+
+  async function onDelete() {
+    toggleDeleteModal()
+    try {
+      const formData = await deleteExam(exam)
+      if (!formData.error) toast.success('Suppression bien efféctuée.', {icon: '😶'})
+    }
+    catch (e) { toast.error(e.message) }
+  }
+
   return (
     <>
       <tr>
         <td><i className='bi bi-prescription2'/></td>
-        <th scope='row'>{exam.id}</th>
-        <td className='text-capitalize'>{exam.name}</td>
-        <td>
+        <th scope='row'>#{exam.id}</th>
+        <td className='text-uppercase'>{limitStrTo(25, exam.wording)}</td>
+        <td className='text-uppercase' title={exam?.category ? exam.category.name : ''}>
           {exam?.category
-            ? <Link to={`#!`} className='text-decoration-none'>{exam.category}</Link>
-            : '-'}
+            ? <Badge>{limitStrTo(15, exam.category.name)}</Badge>
+            : '❓'}
         </td>
         <th scope='row'>
-          {exam.cost.toFixed(2).toLocaleString()}
-          <span className="text-secondary mx-1">USD</span>
-        </th>
-        <th scope='row'>
-          {exam.price.toFixed(2).toLocaleString()}
-          <span className="text-secondary mx-1">USD</span>
+          {exam?.price
+            ? <><span className="text-secondary me-1">{currency && currency.value}</span>
+              {parseFloat(exam.price).toFixed(2).toLocaleString()}</>
+            : '❓'}
         </th>
         <td className='text-md-end'>
-          <ButtonGroup>
-            <Button type='button' variant='light' className='p-0 pe-1 px-1' title='Modification'>
-              <i className='bi bi-pencil'/>
+          <ButtonGroup size='sm'>
+            <Button type='button' variant='light' title='Modification' disabled={isLoading} onClick={toggleEditModal}>
+              <i className='bi bi-pencil-square text-primary'/>
             </Button>
-            <Button size='sm' variant='light' type='button' className='p-0 pe-1 px-1' title='Suppression'>
-              <i className='bi bi-trash text-danger'/>
+            <Button size='sm' variant='light' type='button' title='Suppression' disabled={isLoading} onClick={toggleDeleteModal}>
+              <i className='bi bi-trash3 text-danger'/>
             </Button>
           </ButtonGroup>
         </td>
       </tr>
+
+      <EditExam onHide={toggleEditModal} show={showEdit} currency={currency} data={exam} />
+      <AppDelModal
+        show={showDelete}
+        onHide={toggleDeleteModal}
+        onDelete={onDelete}
+        text={
+          <p>
+            Êtes-vous certain(e) de vouloir supprimer l'examen <br/>
+            <i className='bi bi-quote me-1'/>
+            <span className="fw-bold text-uppercase">{exam.wording}</span>
+            <i className='bi bi-quote mx-1'/>
+          </p>
+        } />
     </>
   )
 }
@@ -49,11 +78,16 @@ const ExamItem = ({exam}) => {
 export const ExamsList = () => {
   const [keywords, setKeywords] = useState({search: ''})
   const [showNew, setShowNew] = useState(false)
+  const { fCurrency } = useSelector(state => state.parameters)
+  const {data: exams = [], isLoading, isFetching, isSuccess, isError, refetch} = useGetExamsQuery('Exam')
+
+  let content, errors
+  if (isError) errors = <AppMainError/>
+  else if (isSuccess) content = exams && exams.ids.map(id => <ExamItem key={id} id={id} currency={fCurrency}/>)
 
   const handleToggleNewExam = () => setShowNew(!showNew)
 
-  function onRefresh() {
-  }
+  const onRefresh = async () => await refetch()
 
   function handleSubmit(e) {
     e.preventDefault()
@@ -62,24 +96,17 @@ export const ExamsList = () => {
   return (
     <>
       <AppDataTableStripped
+        loader={isLoading}
         title='Liste des examens disponibles'
         overview={
           <>
-            <p>
-              {exams.length < 1
-                ? 'Aucun(e) patient(e) enregistré(e).'
-                : <>Il y a au total <code>{exams.length.toLocaleString()}</code> examens(s) enregistré(s) :</>}
-            </p>
-            <Col md={6}>
+            <Col md={3}>
               <Button
                 type='button'
                 title='Enregistrer un acte médical'
                 className='mb-1 me-1'
                 onClick={handleToggleNewExam}>
                 <i className='bi bi-plus'/> Enregistrer
-              </Button>
-              <Button type="button" variant='info' className='mb-1' disabled={exams.length < 1}>
-                <i className='bi bi-printer'/> Impression
               </Button>
             </Col> {/* add new patient and printing's launch button */}
             <Col className='text-md-end'>
@@ -101,20 +128,17 @@ export const ExamsList = () => {
             </Col> {/* search form for patients */}
           </>
         }
-        thead={<AppTHead isImg onRefresh={onRefresh} items={[
+        thead={<AppTHead isImg loader={isLoading} isFetching={isFetching} onRefresh={onRefresh} items={[
           {label: '#'},
           {label: 'Libéllé'},
           {label: 'Catégorie'},
-          {label: 'Coût'},
           {label: 'Prix'},
         ]}/>}
-        tbody={
-          <tbody>
-          {exams && exams?.map(exam => <ExamItem key={exam.id} exam={exam}/>)}
-          </tbody>
-        } />
+        tbody={<tbody>{content}</tbody> } />
 
-      <AddExams onHide={handleToggleNewExam} show={showNew} />
+      {errors && errors}
+
+      <AddExams onHide={handleToggleNewExam} show={showNew} currency={fCurrency} />
     </>
   )
 }

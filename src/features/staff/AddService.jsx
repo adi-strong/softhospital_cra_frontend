@@ -32,7 +32,7 @@ export const AddService = ({show = false, onHide}) => {
     : []
 
   const onReset = () => {
-    setServices([{name: ''}])
+    setServices([{wording: ''}])
     setDepartment(null)
   }
 
@@ -65,7 +65,7 @@ export const AddService = ({show = false, onHide}) => {
             toast.success('Service bien enregistré.')
             if (values.length < 1) {
               onHide()
-              setServices([{name: ''}])
+              setServices([{wording: ''}])
               setDepartment(null)
             }
           }

@@ -6,39 +6,68 @@ import img4 from '../../assets/app/img/bedrooms/4.jpg';
 import img5 from '../../assets/app/img/bedrooms/5.jpg';
 import img6 from '../../assets/app/img/bedrooms/6.jpg';
 import img7 from '../../assets/app/img/bedrooms/7.webp';
-import {Button, ButtonGroup, Col, Form, InputGroup, Row} from "react-bootstrap";
+import {Button, ButtonGroup, Col, Form, InputGroup, Row, Spinner} from "react-bootstrap";
 import {style} from "./BedsList";
 import {handleChange} from "../../services/handleFormsFieldsServices";
 import {AddBedroom} from "./AddBedroom";
+import {useDeleteBedroomMutation, useGetBedroomsQuery} from "./bedroomApiSlice";
+import {AppDelModal, AppMainError} from "../../components";
+import {ImageGridLoader} from "../../loaders/ImageGridLoader";
+import toast from "react-hot-toast";
+import {EditBedroom} from "./EditBedroom";
 
 const elements = [img1, img2, img3, img4, img5, img6, img7]
 
-const bedrooms = [
-  {id: 3, wording: '09K LL', category: 'Normale', description: 'Repellat fugiat adipisci nemo illum nesciunt voluptas.'},
-  {id: 2, wording: '12', category: 'Standard', description: 'Voluptas necessitatibus occaecati quia. Earum totam.'},
-  {id: 1, wording: '001-a', category: 'VIP', description: 'Magni qui quod omnis unde et eos fuga et exercitationem.'},
-]
-
-const BedroomItem = ({bedroom}) => {
+const BedroomItem = ({id}) => {
   const randomImg = Math.floor(Math.random() * elements.length)
+  const [showEdit, setShowEdit] = useState(false)
+  const [showDelete, setShowDelete] = useState(false)
+  const [deleteBedroom, {isLoading}] = useDeleteBedroomMutation()
+  const { bedroom } = useGetBedroomsQuery('Bedroom', {
+    selectFromResult: ({ data }) => ({ bedroom: data.entities[id] })
+  })
+
+  const toggleEditModal = () => setShowEdit(!showEdit)
+  const toggleDeleteModal = () => setShowDelete(!showDelete)
+
+  async function onDelete() {
+    toggleDeleteModal()
+    try {
+      const formData = await deleteBedroom(bedroom)
+      if (!formData.error) toast.success('Suppression bien efféctuée.', {icon: '😶'})
+    }
+    catch (e) { toast.error(e.message) }
+  }
 
   return (
     <>
       <Col key={bedroom.id} md={6} lg={4}>
-        <div className='bed'>
+        <div className='bed' style={{ height: 352 }}>
           <img src={elements[randomImg]} className="img-fluid" alt="" style={style}/>
           <div className='bed-content'>
-            <h4>{bedroom.wording}</h4>
-            <span>{bedroom.category}</span>
+            <h4>{bedroom.number}</h4>
+            <span>{bedroom?.category ? bedroom.category.name : 'Aucune catégorie attribuée'}</span>
             <div>
               {bedroom.description}
 
               <div className='mb-2'>
                 <ButtonGroup size='sm'>
-                  <Button type='button' variant='light' className='p-0 px-1 pe-1' title='Modification'>
+                  <Button
+                    type='button'
+                    disabled={isLoading}
+                    onClick={toggleEditModal}
+                    variant='light'
+                    className='p-0 px-1 pe-1'
+                    title='Modification'>
                     <i className='bi bi-pencil text-primary'/>
                   </Button>
-                  <Button type='button' variant='light' className='p-0 px-1 pe-1' title='Suppression'>
+                  <Button
+                    type='button'
+                    disabled={isLoading}
+                    onClick={toggleDeleteModal}
+                    variant='light'
+                    className='p-0 px-1 pe-1'
+                    title='Suppression'>
                     <i className='bi bi-trash text-danger'/>
                   </Button>
                 </ButtonGroup>
@@ -47,6 +76,20 @@ const BedroomItem = ({bedroom}) => {
           </div>
         </div>
       </Col>
+
+      <EditBedroom data={bedroom} show={showEdit} onHide={toggleEditModal} />
+      <AppDelModal
+        show={showDelete}
+        onHide={toggleDeleteModal}
+        onDelete={onDelete}
+        text={
+          <p>
+            Êtes-vous certain(e) de vouloir supprimer la chambre <br/>
+            <i className='bi bi-quote me-1'/>
+            <span className="fw-bold text-uppercase">{bedroom.number}</span>
+            <i className='bi bi-quote mx-1'/>
+          </p>
+        } />
     </>
   )
 }
@@ -54,11 +97,15 @@ const BedroomItem = ({bedroom}) => {
 export const BedroomsList = () => {
   const [keywords, setKeywords] = useState({search: ''})
   const [showNew, setShowNew] = useState(false)
+  const {data: bedrooms = [], isLoading, isFetching, isSuccess, isError, refetch} = useGetBedroomsQuery('Bedroom')
+
+  let content, errors
+  if (isError) errors = <AppMainError/>
+  else if (isSuccess) content = bedrooms && bedrooms.ids.map(id => <BedroomItem key={id} id={id} />)
 
   const handleToggleNewBedroom = () => setShowNew(!showNew)
 
-  function onRefresh() {
-  }
+  const onRefresh = async () => await refetch()
 
   function handleSubmit(e) {
     e.preventDefault()
@@ -66,7 +113,6 @@ export const BedroomsList = () => {
 
   return (
     <>
-      <p>Il y au total <code>{bedrooms.length}</code> chambre(s) :</p>
       <Row className='mb-4'>
         <Col md={8} className=' mb-1'>
           <form onSubmit={handleSubmit}>
@@ -89,14 +135,16 @@ export const BedroomsList = () => {
           <Button type='button' variant='secondary' className='me-1' onClick={handleToggleNewBedroom}>
             <i className='bi bi-plus'/> Enregistrer
           </Button>
-          <Button type='button' className='me-1' onClick={onRefresh}>
-            <i className='bi bi-arrow-clockwise'/>
+          <Button disabled={isFetching} type='button' className='me-1' onClick={onRefresh}>
+            {isFetching ? <Spinner animation='border' size='sm'/> : <i className='bi bi-arrow-clockwise'/>}
           </Button>
         </Col>
       </Row>
-      <Row data-aos='fade-up' data-aos-duration={100} className='pt-2'>
-        {bedrooms && bedrooms?.map(bedroom => <BedroomItem key={bedroom.id} bedroom={bedroom}/>)}
-      </Row>
+      <Row data-aos='fade-up' data-aos-duration={100} className='pt-2'>{content}</Row>
+
+      {isLoading && <ImageGridLoader/>}
+
+      {errors && errors}
 
       <AddBedroom onHide={handleToggleNewBedroom} show={showNew} />
     </>

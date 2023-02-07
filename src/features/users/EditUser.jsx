@@ -15,7 +15,7 @@ export const EditUser = ({show, onHide, data}) => {
   const canSave = [user.username, user.tel].every(Boolean)
 
   async function onSubmit() {
-    apiErrors = {username: null, name: null, tel: '', email: null}
+    apiErrors = {username: null, wording: null, tel: '', email: null}
     if (canSave) {
       try {
         const userData = await updateUser({

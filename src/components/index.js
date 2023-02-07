@@ -21,8 +21,10 @@ import AppAsyncSelectOptions from "./forms/AppAsyncSelectOptions";
 import AppSelectOptions from "./forms/AppSelectOptions";
 import AppMainError from "./AppMainError";
 import AppLgModal from "./modals/AppLgModal";
+import AppFloatingSelectField from "./forms/AppFloatingSelectField";
 
 export {
+  AppFloatingSelectField,
   AppLgModal,
   AppMainError,
   AppSelectOptions,

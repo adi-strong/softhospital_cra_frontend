@@ -1,18 +1,68 @@
 import {useState} from "react";
-import {Button, Col, Modal, Row} from "react-bootstrap";
+import {Button, InputGroup, Modal, Spinner} from "react-bootstrap";
 import PropTypes from "prop-types";
-import {AppFloatingInputField} from "../../components";
-import {handleChange} from "../../services/handleFormsFieldsServices";
+import {useAddNewBedMutation} from "./bedApiSlice";
+import {useGetBedroomsQuery, useLazyHandleLoadBedroomsQuery} from "./bedroomApiSlice";
+import toast from "react-hot-toast";
+import {BedForm} from "./BedForm";
 
-export const AddBed = ({onHide, show = false}) => {
-  const [bed, setBed] = useState({wording: '', cost: 0, price: 0, description: ''})
+export const AddBed = ({onHide, show = false, currency}) => {
+  const [bed, setBed] = useState({number: '', bedroom: null, cost: 0, price: 0})
+  const [addNewBed, {isLoading, isError, error}] = useAddNewBedMutation()
+  const [handleLoadBedrooms] = useLazyHandleLoadBedroomsQuery()
+  const {
+    data: bedrooms = [],
+    isSuccess,
+    isFetching,
+    isError: isBedroomsError} = useGetBedroomsQuery('Bedroom')
 
-  function onSubmit(e) {
-    e.preventDefault()
-    alert('submitted')
+  let options, apiErrors = {number: null, cost: null, price: null, bedroom: null}
+  if (isBedroomsError) alert('Erreur lors du chargement des chambres !!')
+  else if (isSuccess) options = bedrooms && bedrooms.ids.map(id => {
+    return {
+      label: bedrooms.entities[id].number,
+      value: bedrooms.entities[id]['@id'],
+    }
+  })
+
+  const currencySymbol1 = <InputGroup.Text disabled className='fw-bold'>{currency && currency.value}</InputGroup.Text>
+  const currencySymbol2 = <InputGroup.Text disabled className='fw-bold'>{currency && currency.currency}</InputGroup.Text>
+
+  const onSelectBedroom = event => setBed({...bed, bedroom: event})
+
+  const onReset = () => setBed({number: '', bedroom: null, cost: 0, price: 0})
+
+  const onLoadBedrooms = async keyword => {
+    try {
+      const lazyData = await handleLoadBedrooms(keyword).unwrap()
+      if (lazyData && lazyData.length > 0) {
+        return lazyData
+      }
+    }
+    catch (e) { toast.error(e.message) }
   }
 
-  const onReset = () => setBed({wording: '', cost: 0, price: 0, description: ''})
+  async function onSubmit() {
+    apiErrors = {number: null, cost: null, price: null, bedroom: null}
+    try {
+      const formData = await addNewBed({...bed, bedroom: bed.bedroom ? bed.bedroom.value : null})
+      if (!formData.error) {
+        toast.success('Enregistrement bien efféctuée.')
+        onReset()
+        onHide()
+      }
+    }
+    catch (e) { toast.error(e.message) }
+  }
+
+  if (isError) {
+    const { violations } = error.data
+    if (violations) {
+      violations.forEach(({ propertyPath, message }) => {
+        apiErrors[propertyPath] = message;
+      });
+    }
+  }
 
   return (
     <>
@@ -21,55 +71,26 @@ export const AddBed = ({onHide, show = false}) => {
           <Modal.Title>Ajouter un lit</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <AppFloatingInputField
-            required
-            autofocus
-            name='wording'
-            value={bed.wording}
-            onChange={(e) => handleChange(e, bed, setBed)}
-            placeholder='Lit...'
-            label='Lit...' />
-          <Row>
-            <Col md={6}>
-              <AppFloatingInputField
-                required
-                type='number'
-                name='cost'
-                value={bed.cost}
-                onChange={(e) => handleChange(e, bed, setBed)}
-                placeholder='Coût'
-                label='Coût' />
-            </Col>
-            <Col md={6}>
-              <AppFloatingInputField
-                required
-                type='number'
-                name='price'
-                value={bed.price}
-                onChange={(e) => handleChange(e, bed, setBed)}
-                placeholder='Prix'
-                label='Prix' />
-            </Col>
-          </Row>
-          <AppFloatingInputField
-            required
-            text="Ce champs ne peut contenir que 53 caractère(s) maximum."
-            maxLength={53}
-            name='description'
-            value={bed.description}
-            onChange={(e) => handleChange(e, bed, setBed)}
-            placeholder='Petite description du lit...'
-            label='Petite description du lit...' />
-          <Button type='reset' variant='light' className='w-100' onClick={onReset}>
-            <i className='bi bi-trash3'/>
-          </Button>
+          <BedForm
+            currency={currency}
+            currencySymbol1={currencySymbol1}
+            currencySymbol2={currencySymbol2}
+            bed={bed}
+            setBed={setBed}
+            onReset={onReset}
+            apiErrors={apiErrors}
+            options={options}
+            onLoadBedrooms={onLoadBedrooms}
+            isLoading={isLoading}
+            isFetching={isFetching}
+            onSelectBedroom={onSelectBedroom} />
         </Modal.Body>
         <Modal.Footer>
-          <Button type='button' variant='light' onClick={onHide}>
+          <Button disabled={isLoading} type='button' variant='light' onClick={onHide}>
             <i className='bi bi-x'/> Annuler
           </Button>
-          <Button type='button' onClick={onSubmit}>
-            Enregistrer
+          <Button disabled={isLoading} type='button' onClick={onSubmit}>
+            {isLoading ? <>Veuillez patienter <Spinner animation='border' size='sm'/></> : 'Enregistrer'}
           </Button>
         </Modal.Footer>
       </Modal>

@@ -25,7 +25,7 @@ export const BlankLayout = () => {
             <Row className='justify-content-center'>
               <Col lg={4} md={6} className='d-flex flex-column align-items-center justify-content-center'>
                 <div className="d-flex justify-content-center py-4">
-                  <Link to='/member/dashboard' className='text-decoration-none'>
+                  <Link to='/member/reception' className='text-decoration-none'>
                     <img src={logo} alt='' width={24.5} height={26} className='me-2'/>
                     <span style={style}>softHospital</span>
                   </Link>

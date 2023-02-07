@@ -1,51 +1,104 @@
 import {useState} from "react";
-import {AppDataTableStripped, AppTHead} from "../../components";
-import {Button, ButtonGroup, Col, Form, InputGroup} from "react-bootstrap";
+import {AppDataTableStripped, AppDelModal, AppMainError, AppTHead} from "../../components";
+import {Button, ButtonGroup, Form, InputGroup} from "react-bootstrap";
 import {handleChange} from "../../services/handleFormsFieldsServices";
-import {Link} from "react-router-dom";
-import moment from "moment";
 import {AddTreatmentCategories} from "./AddTreatmentCategories";
+import {limitStrTo} from "../../services";
+import {
+  totalTreatmentCategories,
+  useDeleteTreatmentCategoryMutation,
+  useGetTreatmentCategoriesQuery
+} from "./treatmentCategoryApiSlice";
+import BarLoaderSpinner from "../../loaders/BarLoaderSpinner";
+import toast from "react-hot-toast";
+import {EditTreatmentCategory} from "./EditTreatmentCategory";
 
-const categories = [
-  {id: 2, name: 'Paludisme', createdAt: '2023-01-02 04:10'},
-  {id: 1, name: 'Infections', createdAt: '2023-01-05 09:16'},
-]
+const TreatmentCategoryItem = ({id}) => {
+  const [showEdit, setShowEdit] = useState(false)
+  const [showDelete, setShowDelete] = useState(false)
+  const [deleteTreatmentCategory, {isLoading}] = useDeleteTreatmentCategoryMutation()
+  const { category } = useGetTreatmentCategoriesQuery('TreatmentCategories', {
+    selectFromResult: ({ data }) => ({ category: data.entities[id] })
+  })
 
-const TreatmentCategoryItem = ({category}) => {
+  const toggleEditModal = () => setShowEdit(!showEdit)
+  const toggleDeleteModal = () => setShowDelete(!showDelete)
+
+  async function onDelete() {
+    try {
+      toggleDeleteModal()
+      const formData = await deleteTreatmentCategory(category)
+      if (!formData.error) toast.success('Suppression bien efféctuée.', {icon: '😶'})
+    }
+    catch (e) { toast.error(e.message) }
+  }
+
   return (
     <>
       <tr>
         <td><i className='bi bi-tags'/></td>
-        <th scope='row'>{category.id}</th>
-        <td className='text-capitalize'>
-          <Link to={`#!`} className='text-decoration-none'>
-            {category.name}
-          </Link>
+        <td className='text-uppercase' title={category.name}>
+          {limitStrTo(30, category.name)}
         </td>
-        <td>{category?.createdAt ? moment(category.createdAt).calendar() : '-'}</td>
+        <td>{category?.createdAt ? category.createdAt : '-'}</td>
         <td className='text-md-end'>
           <ButtonGroup size='sm'>
-            <Button type='button' variant='light' className='p-0 pe-1 px-1' title='Modification'>
-              <i className='bi bi-pencil'/>
+            <Button
+              type='button'
+              variant='light'
+              title='Modification'
+              disabled={isLoading}
+              onClick={toggleEditModal}>
+              <i className='bi bi-pencil-square text-primary'/>
             </Button>
-            <Button size='sm' variant='light' type='button' className='p-0 pe-1 px-1' title='Suppression'>
-              <i className='bi bi-trash text-danger'/>
+            <Button
+              size='sm'
+              variant='light'
+              type='button'
+              title='Suppression'
+              disabled={isLoading}
+              onClick={toggleDeleteModal}>
+              <i className='bi bi-trash3 text-danger'/>
             </Button>
           </ButtonGroup>
         </td>
       </tr>
+
+      <EditTreatmentCategory onHide={toggleEditModal} show={showEdit} data={category} />
+      <AppDelModal
+        show={showDelete}
+        onHide={toggleDeleteModal}
+        onDelete={onDelete}
+        text={
+          <p>
+            Êtes-vous certain(e) de vouloir supprimer la catégorie <br/>
+            <i className='bi bi-quote me-1'/>
+            <span className="fw-bold text-uppercase">{category.name}</span>
+            <i className='bi bi-quote mx-1'/>
+          </p>
+        } />
     </>
   )
 }
 
-export const TreatmentCategoriesList = () => {
+export const TreatmentCategoriesList = ({currency}) => {
   const [keywords, setKeywords] = useState({search: ''})
   const [showNew, setShowNew] = useState(false)
+  const {
+    data: categories = [],
+    isLoading,
+    isFetching,
+    isSuccess,
+    isError,
+    refetch} = useGetTreatmentCategoriesQuery('TreatmentCategories')
+
+  let content, errors
+  if (isError) errors = <AppMainError/>
+  else if (isSuccess) content = categories && categories.ids.map(id => <TreatmentCategoryItem key= {id} id={id}/>)
 
   const handleToggleNewTreatmentCategories = () => setShowNew(!showNew)
 
-  function onRefresh() {
-  }
+  const onRefresh = async () => await refetch()
 
   function handleSubmit(e) {
     e.preventDefault()
@@ -58,11 +111,11 @@ export const TreatmentCategoriesList = () => {
         overview={
           <>
             <p>
-              {categories.length < 1
+              {totalTreatmentCategories < 1
                 ? 'Aucun(e) patient(e) enregistré(e).'
-                : <>Il y a au total <code>{categories.length.toLocaleString()}</code> catégorie(s) enregistrée(s) :</>}
+                : <>Il y a au total <code>{totalTreatmentCategories.toLocaleString()}</code> catégorie(s) enregistrée(s) :</>}
             </p>
-            <Col md={6}>
+            <div className='text-md-end mb-2'>
               <Button
                 type='button'
                 title='Enregistrer une catégorie'
@@ -70,11 +123,8 @@ export const TreatmentCategoriesList = () => {
                 onClick={handleToggleNewTreatmentCategories}>
                 <i className='bi bi-plus'/> Enregistrer
               </Button>
-              <Button type="button" variant='info' className='mb-1' disabled={categories.length < 1}>
-                <i className='bi bi-printer'/> Impression
-              </Button>
-            </Col> {/* add new patient and printing's launch button */}
-            <Col className='text-md-end'>
+            </div> {/* add new patient and printing's launch button */}
+            <div>
               <form onSubmit={handleSubmit}>
                 <InputGroup>
                   <Form.Control
@@ -90,19 +140,18 @@ export const TreatmentCategoriesList = () => {
                   </Button>
                 </InputGroup>
               </form>
-            </Col> {/* search form for patients */}
+            </div> {/* search form for patients */}
           </>
         }
-        thead={<AppTHead isImg onRefresh={onRefresh} items={[
-          {label: '#'},
+        thead={<AppTHead isImg isFetching={isFetching} loader={isLoading} onRefresh={onRefresh} items={[
           {label: 'Libellé'},
           {label: "Date d'enregistrement"},
         ]}/>}
-        tbody={
-          <tbody>
-          {categories && categories?.map(category => <TreatmentCategoryItem key={category.id} category={category}/>)}
-          </tbody>
-        } />
+        tbody={<tbody>{content}</tbody>} />
+
+      {isLoading && <BarLoaderSpinner loading={isLoading}/>}
+
+      {errors && errors}
 
       <AddTreatmentCategories onHide={handleToggleNewTreatmentCategories} show={showNew} />
     </>

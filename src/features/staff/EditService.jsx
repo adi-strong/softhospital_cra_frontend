@@ -30,7 +30,7 @@ export function EditService({data, show = false, onHide}) {
   let apiErrors = {name: null}
 
   async function onSubmit() {
-    apiErrors = {name: null}
+    apiErrors = {wording: null}
     try {const data = await updateService({
       id: service.id,
       name: service.name,

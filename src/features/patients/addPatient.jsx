@@ -18,7 +18,7 @@ const style = {
 const AddPatient = () => {
   const dispatch = useDispatch()
   const [patient, setPatient] = useState({
-    name: '',
+    wording: '',
     lastName: '',
     firstName: '',
     sex: 'none',

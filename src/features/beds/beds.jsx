@@ -6,7 +6,7 @@ import {BedroomsList} from "./BedroomsList";
 import {BedroomCategoriesList} from "./BedroomCategoriesList";
 
 const tabs = [
-  {title: 'List', eventKey: 'beds'},
+  {title: 'Lits', eventKey: 'beds'},
   {title: 'Chambres', eventKey: 'bedrooms'},
 ]
 

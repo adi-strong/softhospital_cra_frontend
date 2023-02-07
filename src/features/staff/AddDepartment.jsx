@@ -9,7 +9,7 @@ export const AddDepartment = ({onHide, show = false}) => {
   const [departments, setDepartments] = useState([{name: ''}])
   const [addNewDepartment, {isLoading}] = useAddNewDepartmentMutation()
 
-  const onReset = () => setDepartments([{name: ''}])
+  const onReset = () => setDepartments([{wording: ''}])
 
   async function onSubmit(e) {
     if (departments.length > 0) {
@@ -23,7 +23,7 @@ export const AddDepartment = ({onHide, show = false}) => {
             toast.success('Département bien enregistré.')
             if (values.length < 1) {
               onHide()
-              setDepartments([{name: ''}])
+              setDepartments([{wording: ''}])
             }
           }
           else {

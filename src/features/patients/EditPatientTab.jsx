@@ -22,7 +22,7 @@ export const maritalStatusOptions = [
 
 export const EditPatientTab = () => {
   const [patient, setPatient] = useState({
-    name: 'Lifwa',
+    wording: 'Lifwa',
     lastName: "Wan'etumba",
     firstName: 'Adivin',
     sex: 'none',

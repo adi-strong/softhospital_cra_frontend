@@ -1,38 +1,33 @@
 import {AppBreadcrumb, AppHeadTitle} from "../../components";
-import {Card, Tab, Tabs} from "react-bootstrap";
-import {useState} from "react";
+import {Card, Col, Row} from "react-bootstrap";
 import {TreatmentsList} from "./TreatmentsList";
 import {TreatmentCategoriesList} from "./TreatmentCategoriesList";
-
-const tabs = [
-  {title: 'Liste de traitements disponibles', eventKey: 'treatments'},
-  {title: 'Liste des catégories de traitements', eventKey: 'categories'},
-]
+import {useSelector} from "react-redux";
 
 const Treatments = () => {
-  const [key, setKey] = useState('treatments')
+  const { fCurrency } = useSelector(state => state.parameters)
 
   return (
     <>
       <AppHeadTitle title='Traitements' />
       <AppBreadcrumb title='Traitements' />
-      <Card className='border-0'>
-        <Card.Body>
-          <Tabs
-            id='treatments-tabs'
-            variant='tabs-bordered'
-            activeKey={key}
-            onSelect={(k) => setKey(k)}
-            className='pt-2'>
-            {tabs.map((tab, idx) =>
-              <Tab key={idx} title={tab.title} eventKey={tab.eventKey} className='pt-3'>
-                {tab.eventKey === 'treatments'
-                  ? <TreatmentsList/>
-                  : <TreatmentCategoriesList/>}
-              </Tab>)}
-          </Tabs>
-        </Card.Body>
-      </Card>
+      <Row>
+        <Col md={7}>
+          <Card className='border-0'>
+            <Card.Body>
+              <TreatmentsList currency={fCurrency} />
+            </Card.Body>
+          </Card>
+        </Col>
+
+        <Col md={5}>
+          <Card className='border-0'>
+            <Card.Body>
+              <TreatmentCategoriesList currency={fCurrency} />
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
     </>
   )
 }

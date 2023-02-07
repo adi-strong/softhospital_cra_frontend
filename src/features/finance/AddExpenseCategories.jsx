@@ -9,7 +9,7 @@ export const AddExpenseCategories = ({show, onHide, setShow}) => {
   const [categories, setCategories] = useState([{name: ''}])
   const [addNewExpenseCategory, {isLoading}] = useAddNewExpenseCategoryMutation()
 
-  const onReset = () => setCategories([{name: ''}])
+  const onReset = () => setCategories([{wording: ''}])
 
   async function onSubmit() {
     if (categories.length > 0) {

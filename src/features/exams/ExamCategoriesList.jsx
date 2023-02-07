@@ -1,39 +1,67 @@
 import {useState} from "react";
-import {AppDataTableStripped, AppTHead} from "../../components";
-import {Button, ButtonGroup, Col, Form, InputGroup} from "react-bootstrap";
+import {AppDataTableStripped, AppDelModal, AppMainError, AppTHead} from "../../components";
+import {Button, ButtonGroup, Form, InputGroup} from "react-bootstrap";
 import {handleChange} from "../../services/handleFormsFieldsServices";
-import moment from "moment";
 import {AddExamCategories} from "./AddExamCategories";
-import {Link} from "react-router-dom";
+import {totalExamCategories, useDeleteExamCategoryMutation, useGetExamCategoriesQuery} from "./examCategoryApiSlice";
+import BarLoaderSpinner from "../../loaders/BarLoaderSpinner";
+import {limitStrTo} from "../../services";
+import toast from "react-hot-toast";
+import {EditExamCategory} from "./EditExamCategory";
 
-const categories = [
-  {id: 2, name: 'Hormonologie', createdAt: '2023-01-02 04:10'},
-  {id: 1, name: 'Biologie', createdAt: '2023-01-05 09:16'},
-]
+const ExamCategoryItem = ({id}) => {
+  const [showEdit, setShowEdit] = useState(false)
+  const [showDelete, setShowDelete] = useState(false)
+  const [deleteExamCategory, {isLoading}] = useDeleteExamCategoryMutation()
+  const { category } = useGetExamCategoriesQuery('ExamCategories', {
+    selectFromResult: ({ data }) => ({ category: data.entities[id] })
+  })
 
-const ExamCategoryItem = ({category}) => {
+  const toggleEditModal = () => setShowEdit(!showEdit)
+  const toggleDeleteModal = () => setShowDelete(!showDelete)
+
+  async function onDelete() {
+    try {
+      toggleDeleteModal()
+      const formData = await deleteExamCategory(category)
+      if (!formData.error) toast.success('Suppression bien efféctuée.', {icon: '😶'})
+    }
+    catch (e) { toast.error(e.message) }
+  }
+
   return (
     <>
       <tr>
         <td><i className='bi bi-tags'/></td>
-        <th scope='row'>{category.id}</th>
-        <td className='text-capitalize'>
-          <Link to={`#!`} className='text-decoration-none'>
-            {category.name}
-          </Link>
+        <td className='text-uppercase' title={category.name}>
+          {limitStrTo(30, category.name)}
         </td>
-        <td>{category?.createdAt ? moment(category.createdAt).calendar() : '-'}</td>
+        <td>{category?.createdAt ? category.createdAt : '-'}</td>
         <td className='text-md-end'>
           <ButtonGroup size='sm'>
-            <Button type='button' variant='light' className='p-0 pe-1 px-1' title='Modification'>
-              <i className='bi bi-pencil'/>
+            <Button type='button' variant='light' title='Modification' disabled={isLoading} onClick={toggleEditModal}>
+              <i className='bi bi-pencil-square text-primary'/>
             </Button>
-            <Button size='sm' variant='light' type='button' className='p-0 pe-1 px-1' title='Suppression'>
-              <i className='bi bi-trash text-danger'/>
+            <Button size='sm' variant='light' type='button' title='Suppression' disabled={isLoading} onClick={toggleDeleteModal}>
+              <i className='bi bi-trash3 text-danger'/>
             </Button>
           </ButtonGroup>
         </td>
       </tr>
+
+      <EditExamCategory show={showEdit} onHide={toggleEditModal} data={category} />
+      <AppDelModal
+        show={showDelete}
+        onHide={toggleDeleteModal}
+        onDelete={onDelete}
+        text={
+          <p>
+            Êtes-vous certain(e) de vouloir supprimer la catégorie <br/>
+            <i className='bi bi-quote me-1'/>
+            <span className="fw-bold text-uppercase">{category.name}</span>
+            <i className='bi bi-quote mx-1'/>
+          </p>
+        } />
     </>
   )
 }
@@ -41,11 +69,21 @@ const ExamCategoryItem = ({category}) => {
 export const ExamCategoriesList = () => {
   const [keywords, setKeywords] = useState({search: ''})
   const [showNew, setShowNew] = useState(false)
+  const {
+    data: categories = [],
+    isLoading,
+    isFetching,
+    isSuccess,
+    isError,
+    refetch} = useGetExamCategoriesQuery('ExamCategories')
+
+  let content, errors
+  if (isError) errors = <AppMainError/>
+  else if (isSuccess) content = categories && categories.ids.map(id => <ExamCategoryItem key={id} id={id}/>)
 
   const handleToggleNewExamCategory = () => setShowNew(!showNew)
 
-  function onRefresh() {
-  }
+  const onRefresh = async () => await refetch()
 
   function handleSubmit(e) {
     e.preventDefault()
@@ -57,11 +95,11 @@ export const ExamCategoriesList = () => {
         overview={
           <>
             <p>
-              {categories.length < 1
-                ? 'Aucun(e) patient(e) enregistré(e).'
-                : <>Il y a au total <code>{categories.length.toLocaleString()}</code> catégorie(s) enregistrée(s) :</>}
+              {totalExamCategories < 1
+                ? 'Aucune catégorie pour le moment 🎈'
+                : <>Il y a au total <code>{totalExamCategories.toLocaleString()}</code> catégorie(s) :</>}
             </p>
-            <Col md={6}>
+            <div className='mb-2 text-md-end'>
               <Button
                 type='button'
                 title='Enregistrement des catégories'
@@ -69,11 +107,8 @@ export const ExamCategoriesList = () => {
                 onClick={handleToggleNewExamCategory}>
                 <i className='bi bi-plus'/> Enregistrer
               </Button>
-              <Button type="button" variant='info' className='mb-1' disabled={categories.length < 1}>
-                <i className='bi bi-printer'/> Impression
-              </Button>
-            </Col> {/* add new patient and printing's launch button */}
-            <Col className='text-md-end'>
+            </div> {/* add new patient and printing's launch button */}
+            <div>
               <form onSubmit={handleSubmit}>
                 <InputGroup>
                   <Form.Control
@@ -89,19 +124,18 @@ export const ExamCategoriesList = () => {
                   </Button>
                 </InputGroup>
               </form>
-            </Col> {/* search form for patients */}
+            </div> {/* search form for patients */}
           </>
         }
-        thead={<AppTHead isImg onRefresh={onRefresh} items={[
-          {label: '#'},
+        thead={<AppTHead isImg loader={isLoading} isFetching={isFetching} onRefresh={onRefresh} items={[
           {label: 'Libéllé'},
           {label: "Date d'enregistrement"},
         ]}/>}
-        tbody={
-          <tbody>
-          {categories && categories?.map(category => <ExamCategoryItem key={category.id} category={category}/>)}
-          </tbody>
-        } />
+        tbody={<tbody>{content}</tbody>} />
+
+      {isLoading && <BarLoaderSpinner loading={isLoading}/>}
+
+      {errors && errors}
 
       <AddExamCategories onHide={handleToggleNewExamCategory} show={showNew} />
     </>

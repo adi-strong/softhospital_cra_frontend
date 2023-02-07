@@ -11,7 +11,7 @@ export function EditDepartment({data, show = false, onHide}) {
   let apiErrors = {name: null}
 
   async function handleEdit() {
-    apiErrors = {name: null}
+    apiErrors = {wording: null}
     try {
       const departmentData = await updateDepartment(department)
       if (!departmentData.error) {

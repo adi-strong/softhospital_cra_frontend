@@ -1,32 +1,81 @@
 import {useState} from "react";
-import {AppDataTableStripped, AppTHead} from "../../components";
+import {AppDataTableStripped, AppDelModal, AppMainError, AppTHead} from "../../components";
 import {Button, ButtonGroup, Form, InputGroup} from "react-bootstrap";
 import {handleChange} from "../../services/handleFormsFieldsServices";
 import {AddBedroomCategories} from "./AddBedroomCategories";
+import {
+  totalBedroomCategories,
+  useDeleteBedroomCategoryMutation,
+  useGetBedroomCategoriesQuery
+} from "./bedroomCategoryApiSlice";
+import BarLoaderSpinner from "../../loaders/BarLoaderSpinner";
+import {limitStrTo} from "../../services";
+import toast from "react-hot-toast";
+import {EditBedroomCategory} from "./EditBedroomCategory";
 
-const categories = [
-  {id: 3, name: 'Normale'},
-  {id: 2, name: 'Standard'},
-  {id: 1, name: 'VIP'},
-]
+const BedroomCategoryItem = ({id}) => {
+  const [showEdit, setShowEdit] = useState(false)
+  const [showDelete, setShowDelete] = useState(false)
+  const [deleteBedroomCategory, {isLoading}] = useDeleteBedroomCategoryMutation()
+  const { category } = useGetBedroomCategoriesQuery('BedroomCategories', {
+    selectFromResult: ({ data }) => ({ category: data.entities[id] })
+  })
 
-const BedroomCategoryItem = ({category}) => {
+  const toggleEditModal = () => setShowEdit(!showEdit)
+  const toggleDeleteModal = () => setShowDelete(!showDelete)
+
+  async function onDelete() {
+    try {
+      toggleDeleteModal()
+      const formData = await deleteBedroomCategory(category)
+      if (!formData.error) toast.success('Suppression bien efféctuée.', {icon: '😶'})
+    }
+    catch (e) { toast.error(e.message) }
+  }
+
   return (
     <>
       <tr>
         <td><i className='bi bi-tag'/></td>
-        <td className='text-capitalize'>{category.name}</td>
+        <td className='text-capitalize' title={category.name}>{limitStrTo(30, category.name)}</td>
+        <td>{category?.createdAt ? category.createdAt : '❓'}</td>
         <td className='text-md-end'>
           <ButtonGroup>
-            <Button type='button' variant='light' className='p-0 px-1 pe-1' title='Modifier'>
-              <i className='bi bi-pencil'/>
+            <Button
+              type='button'
+              variant='light'
+              className='p-0 px-1 pe-1'
+              title='Modifier'
+              disabled={isLoading}
+              onClick={toggleEditModal}>
+              <i className='bi bi-pencil text-primary'/>
             </Button>
-            <Button type='button' variant='light' className='p-0 px-1 pe-1' title='Supprimer'>
+            <Button
+              type='button'
+              variant='light'
+              className='p-0 px-1 pe-1'
+              title='Supprimer'
+              disabled={isLoading}
+              onClick={toggleDeleteModal}>
               <i className='bi bi-trash text-danger'/>
             </Button>
           </ButtonGroup>
         </td>
       </tr>
+
+      <EditBedroomCategory data={category} onHide={toggleEditModal} show={showEdit} />
+      <AppDelModal
+        show={showDelete}
+        onHide={toggleDeleteModal}
+        onDelete={onDelete}
+        text={
+          <p>
+            Êtes-vous certain(e) de vouloir supprimer la catégorie <br/>
+            <i className='bi bi-quote me-1'/>
+            <span className="fw-bold text-uppercase">{category.name}</span>
+            <i className='bi bi-quote mx-1'/>
+          </p>
+        } />
     </>
   )
 }
@@ -34,11 +83,21 @@ const BedroomCategoryItem = ({category}) => {
 export const BedroomCategoriesList = () => {
   const [keywords, setKeywords] = useState({search: ''})
   const [showNew, setShowNew] = useState(false)
+  const {
+    data: categories = [],
+    isLoading,
+    isFetching,
+    isSuccess,
+    isError,
+    refetch} = useGetBedroomCategoriesQuery('BedroomCategories')
+
+  let content, errors
+  if (isError) errors = <AppMainError/>
+  else if (isSuccess) content = categories && categories.ids.map(id => <BedroomCategoryItem key={id} id={id}/>)
 
   const handleToggleNewBedroomCategory = () => setShowNew(!showNew)
 
-  function onRefresh() {
-  }
+  const onRefresh = async () => await refetch()
 
   function handleSubmit(e) {
     e.preventDefault()
@@ -47,15 +106,15 @@ export const BedroomCategoriesList = () => {
   return (
     <>
       <AppDataTableStripped
-        title={<><i className='bi bi-tags'/> Catégories de chambres</>}
+        title={<><i className='bi bi-tags'/> Catégories des chambres</>}
         overview={
           <>
             <p>
-              {categories.length < 1
+              {totalBedroomCategories < 1
                 ? 'Aucun(e) catégorie enregistrée.'
-                : <>Il y a au total <code>{categories.length.toLocaleString()}</code> catégorie(s) enregistré(s) :</>}
+                : <>Il y a au total <code>{totalBedroomCategories.toLocaleString()}</code> catégorie(s) enregistré(s) :</>}
             </p>
-            <div className='text-md-end'>
+            <div className='text-md-end mb-2'>
               <Button
                 type='button'
                 variant='secondary'
@@ -84,12 +143,15 @@ export const BedroomCategoriesList = () => {
             </div> {/* search form for patients */}
           </>
         }
-        thead={<AppTHead isImg onRefresh={onRefresh} items={[{label: 'Libellé'},]}/>}
-        tbody={
-          <tbody>
-          {categories && categories?.map(category => <BedroomCategoryItem key={category.id} category={category}/>)}
-          </tbody>
-        } />
+        thead={<AppTHead isImg loader={isLoading} isFetching={isFetching} onRefresh={onRefresh} items={[
+          {label: 'Libellé'},
+          {label: "Date d'ajout"},
+        ]}/>}
+        tbody={<tbody>{content}</tbody>} />
+
+      {isLoading && <BarLoaderSpinner loading={isLoading}/>}
+
+      {errors && errors}
 
       <AddBedroomCategories onHide={handleToggleNewBedroomCategory} show={showNew} />
     </>

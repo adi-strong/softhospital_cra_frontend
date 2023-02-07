@@ -7,8 +7,10 @@ const animatedComponents = makeAnimated()
 
 const AppAsyncSelectOptions = (
   {
+    label,
     placeholder,
     className,
+    error = null,
     disabled = false,
     isMulti = false,
     closeMenuOnSelect = true,
@@ -19,6 +21,7 @@ const AppAsyncSelectOptions = (
   }) => {
   return (
     <>
+      {label && <div className='mb-2'>{label}</div>}
       <AsyncSelect
         placeholder={placeholder}
         components={animatedComponents}
@@ -31,6 +34,7 @@ const AppAsyncSelectOptions = (
         isMulti={isMulti}
         closeMenuOnSelect={closeMenuOnSelect}
         isClearable />
+      {error && <div className='text-danger'>{error}</div>}
     </>
   )
 }
@@ -42,7 +46,7 @@ AppAsyncSelectOptions.propTypes = {
   defaultOptions: PropTypes.array,
   onChange: PropTypes.func.isRequired,
   loadOptions: PropTypes.func.isRequired,
-  value: PropTypes.any.isRequired,
+  value: PropTypes.any,
   isMulti: PropTypes.bool,
   closeMenuOnSelect: PropTypes.bool,
 }

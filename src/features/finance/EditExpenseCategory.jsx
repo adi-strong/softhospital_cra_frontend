@@ -11,7 +11,7 @@ export const EditExpenseCategory = ({show, onHide, data}) => {
   let apiErrors = {name: null}
 
   async function onSubmit() {
-    apiErrors = {name: null}
+    apiErrors = {wording: null}
     try {
       const formData = await updateExpenseCategory(category)
       if (!formData.error) {

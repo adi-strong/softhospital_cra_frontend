@@ -1,25 +1,25 @@
 import {useState} from "react";
-import {useUpdateTreatmentCategoryMutation} from "./treatmentCategoryApiSlice";
+import {useUpdateActCategoryMutation} from "./actCategoriesApiSlice";
 import toast from "react-hot-toast";
 import {AppEditModal} from "../../components";
 import AppInputField from "../../components/forms/AppInputField";
 import {handleChange} from "../../services/handleFormsFieldsServices";
 
-export const EditTreatmentCategory = ({show, onHide, data}) => {
+export const EditActCategory = ({show, onHide, data}) => {
   const [category, setCategory] = useState(data)
-  const [updateTreatmentCategory, {isLoading, isError, error}] = useUpdateTreatmentCategoryMutation()
+  const [updateActCategory, {isLoading, isError, error}] = useUpdateActCategoryMutation()
   let apiErrors = {name: null}
 
   async function onSubmit() {
-    apiErrors = {name: null}
+    apiErrors = {wording: null}
     try {
-      const formData = await updateTreatmentCategory(category)
+      const formData = await updateActCategory(category)
       if (!formData.error) {
         toast.success('Modification bien efféctuée.')
         onHide()
       }
     }
-    catch (e) { }
+    catch (e) { toast.error(e.message) }
   }
 
   if (isError) {
@@ -34,19 +34,17 @@ export const EditTreatmentCategory = ({show, onHide, data}) => {
   return (
     <>
       <AppEditModal
-        loader={isLoading}
         onHide={onHide}
         show={show}
-        onEdit={onSubmit}>
+        onEdit={onSubmit}
+        loader={isLoading}>
         <AppInputField
           required
           autofocus
-          disabled={isLoading}
-          label={<>Catégorie <i className='text-danger'>*</i></>}
           name='name'
           value={category.name}
           onChange={(e) => handleChange(e, category, setCategory)}
-          placeholder='Libellé'
+          disabled={isLoading}
           error={apiErrors.name} />
       </AppEditModal>
     </>
