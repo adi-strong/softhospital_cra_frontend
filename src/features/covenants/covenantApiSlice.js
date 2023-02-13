@@ -29,7 +29,7 @@ export const covenantApiSlice = api.injectEndpoints({
       query: covenant => ({
         url: pathToApi+'/covenants',
         method: 'POST',
-        body: {...covenant, cost: covenant.cost.toString(), price: covenant.price.toString()},
+        body: covenant,
       }),
       invalidatesTags: ['Covenant']
     }), // add new covenant
@@ -39,10 +39,21 @@ export const covenantApiSlice = api.injectEndpoints({
         headers: patchHeaders,
         url: pathToApi+`/covenants/${covenant.id}`,
         method: 'PATCH',
-        body: JSON.stringify(covenant),
+        body: JSON.stringify({
+          denomination: covenant.denomination,
+          unitName: covenant?.unitName ? covenant.unitName : null,
+          focal: covenant?.focal ? covenant.focal : null,
+          tel: covenant?.tel ? covenant.tel : null,
+          email: covenant?.email ? covenant.email : null,
+          address: covenant?.address ? covenant.address : null,
+          logo: covenant?.logo
+            ? covenant.logo['@id']
+              ? covenant.logo['@id']
+              : covenant.logo.id
+            : null,
+        }),
       }),
       invalidatesTags: ['Covenant']
-
     }), // update covenant
 
     deleteCovenant: build.mutation({
@@ -54,6 +65,28 @@ export const covenantApiSlice = api.injectEndpoints({
       }),
       invalidatesTags: ['Covenant']
     }), // delete covenant
+
+    getSingleCovenant: build.query({
+      query: id => pathToApi+`/covenants/${id}`,
+      transformResponse: (res, meta, arg) => {
+        return {...res, createdAt: res?.createdAt ? moment(res.createdAt).calendar() : null,}
+      },
+      providesTags: (result, error, arg) => [{type: 'SingleCovenant', id: arg}]
+    }), // get single covenant
+
+    loadCovenants: build.query({
+      query: keyword => pathToApi+`/covenants?denomination=${keyword}`,
+      transformResponse: res => {
+        const data = res['hydra:member']
+        return data.map(covenant => {
+          return {
+            id: covenant.id,
+            label: covenant.denomination,
+            value: covenant['@id']
+          }
+        })
+      }
+    }), // load covenants
   })
 })
 
@@ -62,4 +95,6 @@ export const {
   useAddNewCovenantMutation,
   useUpdateCovenantMutation,
   useDeleteCovenantMutation,
+  useGetSingleCovenantQuery,
+  useLazyLoadCovenantsQuery,
 } = covenantApiSlice

@@ -2,7 +2,7 @@ import {useEffect, useState} from "react";
 import {AppEditModal, AppSelectOptions} from "../../components";
 import {useUpdateExamMutation} from "./examApiSlice";
 import {handleChange, onSelectAsyncOption} from "../../services/handleFormsFieldsServices";
-import {Button, Col, Form, InputGroup, Row} from "react-bootstrap";
+import {Col, Form, InputGroup, Row} from "react-bootstrap";
 import AppInputField from "../../components/forms/AppInputField";
 import toast from "react-hot-toast";
 import {useGetExamCategoriesQuery} from "./examCategoryApiSlice";
@@ -89,7 +89,7 @@ export const EditExam = ({show, onHide, data, currency}) => {
           <Col md={6} className='mb-3'>
             <Form.Label htmlFor='price'>Prix</Form.Label>
             <InputGroup>
-              {currency && <Button type='button' disabled>{currency.currency}</Button>}
+              {currency && <InputGroup.Text>{currency.currency}</InputGroup.Text>}
               <Form.Control
                 id='price'
                 type='number'
@@ -99,7 +99,7 @@ export const EditExam = ({show, onHide, data, currency}) => {
                 onChange={(e) => handleChange(e, exam, setExam)}
                 error={apiErrors.price}
                 label='Prix' />
-              {currency && <Button type='button' variant='secondary' disabled>{currency.value}</Button>}
+              {currency && <InputGroup.Text className='bg-secondary'>{currency.value}</InputGroup.Text>}
             </InputGroup>
           </Col>
         </Row>

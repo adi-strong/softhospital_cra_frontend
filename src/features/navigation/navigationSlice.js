@@ -50,7 +50,6 @@ const initialState = {
       items: [
         {id: 4, label: 'Categories', path: '/member/drugstore/categories'},
         {id: 4, label: 'Produits', path: '/member/drugstore/medicines'},
-        {id: 4, label: 'Unités de consommation', path: '/member/drugstore/consuptions-units'},
         {id: 4, label: 'Fournisseurs', path: '/member/drugstore/providers'},
         {id: 4, label: 'Approvisionnement', path: '/member/drugstore/supply'},
         {id: 4, label: 'Ventes', path: '/member/drugstore/sales'},

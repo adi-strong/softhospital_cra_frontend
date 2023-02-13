@@ -5,7 +5,7 @@ import AppInputField from "../../components/forms/AppInputField";
 import {handleChange, onSelectAsyncOption} from "../../services/handleFormsFieldsServices";
 import toast from "react-hot-toast";
 import {useGetActCategoriesQuery} from "./actCategoriesApiSlice";
-import {Button, Col, Form, InputGroup, Row} from "react-bootstrap";
+import {Col, Form, InputGroup, Row} from "react-bootstrap";
 
 export const EditAct = ({show, onHide, data, currency}) => {
   const [act, setAct] = useState(data)
@@ -86,7 +86,7 @@ export const EditAct = ({show, onHide, data, currency}) => {
           <Col md={6}>
             <Form.Label htmlFor='price'>Prix</Form.Label>
             <InputGroup>
-              {currency && <Button type='button' disabled>{currency.currency}</Button>}
+              {currency && <InputGroup.Text>{currency.currency}</InputGroup.Text>}
               <Form.Control
                 id='price'
                 type='number'
@@ -96,7 +96,7 @@ export const EditAct = ({show, onHide, data, currency}) => {
                 onChange={(e) => handleChange(e, act, setAct)}
                 error={apiErrors.price}
                 label='Prix' />
-              {currency && <Button type='button' variant='secondary' disabled>{currency.value}</Button>}
+              {currency && <InputGroup.Text className='bg-secondary'>{currency.value}</InputGroup.Text>}
             </InputGroup>
           </Col>
         </Row>

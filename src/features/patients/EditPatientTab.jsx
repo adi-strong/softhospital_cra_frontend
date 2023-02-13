@@ -1,6 +1,11 @@
-import {useCallback, useState} from "react";
-import {handleChange} from "../../services/handleFormsFieldsServices";
-import {PatientForm} from "./PatientForm";
+import {cardTitleStyle} from "../../layouts/AuthLayout";
+import {useEffect, useMemo, useState} from "react";
+import {AddImageModal} from "../images/AddImageModal";
+import {entrypoint} from "../../app/store";
+import {EditPatientForm} from "./EditPatientForm";
+import {AppMainError} from "../../components";
+import toast from "react-hot-toast";
+import {useUpdatePatientMutation} from "./patientApiSlice";
 
 export const sexOptions = [
   {label: '-- Aucune valeur sélectionnée --', value: 'none'},
@@ -20,44 +25,148 @@ export const maritalStatusOptions = [
   {label: 'Marié(e)', value: 'married'},
 ]
 
-export const EditPatientTab = () => {
-  const [patient, setPatient] = useState({
-    wording: 'Lifwa',
-    lastName: "Wan'etumba",
-    firstName: 'Adivin',
+export const EditPatientTab = ({data, isLoading, isError, refetch}) => {
+  let currentYear, birthYear, age
+  const [show, setShow] = useState(false)
+  const [covenant, setCovenant] = useState(null)
+  const [check, setCheck] = useState({isCovenant: false})
+  const [updatePatient, {isLoading: isPatientChecked}] = useUpdatePatientMutation()
+  const [patient, setPatient]  = useState({
+    name: '',
+    nationality: '',
+    lastName: '',
+    firstName: '',
     sex: 'none',
-    birthDate: '1991-03-05',
-    birthPlace: 'Kinshasa',
-    maritalStatus: 'single',
-    tel: '0904651464',
-    email: 'adi.life91@gmail.com',
-    father: 'JR Lifwa',
-    mother: 'Jeanine Nkolo',
-    address: 'Londolobe n°15',
+    birthDate: '',
+    birthPlace: '',
+    maritalStatus: 'none',
+    tel: '',
+    email: '',
+    father: '',
+    mother: '',
+    address: '',
+    profile: null,
   })
 
-  const currentYear = new Date().getFullYear()
-  const birthYear = patient.birthDate ? parseInt(patient.birthDate.split('-')[0]) : currentYear
-  const age = currentYear - birthYear
+  let profile, apiErrors = {
+    name: null,
+    nationality: null,
+    lastName: null,
+    firstName: null,
+    sex: null,
+    birthDate: null,
+    birthPlace: null,
+    maritalStatus: null,
+    tel: null,
+    email: null,
+    father: null,
+    mother: null,
+    address: null,
+    profile: null,
+  }
 
-  const handleChangeAge = useCallback((e) => {
-    handleChange(e, patient, setPatient)
-  }, [patient])
+  profile = useMemo(() => {
+    return !isLoading && patient?.profile
+      ? entrypoint+patient.profile.contentUrl
+      : null
+  }, [isLoading, patient])
 
-  function onSubmit(e) {
+  useEffect(() => {
+    if (!isLoading && data) {
+      setPatient({
+        id: data.id,
+        name: data?.name,
+        lastName: data?.lastName ? data.lastName : '',
+        firstName: data?.firstName ? data.firstName : '',
+        sex: data?.sex ? data.sex : 'none',
+        mother: data?.mother ? data.mother : '',
+        father: data?.father ? data.father : '',
+        profile: data?.profile ? data.profile : null,
+        email: data?.email ? data.email : '',
+        maritalStatus: data?.maritalStatus ? data.maritalStatus : 'none',
+        birthDate: data?.birthDate ? data.birthDate.substring(0, 10) : '',
+        address: data?.address ? data.address : '',
+        tel: data?.tel ? data.tel : '',
+        birthPlace: data?.birthPlace ? data.birthPlace : '',
+        nationality: data?.nationality ? data.nationality : '',
+      })
+    }
+  }, [isLoading, data]) // get patient's data
+
+  useEffect(() => {
+    if (!isLoading && data && data?.covenant) {
+      setCheck({isCovenant: true})
+      setCovenant({
+        label: data.covenant.denomination,
+        value: data.covenant['@id'],
+      })
+    }
+  }, [isLoading, data]) // get covenant's data
+
+  currentYear = new Date().getFullYear()
+  birthYear = patient.birthDate ? parseInt(patient.birthDate.split('-')[0]) : currentYear
+  age = currentYear - birthYear
+
+  const handleRemoveProfile = () => setPatient({...patient, profile: null})
+
+  const toggleModal = () => setShow(!show)
+
+  async function onSubmit(e) {
     e.preventDefault()
+    apiErrors = {
+      name: null,
+      nationality: null,
+      lastName: null,
+      firstName: null,
+      sex: null,
+      birthDate: null,
+      birthPlace: null,
+      maritalStatus: null,
+      tel: null,
+      email: null,
+      father: null,
+      mother: null,
+      address: null,
+      profile: null,
+    }
+    try {
+      const formData = await updatePatient({...patient, covenant: covenant ? covenant.value : null})
+      if (!formData.error) {
+        toast.success('Modification bien efféctuée.')
+        await refetch()
+      }
+    }
+    catch (e) { toast.error(e.message) }
   }
 
   return (
     <>
-      <PatientForm
-        labelBtn='Modifier'
-        isProfileExists
-        onSubmit={onSubmit}
-        patient={patient}
-        handleChangeAge={handleChangeAge}
+      <h2 className='card-title' style={cardTitleStyle}>Édition</h2>
+
+      <EditPatientForm
         age={age}
-        setPatient={setPatient} />
+        onSubmit={onSubmit}
+        profile={profile}
+        isLoading={isLoading || isPatientChecked}
+        isPatientChecked={isPatientChecked}
+        toggleModal={toggleModal}
+        apiErrors={apiErrors}
+        setPatient={setPatient}
+        patient={patient}
+        covenant={covenant}
+        setCovenant={setCovenant}
+        check={check}
+        setCheck={setCheck}
+        handleRemoveProfile={handleRemoveProfile} />
+
+      {isError && <AppMainError/>}
+
+      <AddImageModal
+        show={show}
+        onHide={toggleModal}
+        itemState={patient}
+        setItemState={setPatient}
+        item='profile' />
     </>
   )
 }

@@ -30,7 +30,11 @@ const
   Invoices = lazy(() => import('./features/finance/invoices')),
   Expenses = lazy(() => import('./features/finance/expenses')),
   Entries = lazy(() => import('./features/finance/entries')),
-  Outputs = lazy(() => import('./features/finance/outputs'))
+  Outputs = lazy(() => import('./features/finance/outputs')),
+  MedicineCategories = lazy(() => import('./features/medicines/medicineCategories')),
+  DrugStore = lazy(() => import('./features/medicines/drugStore')),
+  Providers = lazy(() => import('./features/medicines/providers')),
+  MedicinesInvoicing = lazy(() => import('./features/medicines/medicinesInvoicing'))
 
 const routes = [
   {
@@ -47,10 +51,10 @@ const routes = [
     outlets: [
       {index: true, element: <Patients/>},
       {path: 'add', element: <AddPatient/>},
-      {path: ':id', element: <SinglePatient/>},
+      {path: ':id/:slug', element: <SinglePatient/>},
       {path: 'covenants', element: <Covenants/>},
       {path: 'covenants/add', element: <AddCovenant/>},
-      {path: 'covenants/:id', element: <SingleCovenant/>},
+      {path: 'covenants/:id/:slug', element: <SingleCovenant/>},
     ]
   },
 
@@ -114,6 +118,18 @@ const routes = [
     ]
   },
   // End STAFF *************************************************************************
+
+  // MEDICINES *****************************************************************************
+  {
+    path: '/member/drugstore/',
+    outlets: [
+      {path: 'medicines', element: <DrugStore/>},
+      {path: 'categories', element: <MedicineCategories/>},
+      {path: 'providers', element: <Providers/>},
+      {path: 'sales', element: <MedicinesInvoicing/>},
+    ]
+  },
+  // End MEDICINES *************************************************************************
 ]
 
 export default routes

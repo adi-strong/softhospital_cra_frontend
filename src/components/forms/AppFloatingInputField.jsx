@@ -42,7 +42,7 @@ const AppFloatingInputField = (
 
 AppFloatingInputField.propTypes = {
   name: PropTypes.string.isRequired,
-  label: PropTypes.string.isRequired,
+  label: PropTypes.any.isRequired,
   value: PropTypes.any,
   onChange: PropTypes.func.isRequired,
   type: PropTypes.string,

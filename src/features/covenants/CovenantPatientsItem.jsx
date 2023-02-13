@@ -1,13 +1,13 @@
 import {useState} from "react";
+import {useDeletePatientMutation} from "../patients/patientApiSlice";
 import {entrypoint} from "../../app/store";
-import img from '../../assets/app/img/default_profile.jpg';
+import toast from "react-hot-toast";
+import img from "../../assets/app/img/default_profile.jpg";
 import {Link} from "react-router-dom";
 import {Button} from "react-bootstrap";
-import {useDeletePatientMutation} from "./patientApiSlice";
-import toast from "react-hot-toast";
 import {AppDelModal} from "../../components";
 
-export function PatientItem({patient}) {
+export const CovenantPatientsItem = ({patient, onRefresh}) => {
   const [show, setShow] = useState(false)
   const [deletePatient, {isLoading}] = useDeletePatientMutation()
 
@@ -27,15 +27,16 @@ export function PatientItem({patient}) {
     ? entrypoint+patient.profile.contentUrl
     : null
 
-  const isCovenantExists = !!patient?.covenant
-
   const toggleModal = () => setShow(!show)
 
   async function onDelete() {
     toggleModal()
     try {
       const data = await deletePatient(patient)
-      if (!data.error) toast.success('Suppression bien efféctuée.', {icon: '😶'})
+      if (!data.error) {
+        toast.success('Suppression bien efféctuée.', {icon: '😶'})
+        onRefresh()
+      }
     }
     catch (e) { toast.error(e.message) }
   }
@@ -58,13 +59,7 @@ export function PatientItem({patient}) {
           </Link>
         </td>
         <td className='text-capitalize'>{sex ? sex : '❓'}</td>
-        <td>{patient?.age ? patient.age.toLocaleString()+' an(s)' : '❓'}</td>
         <td className='text-capitalize'>{maritalStatus ? maritalStatus : '❓'}</td>
-        <td>
-          {isCovenantExists
-            ? <i className='bi bi-check-square-fill text-success'/>
-            : <i className='bi bi-x-square-fill text-primary'/>}
-        </td>
         <td>{patient?.createdAt ? patient.createdAt : '❓'}</td>
         <td>
           <Button type='button' variant='danger' size='sm' onClick={toggleModal} className='w-100' disabled={isLoading}>
