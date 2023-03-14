@@ -46,6 +46,7 @@ export const AddOffice = ({show = false, onHide}) => {
           <InputGroup key={key} className='mb-3' data-aos='fade-in'>
             <Form.Control
               required
+              autoFocus
               name='title'
               value={item.title}
               onChange={(e) => onArrayChange(e, key, offices, setOffices)}

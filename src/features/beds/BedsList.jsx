@@ -49,7 +49,7 @@ const BedItem = ({id, currency}) => {
   return (
     <>
       <Col md={6} lg={4}>
-        <div className='bed'>
+        <div className='bed shadow-sm'>
           <img src={elements[randomImg]} className="img-fluid" alt="" style={style}/>
           <div className='bed-content'>
             <h4>{bed.number}</h4>

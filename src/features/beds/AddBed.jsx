@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {useMemo, useState} from "react";
 import {Button, InputGroup, Modal, Spinner} from "react-bootstrap";
 import PropTypes from "prop-types";
 import {useAddNewBedMutation} from "./bedApiSlice";
@@ -18,12 +18,14 @@ export const AddBed = ({onHide, show = false, currency}) => {
 
   let options, apiErrors = {number: null, cost: null, price: null, bedroom: null}
   if (isBedroomsError) alert('Erreur lors du chargement des chambres !!')
-  else if (isSuccess) options = bedrooms && bedrooms.ids.map(id => {
+  options = useMemo(() => isSuccess && bedrooms ? bedrooms.ids?.map(id => {
+    const bedroom = bedrooms.entities[id]
+    const category = bedroom?.category ? ` (${bedroom.category?.name})` : ''
     return {
-      label: bedrooms.entities[id].number,
-      value: bedrooms.entities[id]['@id'],
+      label: bedroom.number+category,
+      value: bedroom['@id'],
     }
-  })
+  }) : [], [isSuccess, bedrooms])
 
   const currencySymbol1 = <InputGroup.Text disabled className='fw-bold'>{currency && currency.value}</InputGroup.Text>
   const currencySymbol2 = <InputGroup.Text disabled className='fw-bold'>{currency && currency.currency}</InputGroup.Text>

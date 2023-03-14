@@ -1,6 +1,7 @@
 import {memo} from "react";
 import Select from "react-select";
 import makeAnimated from 'react-select/animated';
+import {Form} from "react-bootstrap";
 
 const animatedComponents = makeAnimated()
 
@@ -16,9 +17,11 @@ const AppSelectOptions = (
     onChange,
     value,
     name,
+    label,
   }) => {
   return (
     <>
+      {label && <Form.Label>{label}</Form.Label>}
       <Select
         id={name}
         placeholder={placeholder}

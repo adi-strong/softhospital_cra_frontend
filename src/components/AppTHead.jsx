@@ -2,9 +2,9 @@ import {memo} from "react";
 import PropTypes from "prop-types";
 import {Spinner} from "react-bootstrap";
 
-const AppTHead = ({img, onRefresh, className, isImg = false, items = [], loader = false, isFetching = false}) => {
+const AppTHead = ({img, onRefresh, style = {}, className, isImg = false, items = [], loader = false, isFetching = false}) => {
   return (
-    <thead className={className}>
+    <thead className={className} style={style}>
     <tr>
       {isImg && <th scope='col'>{img}</th>}
       {items && items?.map((item, idx) =>

@@ -16,7 +16,7 @@ const style = {
 const AppBreadcrumb = ({title, links = []}) => {
   return (
     <div className='pagetitle'>
-      <h1>{title ? title : 'Réception'}</h1>
+      <h1>{title ? title : 'Réception (Fiches)'}</h1>
       <nav>
         <ol className='breadcrumb'>
           {title &&

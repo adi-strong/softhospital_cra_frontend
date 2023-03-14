@@ -1,17 +1,21 @@
-import {AppBreadcrumb, AppFloatingAreaField, AppFloatingInputField, AppHeadTitle} from "../../components";
+import {AppBreadcrumb, AppHeadTitle} from "../../components";
 import {useEffect, useState} from "react";
 import {useDispatch} from "react-redux";
 import {onInitSidebarMenu} from "../navigation/navigationSlice";
-import {Button, Card, Col, InputGroup, Row} from "react-bootstrap";
-import {cardTitleStyle} from "../../layouts/AuthLayout";
-import AppInputField from "../../components/forms/AppInputField";
-import {handleChange} from "../../services/handleFormsFieldsServices";
+import {Card, Col, Form, Row} from "react-bootstrap";
+import {ConsultForm1} from "./ConsultForm1";
+import {ConsultForm2} from "./ConsultForm2";
+import {useAddNewConsultationMutation} from "./consultationApiSlice";
+import toast from "react-hot-toast";
+import {useNavigate} from "react-router-dom";
 
 const AddConsultation = () => {
-  const dispatch = useDispatch()
+  const dispatch = useDispatch(), navigate = useNavigate()
+  const [addNewConsultation, {isLoading, isError, error}] = useAddNewConsultationMutation()
 
   const [consultation, setConsultation] = useState({
     comment: '',
+    note: '',
     weight: 0.0,
     temperature: 0.0,
     arterialTension: '',
@@ -19,138 +23,137 @@ const AddConsultation = () => {
     respiratoryFrequency: '',
     oxygenSaturation: '',
     diagnostic: '',
+    file: null,
+    agent: null,
+    appointmentDate: new Date(),
+    patient: null,
+    acts: null,
+    exams: null,
+    treatments: null,
+    bed: null,
   }) // state: consultation's fields
 
+  let apiErrors = {
+    comment: null,
+    weight: null,
+    temperature: null,
+    arterialTension: null,
+    cardiacFrequency: null,
+    respiratoryFrequency: null,
+    oxygenSaturation: null,
+    diagnostic: null,
+    doctor: null,
+    patient: null,
+    exams: null,
+    treatments: null,
+    acts: null,
+    bed: null,
+  }
+
   useEffect(() => {
-    dispatch(onInitSidebarMenu('/treatments/consultations'))
+    dispatch(onInitSidebarMenu('/member/treatments/consultations'))
   }, [dispatch]) // toggle dropdown treatments menu
 
   function onReset() {
     setConsultation({
       comment: '',
+      note: '',
       oxygenSaturation: '',
       respiratoryFrequency: '',
       cardiacFrequency: '',
       arterialTension: '',
       temperature: 0.0,
       weight: 0.0,
+      file: null,
+      agent: null,
+      diagnostic: '',
+      appointmentDate: new Date(),
+      patient: null,
+      treatments: null,
+      acts: null,
+      exams: null,
+      bed: null,
     })
   } // reset local state
 
-  function onSubmit(e) {
+  const canSave = [
+    consultation.file,
+    consultation.patient,
+    consultation.agent,
+    consultation.appointmentDate
+  ].every(Boolean) || !isLoading
+
+  async function onSubmit(e) {
     e.preventDefault()
-    alert('submitted !')
+    apiErrors = {
+      comment: null,
+      weight: null,
+      temperature: null,
+      arterialTension: null,
+      cardiacFrequency: null,
+      respiratoryFrequency: null,
+      oxygenSaturation: null,
+      diagnostic: null,
+      doctor: null,
+      patient: null,
+      exams: null,
+      treatments: null,
+      acts: null,
+      bed: null,
+    }
+
+    if (canSave) {
+      const data = await addNewConsultation(consultation)
+      if (!data?.error) {
+        onReset()
+        toast.success('Opération bien efféctuée.')
+        navigate('/member/treatments/consultations')
+      }
+    }
+    else alert('Veuillez renseigner les champs obligatoires !!!')
   } // handle submit data
+
+  if (isError) {
+    const { violations } = error.data
+    if (violations) {
+      violations.forEach(({ propertyPath, message }) => {
+        apiErrors[propertyPath] = message;
+      });
+    }
+  }
 
   return (
     <>
       <AppHeadTitle title='Nouvelle Consultation' />
-      <AppBreadcrumb title='Nouvelle consultation (Fiche)' />
-      <Row>
-        <Col md={7}>
-          <Card className='border-0'>
-            <Card.Body>
-              <h5 className='card-title' style={cardTitleStyle}>Anamnèse &amp; signes vitaux</h5>
-              <form onSubmit={onSubmit} className='row mt-3'>
-                <Col md={6} className='mb-3'>
-                  <InputGroup>
-                    <span className='input-group-text'>Poids</span>
-                    <AppInputField
-                      autofocus
-                      type='number'
-                      value={consultation.weight}
-                      name='weight'
-                      onChange={(e) => handleChange(e, consultation, setConsultation)}
-                      placeholder='Poids' />
-                    <span className='input-group-text'>Kg</span>
-                  </InputGroup>
-                </Col> {/* Weight */}
-                <Col md={6}>
-                  <InputGroup>
-                    <span className='input-group-text'>T°</span>
-                    <AppInputField
-                      type='number'
-                      value={consultation.temperature}
-                      name='temperature'
-                      onChange={(e) => handleChange(e, consultation, setConsultation)}
-                      placeholder='Température' />
-                    <span className='input-group-text'>Température</span>
-                  </InputGroup>
-                </Col> {/* Temperature */}
-                <Col md={6}>
-                  <AppFloatingInputField
-                    value={consultation.arterialTension}
-                    onChange={(e) => handleChange(e, consultation, setConsultation)}
-                    name='arterialTension'
-                    placeholder='Tension Artérielle (cmHg | mmHg) :'
-                    label='Tension Artérielle (cmHg | mmHg) :' />
-                </Col> {/* Arterial Tension */}
-                <Col md={6}>
-                  <AppFloatingInputField
-                    value={consultation.cardiacFrequency}
-                    onChange={(e) => handleChange(e, consultation, setConsultation)}
-                    name='cardiacFrequency'
-                    placeholder='Fréquence Cardiaque (fcm) :'
-                    label='Fréquence Cardiaque (fcm) :' />
-                </Col> {/* Arterial Tension */}
-                <Col md={6}>
-                  <AppFloatingInputField
-                    value={consultation.respiratoryFrequency}
-                    onChange={(e) => handleChange(e, consultation, setConsultation)}
-                    name='respiratoryFrequency'
-                    placeholder='Fréquence Respiratoire (cpm) :'
-                    label='Fréquence Respiratoire (cpm) :' />
-                </Col> {/* Respiratory Frequency */}
-                <Col md={6}>
-                  <AppFloatingInputField
-                    value={consultation.oxygenSaturation}
-                    onChange={(e) => handleChange(e, consultation, setConsultation)}
-                    name='oxygenSaturation'
-                    placeholder='Saturation en oxygène (o2) :'
-                    label='Saturation en oxygène (o2) :' />
-                </Col> {/* Oxygen Saturation */}
-                <AppFloatingAreaField
-                  rows={150}
-                  name='comment'
-                  value={consultation.comment}
-                  onChange={(e) => handleChange(e, consultation, setConsultation)}
-                  placeholder='Commentaire(s)'
-                  label='Commentaire(s) :' /> {/* Comments */}
+      <AppBreadcrumb title='Nouvelle consultation (Fiche)' links={[
+        {label: 'Liste des consultations', path: '/member/treatments/consultations'}
+      ]} />
 
-                <div className='text-md-center'>
-                  <Button type='submit' className='me-1 mb-1'>
-                    Valider
-                  </Button>
-                  <Button type='button' variant='secondary' className='mb-1' onClick={onReset}>
-                    Effacer
-                  </Button>
-                </div>
-              </form>
-            </Card.Body>
-          </Card>
-        </Col> {/* ********** *  signes vitaux  *********** */}
-        <Col md={5}>
-          <Card className='border-0'>
-            <Card.Body>
-              <h5 className='card-title' style={cardTitleStyle}><i className='bi bi-person-gear'/> Patient(e)</h5>
-            </Card.Body>
-          </Card> {/* Patient */}
-          <Card className='border-0'>
-            <Card.Body>
-              <h5 className='card-title' style={cardTitleStyle}>
-                <i className='bi bi-prescription2'/> Premier(s) soin(s)
-              </h5>
-            </Card.Body>
-          </Card> {/* treatments */}
-          <Card className='border-0'>
-            <Card.Body>
-              <h5 className='card-title' style={cardTitleStyle}>
-                <i className='bi bi-heart-pulse'/> Hospitalisation
-              </h5>
-            </Card.Body>
-          </Card> {/* hospitalization */}
-        </Col> {/* ********** *  other infos  *********** */}
-      </Row>
+      <Form onSubmit={onSubmit}>
+        <Row>
+          <Col md={5}>
+            <ConsultForm2
+              loader={isLoading}
+              onReset={onReset}
+              setConsultation={setConsultation}
+              consultation={consultation}
+              apiErrors={apiErrors}/>
+          </Col>
+
+          <Col>
+            <Card className='border-0'>
+              <Card.Body>
+                <ConsultForm1
+                  loader={isLoading}
+                  onReset={onReset}
+                  setConsultation={setConsultation}
+                  consultation={consultation}
+                  apiErrors={apiErrors}/>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Form>
     </>
   )
 }

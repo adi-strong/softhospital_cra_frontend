@@ -37,7 +37,7 @@ const initialState = {
         {id: 3, label: 'Consultations', path: '/member/treatments/consultations'},
         {id: 3, label: 'Médecin (Rendez-vous)', path: '/member/treatments/appointments'},
         {id: 3, label: 'Laboratoire', path: '/member/treatments/lab'},
-        {id: 3, label: 'Prescription du médecin', path: '/member/treatments/prescription'},
+        {id: 3, label: 'Prescription du médecin', path: '/member/treatments/prescriptions'},
         {id: 3, label: 'Nursing', path: '/member/treatments/nursing'},
       ]
     },

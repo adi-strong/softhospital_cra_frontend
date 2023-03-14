@@ -13,6 +13,7 @@ const AppSelectField = (
     options = [],
     disabled = false,
     required = false,
+    defaultValue = false
   }) => {
   return (
     <div className={`mb-3 ${className}`}>
@@ -23,6 +24,7 @@ const AppSelectField = (
         onChange={onChange}
         disabled={disabled}
         required={required}>
+        {defaultValue && <option value='none'>-- Aucun élément sélectionnée --</option>}
         {options && options.map((option, idx) =>
           <option key={idx} value={option.value}>
             {option.label}

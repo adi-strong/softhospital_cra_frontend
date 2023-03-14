@@ -1,80 +1,55 @@
-import {AppDataTableStripped, AppTHead} from "../../components";
+import {AppDataTableStripped, AppMainError, AppTHead} from "../../components";
+import {useMemo} from "react";
 import {Link} from "react-router-dom";
-import {Button, ButtonGroup} from "react-bootstrap";
-import moment from "moment";
+import {useGetConsultationsQuery} from "./consultationApiSlice";
+import {ConsultationItem} from "./ConsultationItem";
 
-const consultations = [
-  {id: 2, patient: 'Romeo akondjaka', createdAt: '2023-01-07 19:48', isCompleted: false},
-  {id: 1, patient: 'Derrick tukayana', createdAt: '2023-01-08 06:01', isCompleted: true},
+const thead = [
+  {label: '#'},
+  {label: 'Fiche'},
+  {label: 'Patient(e)'},
+  {label: <><i className='bi bi-person'/></>},
+  {label: <><i className='bi bi-calendar-event'/> Date</>},
 ]
 
-const ConsultationItem = ({consultation}) => {
-  return (
-    <>
-      <tr>
-        <td><i className='bi bi-file-medical'/></td>
-        <th scope='row'>{consultation.id}</th>
-        <td className='text-uppercase'>
-          <Link to={`#!`} className='text-decoration-none'>
-            {consultation.patient}
-          </Link>
-        </td>
-        <td><i className='bi bi-dash'/></td>
-        <td><i className='bi bi-x'/></td>
-        <td>{consultation?.createdAt ? moment(consultation.createdAt).calendar() : '-'}</td>
-        <td className='text-md-end'>
-          <ButtonGroup>
-            <Link to={`#!`} className='text-decoration-none btn btn-light p-0 pe-1 px-1' title='Modifier'>
-              <i className='bi bi-pencil'/>
-            </Link>
-            <Button type='button' variant='light' className='p-0 pe-1 px-1' title='Supprimer'>
-              <i className='bi bi-trash text-danger'/>
-            </Button>
-          </ButtonGroup>
-        </td>
-      </tr>
-    </>
-  )
-}
-
 export const ConsultationsList = () => {
-  function onRefresh() {
-  }
+  const {
+    data: consultations = [],
+    isLoading,
+    isFetching,
+    isSuccess,
+    isError,
+    refetch} = useGetConsultationsQuery('Consultations')
+
+
+  let content, errors
+  if (isError) errors = <AppMainError/>
+  content = useMemo(() => (
+    <tbody>
+    {isSuccess && consultations && consultations.map(consult =>
+      <ConsultationItem key={consult.id} consult={consult}/>)}
+    </tbody>
+  ), [isSuccess, consultations])
+
+  const onRefresh = async () => await refetch()
 
   return (
     <>
       <AppDataTableStripped
-        title='Liste de fiches de consultation'
+        loader={isLoading}
+        title='Liste des consultations'
+        thead={<AppTHead isImg loader={isLoading} isFetching={isFetching} onRefresh={onRefresh} items={thead} />}
+        tbody={content}
         overview={
-          <>
-            <p>
-              {consultations.length < 1
-                ? 'Aucun(e) patient(e) enregistré(e).'
-                : <>Il y a au total <code>{consultations.length.toLocaleString()}</code> fiches(s) de consultation :</>}
-            </p>
-            <p>
-              <Link to='/treatments/consultations/add' className={`btn btn-primary mb-1 me-1`}>
-                <i className='bi bi bi-plus-circle-dotted'/> Anamnèse &amp; signes vitaux
-              </Link>
-              <Button type="button" variant='info' className='mb-1' disabled={consultations.length < 1}>
-                <i className='bi bi-printer'/> Impression
-              </Button>
-            </p>
-          </>
-        }
-        thead={<AppTHead isImg onRefresh={onRefresh} items={[
-          {label: '#'},
-          {label: 'Patient(e)'},
-          {label: <i className='bi bi-question-circle'/>},
-          {label: <i className='bi bi-check-square'/>},
-          {label: "Date d'enregistrement"},
-        ]}/>}
-        tbody={
-          <tbody>
-          {consultations && consultations?.map(consultation =>
-            <ConsultationItem key={consultation.id} consultation={consultation}/>)}
-          </tbody>
+          <div className='mt-2'>
+            <Link to='/member/treatments/consultations/add' className='btn btn-primary'>
+              <i className='bi bi-plus me-1'/>
+              Nouvelle consultation
+            </Link>
+          </div>
         } />
+
+      {errors && errors}
     </>
   )
 }

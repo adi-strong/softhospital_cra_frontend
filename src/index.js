@@ -8,6 +8,7 @@ import 'aos/dist/aos.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import 'boxicons/css/boxicons.min.css';
+import 'react-datepicker/dist/react-datepicker.min.css';
 import fr from 'date-fns/locale/fr';
 import moment from "moment";
 import {registerLocale} from "react-datepicker";

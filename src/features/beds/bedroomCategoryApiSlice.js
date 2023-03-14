@@ -41,7 +41,7 @@ export const bedroomCategoryApiSlice = api.injectEndpoints({
         method: 'PATCH',
         body: JSON.stringify({name: category.name}),
       }),
-      invalidatesTags: ['BedroomCategories', 'Bedroom']
+      invalidatesTags: ['BedroomCategories', 'Bedroom', 'Bed']
     }), // update category
 
     deleteBedroomCategory: build.mutation({
@@ -50,7 +50,7 @@ export const bedroomCategoryApiSlice = api.injectEndpoints({
         method: 'DELETE',
         body: id,
       }),
-      invalidatesTags: ['BedroomCategories', 'Bedroom']
+      invalidatesTags: ['BedroomCategories', 'Bedroom', 'Bed']
     }), // delete category
   })
 })

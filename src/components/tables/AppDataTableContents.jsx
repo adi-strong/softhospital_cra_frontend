@@ -14,12 +14,13 @@ const AppDataTableContents = (
     isBorderless = false,
     isHover = false,
     loader = false,
+    isBordered = false,
   }) => {
   return (
     <>
       {title && <h5 className="card-title" style={cardTitleStyle}>{title}</h5>}
       <Row className='mb-3'>{overview && overview}</Row>
-      <Table striped={isStriped} borderless={isBorderless} hover={isHover} responsive>
+      <Table striped={isStriped} borderless={isBorderless} bordered={isBordered} hover={isHover} responsive>
         {thead}
         {!loader && tbody}
       </Table>
@@ -35,6 +36,7 @@ AppDataTableContents.propTypes = {
   overview: PropTypes.any,
   isStriped: PropTypes.bool,
   isBorderless: PropTypes.bool,
+  isBordered: PropTypes.bool,
   isHover: PropTypes.bool,
 }
 

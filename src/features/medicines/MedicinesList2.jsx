@@ -1,19 +1,39 @@
 import {useMemo, useState} from "react";
 import {Button, Card, Col, Form, InputGroup} from "react-bootstrap";
-import {AppDataTableStripped, AppTHead} from "../../components";
+import {AppDataTableBorderless, AppMainError, AppTHead} from "../../components";
 import {handleChange} from "../../services/handleFormsFieldsServices";
+import {useGetDrugstoreListQuery} from "./drugStoreApiSlice";
+import BarLoaderSpinner from "../../loaders/BarLoaderSpinner";
+import {MedicineItem2} from "./MedicineItem2";
 
-const thead = [{label: 'Désignation'}, {label: 'Qté'}, {label: 'P.U.'}]
+const thead = [{label: 'Désignation'}, {label: 'Qté.'}]
 
-export const MedicinesList2 = () => {
+export const MedicinesList2 = ({ onPushNewItem, isLoading = false }) => {
   const [search, setSearch] = useState({keyword: ''})
+  const {
+    data: medicines = [],
+    isLoading: isMedicinesLoading,
+    isFetching,
+    isSuccess,
+    isError,
+    refetch} = useGetDrugstoreListQuery('DrugstoreList')
 
   let content, errors
+  if (isError) errors = <AppMainError/>
   content = useMemo(() => {
-    return <tbody/>
-  }, [])
+    if (isSuccess && medicines) {
+      return (
+        <tbody>{medicines.map(medicine =>
+          <MedicineItem2
+            key={medicine.id}
+            medicine={medicine}
+            onPushNewItem={onPushNewItem}
+            isLoading={isLoading}/>)}</tbody>
+      )
+    }
+  }, [isSuccess, medicines, onPushNewItem, isLoading])
 
-  const onRefresh = async () => {}
+  const onRefresh = async () => await refetch()
 
   async function onSubmit(e) {
     e.preventDefault()
@@ -23,10 +43,9 @@ export const MedicinesList2 = () => {
     <>
       <Card className='border-0'>
         <Card.Body>
-          <AppDataTableStripped
-            loader={false}
+          <AppDataTableBorderless
             title={<><i className='bi bi-capsule'/> Produits</>}
-            thead={<AppTHead isImg loader={false} isFetching={false} onRefresh={onRefresh} items={thead}/>}
+            thead={<AppTHead loader={isMedicinesLoading} isFetching={isFetching} onRefresh={onRefresh} items={thead}/>}
             tbody={content}
             overview={
               <>
@@ -39,7 +58,7 @@ export const MedicinesList2 = () => {
                         name='keyword'
                         value={search.keyword}
                         onChange={(e) => handleChange(e, search, setSearch)} />
-                      <Button type='submit' variant='light'>
+                      <Button type='submit' variant='light' disabled={isLoading || isMedicinesLoading || isFetching}>
                         <i className='bi bi-search'/>
                       </Button>
                     </InputGroup>
@@ -47,6 +66,8 @@ export const MedicinesList2 = () => {
                 </Col>
               </>
             } />
+
+          {isMedicinesLoading && <BarLoaderSpinner loading={isMedicinesLoading}/>}
           {errors && errors}
         </Card.Body>
       </Card>

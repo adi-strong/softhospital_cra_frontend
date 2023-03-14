@@ -12,6 +12,7 @@ export const rolesOptions = [
   {label: 'Médecin', value: 'ROLE_MEDIC'},
   {label: 'Caissier(e)', value: 'ROLE_CASHIER'},
   {label: 'Pharmacien(ne)', value: 'ROLE_DRUGGIST'},
+  {label: 'Laborantin', value: 'ROLE_LAB'},
   {label: 'Réceptioniste', value: 'ROLE_RECEPTIONIST'},
 ]
 

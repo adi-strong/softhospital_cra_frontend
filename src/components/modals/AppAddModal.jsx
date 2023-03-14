@@ -2,11 +2,11 @@ import PropTypes from "prop-types";
 import {Button, Modal, Spinner} from "react-bootstrap";
 import {memo} from "react";
 
-function AppAddModal({show = false, loader = false, onHide, onAdd, children, title}) {
+function AppAddModal({show = false, className = 'bg-light', loader = false, onHide, onAdd, children, title}) {
   return (
     <>
       <Modal show={show} onHide={onHide} backdrop='static' keyboard={false}>
-        <Modal.Header closeButton>
+        <Modal.Header className={className}>
           <Modal.Title>{title ? title : 'Enregistrement'}</Modal.Title>
         </Modal.Header>
         <Modal.Body>{children && children}</Modal.Body>
@@ -27,7 +27,7 @@ AppAddModal.propTypes = {
   onHide: PropTypes.func.isRequired,
   show: PropTypes.bool.isRequired,
   loader: PropTypes.bool,
-  title: PropTypes.string.isRequired,
+  title: PropTypes.any.isRequired,
   onAdd: PropTypes.func.isRequired,
 }
 

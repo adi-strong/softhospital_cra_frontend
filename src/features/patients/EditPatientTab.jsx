@@ -73,22 +73,27 @@ export const EditPatientTab = ({data, isLoading, isError, refetch}) => {
 
   useEffect(() => {
     if (!isLoading && data) {
-      setPatient({
-        id: data.id,
-        name: data?.name,
-        lastName: data?.lastName ? data.lastName : '',
-        firstName: data?.firstName ? data.firstName : '',
-        sex: data?.sex ? data.sex : 'none',
-        mother: data?.mother ? data.mother : '',
-        father: data?.father ? data.father : '',
-        profile: data?.profile ? data.profile : null,
-        email: data?.email ? data.email : '',
-        maritalStatus: data?.maritalStatus ? data.maritalStatus : 'none',
-        birthDate: data?.birthDate ? data.birthDate.substring(0, 10) : '',
-        address: data?.address ? data.address : '',
-        tel: data?.tel ? data.tel : '',
-        birthPlace: data?.birthPlace ? data.birthPlace : '',
-        nationality: data?.nationality ? data.nationality : '',
+      const sex = data?.sex ? data.sex : 'none';
+
+      setPatient(prevState => {
+        return {
+          ...prevState,
+          sex: sex,
+          id: data.id,
+          name: data?.name,
+          lastName: data?.lastName ? data.lastName : '',
+          firstName: data?.firstName ? data.firstName : '',
+          mother: data?.mother ? data.mother : '',
+          father: data?.father ? data.father : '',
+          profile: data?.profile ? data.profile : null,
+          email: data?.email ? data.email : '',
+          maritalStatus: data?.maritalStatus ? data.maritalStatus : 'none',
+          birthDate: data?.birthDate ? data.birthDate.substring(0, 10) : '',
+          address: data?.address ? data.address : '',
+          tel: data?.tel ? data.tel : '',
+          birthPlace: data?.birthPlace ? data.birthPlace : '',
+          nationality: data?.nationality ? data.nationality : '',
+        }
       })
     }
   }, [isLoading, data]) // get patient's data

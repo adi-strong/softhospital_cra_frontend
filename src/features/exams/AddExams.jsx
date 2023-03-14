@@ -86,7 +86,7 @@ export const AddExams = ({onHide, show = false, currency}) => {
             onChange={(e) => onSelectAsyncOption(e, setCategory)}
             placeholder='Catégorie...' />
           {exams && exams?.map((exam, idx) =>
-            <Row key={idx} className='mb-3' data-aos='fade-in'>
+            <Row key={idx} data-aos='fade-in'>
               <Col md={6}>
                 <InputGroup>
                   <AppSInputField

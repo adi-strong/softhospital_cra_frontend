@@ -28,7 +28,7 @@ export const handleChange = (event, state, setState) => {
  */
 export const onStrictNumChange = (event, state, setState) => {
   const target = event.target
-  const value = target.value > 0 && !isNaN(target.value) ? parseFloat(target.value) : 0
+  const value = target.value > 0 && !isNaN(target.value) ? parseFloat(target.value) : 1
   setState({...state, [target.name]: value})
 }
 

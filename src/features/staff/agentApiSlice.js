@@ -62,6 +62,28 @@ export const agentApiSlice = api.injectEndpoints({
       },
       providesTags: (result, error, arg) => [{type: 'Agents', id: arg}],
     }), // Get single agent
+
+    handleLoadAgents: build.query({
+      query: keyword => pathToApi+`/agents?fullName=${keyword}`,
+      transformResponse: res => {
+        return res['hydra:member']?.map(agent => {
+          const name = agent?.name
+          const lastName = agent?.lastName ? agent.lastName : ''
+          const firstName = agent?.firstName ? agent.firstName : ''
+
+          const office = agent?.office ? `(${agent.office?.title})` : ''
+
+          const label = `${name} ${lastName} ${firstName} ${office}`
+
+          return {
+            label,
+            value: agent['@id'],
+            id: agent?.id,
+          }
+
+        })
+      },
+    }),
   })
 })
 
@@ -71,4 +93,5 @@ export const {
   useAddNewAgentMutation,
   useUpdateAgentMutation,
   useDeleteAgentMutation,
+  useLazyHandleLoadAgentsQuery,
 } = agentApiSlice

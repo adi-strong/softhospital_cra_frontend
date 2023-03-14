@@ -54,6 +54,20 @@ export const bedApiSlice = api.injectEndpoints({
       }),
       invalidatesTags: ['Bed']
     }), // delete bed
+
+    loadBeds: build.query({
+      query: keyword => pathToApi+`/beds?number=${keyword}`,
+      transformResponse: res => {
+        return res['hydra:member']?.map(bed => {
+          return {
+            id: bed?.id,
+            label: bed?.number,
+            value: bed['@id'],
+            data: bed,
+          }
+        })
+      },
+    }),
   })
 })
 
@@ -62,4 +76,5 @@ export const {
   useAddNewBedMutation,
   useUpdateBedMutation,
   useDeleteBedMutation,
+  useLazyLoadBedsQuery,
 } = bedApiSlice

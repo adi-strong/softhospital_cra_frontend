@@ -13,6 +13,8 @@ export const medicineApiSlice = api.injectEndpoints({
         return data.map(medicine => {
           if (medicine?.createdAt)
             medicine.createdAt = moment(medicine.createdAt).calendar()
+          if (medicine?.expiryDate) medicine.expiryDate = moment(medicine.expiryDate).calendar()
+          if (medicine?.released) medicine.released = moment(medicine.released).calendar()
 
           return medicine
         })
@@ -23,13 +25,19 @@ export const medicineApiSlice = api.injectEndpoints({
           : ['Drugstore']
     }), // list of medicines
 
-    addNeMedicine: build.mutation({
+    addNewMedicine: build.mutation({
       query: medicine => ({
         url: pathToApi+'/medicines',
         method: 'POST',
-        body: medicine,
+        body: {...medicine,
+          cost: medicine?.cost ? medicine.cost.toString() : '0',
+          price: medicine?.price ? medicine.price.toString() : '0',
+          category: medicine?.category ? medicine.category.value : null,
+          subCategory: medicine?.subCategory ? medicine.subCategory.value : null,
+          consumptionUnit: medicine?.consumptionUnit ? medicine.consumptionUnit.value : null,
+        },
       }),
-      invalidatesTags: ['Drugstore']
+      invalidatesTags: ['Drugstore', 'DrugstoreList']
     }), // add new medicine
 
     updateMedicine: build.mutation({
@@ -37,9 +45,17 @@ export const medicineApiSlice = api.injectEndpoints({
         headers: patchHeaders,
         url: pathToApi+`/medicines/${medicine.id}`,
         method: 'PATCH',
-        body: JSON.stringify({wording: medicine.wording}),
+        body: JSON.stringify({
+          wording: medicine?.wording,
+          code: medicine?.code ? medicine.code : null,
+          cost: medicine?.cost ? medicine.cost.toString() : '0',
+          price: medicine?.price ? medicine.price.toString() : '0',
+          category: medicine?.category ? medicine.category.value : null,
+          subCategory: medicine?.subCategory ? medicine.subCategory.value : null,
+          consumptionUnit: medicine?.consumptionUnit ? medicine.consumptionUnit.value : null,
+        }),
       }),
-      invalidatesTags: ['Drugstore']
+      invalidatesTags: ['Drugstore', 'DrugstoreList']
     }), // update medicine
 
     deleteMedicine: build.mutation({
@@ -49,14 +65,67 @@ export const medicineApiSlice = api.injectEndpoints({
         method: 'PATCH',
         body: JSON.stringify({ isDeleted: true }),
       }),
-      invalidatesTags: ['Drugstore']
+      invalidatesTags: ['Drugstore', 'DrugstoreList']
     }), // delete medicine
+
+    handleLoadMedicinesOptions: build.query({
+      query: keyword => pathToApi+`/medicines?wording=${keyword}`,
+      transformResponse: res => res['hydra:member']?.map(medicine => {
+        return {
+          id: medicine.id,
+          quantity: medicine.quantity,
+          cost: parseFloat(medicine.cost),
+          price: parseFloat(medicine.price),
+          code: medicine?.code ? medicine.code : '-- --',
+          label: medicine?.wording,
+          value: medicine['@id'],
+        }
+      })
+    }), // get medicines options
+
+    handleLoadMedicinesCodesOptions: build.query({
+      query: keyword => pathToApi+`/medicines?code=${keyword}`,
+      transformResponse: res => res['hydra:member']?.map(medicine => {
+        return {
+          id: medicine.id,
+          quantity: medicine.quantity,
+          cost: parseFloat(medicine.cost),
+          price: parseFloat(medicine.price),
+          wording: medicine.wording,
+          label: medicine.code,
+          value: medicine['@id'],
+        }
+      })
+    }), // get medicines options
+
+    onPostMedicineSales: build.mutation({
+      query: data => ({
+        url: pathToApi+`/medicine_invoices`,
+        method: 'POST',
+        body: {
+          amount: data?.amount.toString(),
+          discount: data?.discount > 0 ? data.discount : null,
+          currency: data?.currency ? data.currency.value : null,
+          values: data?.values ? data.values?.map(item => {
+            return {
+              id: item?.id,
+              quantity: item?.quantity,
+              price: item?.price.toString(),
+            }
+          }) : null
+        }
+      }),
+      invalidatesTags: ['Drugstore', 'DrugstoreList', 'Box'],
+    })
   })
 })
 
 export const {
   useGetMedicinesQuery,
-  useAddNeMedicineMutation,
+  useAddNewMedicineMutation,
   useUpdateMedicineMutation,
   useDeleteMedicineMutation,
+  useLazyHandleLoadMedicinesOptionsQuery,
+  useLazyHandleLoadMedicinesCodesOptionsQuery,
+  useOnPostMedicineSalesMutation,
 } = medicineApiSlice

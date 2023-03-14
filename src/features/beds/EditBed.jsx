@@ -1,4 +1,4 @@
-import {useEffect, useState} from "react";
+import {useEffect, useState, useMemo} from "react";
 import {useUpdateBedMutation} from "./bedApiSlice";
 import {useGetBedroomsQuery, useLazyHandleLoadBedroomsQuery} from "./bedroomApiSlice";
 import {Button, InputGroup, Modal, Spinner} from "react-bootstrap";
@@ -16,27 +16,36 @@ export const EditBed = ({show, onHide, data, currency}) => {
     isError: isBedroomsError} = useGetBedroomsQuery('Bedroom')
 
   useEffect(() => {
-    if (data) setBed(prevState => {
-      return {
-        id: data.id,
-        number: data.number,
-        cost: data?.cost ? data.cost : 0,
-        price: data?.price ? data.price : 0,
-        bedroom: data?.bedroom
-          ? {label: data.bedroom.number, value: data.bedroom['@id']}
-          : null,
-      }
-    })
+    if (data) {
+      const category = data?.bedroom
+        ? data.bedroom?.category
+          ? data.bedroom.category?.name
+          : ''
+        : ''
+      setBed(prevState => {
+        return {
+          id: data.id,
+          number: data.number,
+          cost: data?.cost ? data.cost : 0,
+          price: data?.price ? data.price : 0,
+          bedroom: data?.bedroom
+            ? {label: `${data.bedroom.number} (${category})`, value: data.bedroom['@id']}
+            : null,
+        }
+      })
+    }
   }, [data])
 
   let options, apiErrors = {number: null, cost: null, price: null, bedroom: null}
   if (isBedroomsError) alert('Erreur lors du chargement des chambres !!')
-  else if (isSuccess) options = bedrooms && bedrooms.ids.map(id => {
+  options = useMemo(() => isSuccess && bedrooms ? bedrooms.ids?.map(id => {
+    const bedroom = bedrooms.entities[id]
+    const category = bedroom?.category ? ` (${bedroom.category?.name})` : ''
     return {
-      label: bedrooms.entities[id].number,
-      value: bedrooms.entities[id]['@id'],
+      label: bedroom.number+category,
+      value: bedroom['@id'],
     }
-  })
+  }) : [], [isSuccess, bedrooms])
 
   const currencySymbol1 = <InputGroup.Text disabled className='fw-bold'>{currency && currency.value}</InputGroup.Text>
   const currencySymbol2 = <InputGroup.Text disabled className='fw-bold'>{currency && currency.currency}</InputGroup.Text>

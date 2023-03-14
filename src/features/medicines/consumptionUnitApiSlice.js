@@ -21,7 +21,7 @@ export const consumptionUnitApiSlice = api.injectEndpoints({
           : ['ConsumptionUnits']
     }), // list of consumption units
 
-    addNeConsumptionUnit: build.mutation({
+    addNewConsumptionUnit: build.mutation({
       query: consumptionUnit => ({
         url: pathToApi+'/consumption_units',
         method: 'POST',
@@ -68,8 +68,8 @@ export const consumptionUnitApiSlice = api.injectEndpoints({
 
 export const {
   useGetConsumptionUnitsQuery,
-  addNeConsumptionUnitMutation,
-  updateConsumptionUnitMutation,
-  deleteConsumptionUnitMutation,
+  useAddNewConsumptionUnitMutation,
+  useUpdateConsumptionUnitMutation,
+  useDeleteConsumptionUnitMutation,
   useLazyHandleGetConsumptionUnitsOptionsQuery,
 } = consumptionUnitApiSlice

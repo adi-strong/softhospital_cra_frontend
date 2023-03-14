@@ -54,6 +54,21 @@ export const examApiSlice = api.injectEndpoints({
       }),
       invalidatesTags: ['Exam']
     }), // delete exam
+
+    handleLoadExams: build.query({
+      query: keyword => pathToApi+`/exams?wording=${keyword}`,
+      transformResponse: res => {
+        return res['hydra:member']?.map(exam => {
+
+          return {
+            id: exam?.id,
+            label: exam?.wording,
+            value: exam['@id'],
+          }
+
+        })
+      },
+    }),
   })
 })
 
@@ -62,4 +77,5 @@ export const {
   useAddNewExamMutation,
   useUpdateExamMutation,
   useDeleteExamMutation,
+  useLazyHandleLoadExamsQuery,
 } = examApiSlice

@@ -54,10 +54,26 @@ export const treatmentApiSlice = api.injectEndpoints({
       }),
       invalidatesTags: ['Treatment']
     }), // delete treatment
+
+    handleLoadTreatments: build.query({
+      query: keyword => pathToApi+`/treatments?wording=${keyword}`,
+      transformResponse: res => {
+        return res['hydra:member']?.map(treatment => {
+
+          return {
+            id: treatment?.id,
+            label: treatment?.wording,
+            value: treatment['@id'],
+          }
+
+        })
+      },
+    }),
   })
 })
 
 export const {
+  useLazyHandleLoadTreatmentsQuery,
   useGetTreatmentsQuery,
   useAddNewTreatmentMutation,
   useUpdateTreatmentMutation,

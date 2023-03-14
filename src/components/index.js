@@ -22,8 +22,20 @@ import AppSelectOptions from "./forms/AppSelectOptions";
 import AppMainError from "./AppMainError";
 import AppLgModal from "./modals/AppLgModal";
 import AppFloatingSelectField from "./forms/AppFloatingSelectField";
+import AppInputGroupField from "./forms/AppInputGroupField";
+import AppModal from "./modals/AppModal";
+import AppDataTableBordered from "./tables/AppDataTableBordered";
+import AppDatePicker from "./forms/AppDatePicker";
+import AppFloatingTextAreaField from "./forms/AppFloatingTextAreaField";
+import AppRichText from "./forms/AppRichText";
 
 export {
+  AppRichText,
+  AppFloatingTextAreaField,
+  AppDatePicker,
+  AppDataTableBordered,
+  AppModal,
+  AppInputGroupField,
   AppFloatingSelectField,
   AppLgModal,
   AppMainError,

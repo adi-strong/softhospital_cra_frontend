@@ -14,9 +14,10 @@ const AppLgModal = ({show = false, loader = false, onHide, onClick, title, child
           <Button type='button' variant='light' disabled={loader} onClick={onHide}>
             <i className='bi bi-x'/> Fermer
           </Button>
-          <Button type='button' disabled={loader} onClick={onClick}>
-            {loader ? <>Veuillez patienter <Spinner animation='border' size='sm'/></> : 'Valider'}
-          </Button>
+          {onClick &&
+            <Button type='button' disabled={loader} onClick={onClick}>
+              {loader ? <>Veuillez patienter <Spinner animation='border' size='sm'/></> : 'Valider'}
+            </Button>}
         </Modal.Footer>
       </Modal>
     </>
@@ -28,7 +29,7 @@ AppLgModal.propTypes = {
   className: PropTypes.string,
   show: PropTypes.bool.isRequired,
   onHide: PropTypes.func.isRequired,
-  onClick: PropTypes.func.isRequired,
+  onClick: PropTypes.func,
 }
 
 export default memo(AppLgModal)

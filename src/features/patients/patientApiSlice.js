@@ -84,6 +84,27 @@ export const patientApiSlice = api.injectEndpoints({
       },
       providesTags: (result, error, arg) => [{type: 'CovenantPatients', id: arg}]
     }), // covenant's patients
+
+    handleLoadPatients: build.query({
+      query: keyword => pathToApi+`/patients?fullName=${keyword}`,
+      transformResponse: res => {
+        return res['hydra:member']?.map(patient => {
+          const name = patient?.name
+          const lastName = patient?.lastName ? patient.lastName : ''
+          const firstName = patient?.firstName ? patient.firstName : ''
+
+          const label = `${name} ${lastName} ${firstName}`
+
+          return {
+            label,
+            value: patient['@id'],
+            id: patient?.id,
+            data: patient,
+          }
+
+        })
+      },
+    }),
   })
 })
 
@@ -94,4 +115,5 @@ export const {
   useDeletePatientMutation,
   useGetSinglePatientQuery,
   useGetCovenantPatientsQuery,
+  useLazyHandleLoadPatientsQuery,
 } = patientApiSlice

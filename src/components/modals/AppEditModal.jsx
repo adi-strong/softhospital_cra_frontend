@@ -2,11 +2,11 @@ import {memo} from "react";
 import PropTypes from "prop-types";
 import {Button, Modal, Spinner} from "react-bootstrap";
 
-const AppEditModal = ({show = false, loader = false, onHide, onEdit, children, title}) => {
+const AppEditModal = ({show = false, loader = false, onHide, onEdit, children, title, size = ''}) => {
   return (
     <>
-      <Modal show={show} onHide={onHide} backdrop='static' keyboard={false}>
-        <Modal.Header className='bg-primary text-light' closeButton>
+      <Modal show={show} onHide={onHide} backdrop='static' keyboard={false} size={size}>
+        <Modal.Header className='bg-primary text-light'>
           <Modal.Title>
             <i className='bi bi-pencil-square me-1'/>
             {title ? title : 'Modification'}

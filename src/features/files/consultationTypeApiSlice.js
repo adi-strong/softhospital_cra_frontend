@@ -53,6 +53,18 @@ export const consultationTypeApiSlice = api.injectEndpoints({
       }),
       invalidatesTags: ['ConsultationType']
     }), // delete consultation's types
+
+    handleLoadConsultTypes: build.query({
+      query: keyword => pathToApi+`/consultations_types?wording=${keyword}`,
+      transformResponse: res => {
+        return res['hydra:member']?.map(file => {
+          return {
+            label: file?.wording,
+            value: file['@id'],
+          }
+        })
+      }
+    }),
   })
 })
 
@@ -61,4 +73,5 @@ export const {
   useDeleteConsultationTypeMutation,
   useAddNewConsultationTypeMutation,
   useUpdateConsultationTypeMutation,
+  useLazyHandleLoadConsultTypesQuery,
 } = consultationTypeApiSlice

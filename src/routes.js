@@ -34,7 +34,18 @@ const
   MedicineCategories = lazy(() => import('./features/medicines/medicineCategories')),
   DrugStore = lazy(() => import('./features/medicines/drugStore')),
   Providers = lazy(() => import('./features/medicines/providers')),
-  MedicinesInvoicing = lazy(() => import('./features/medicines/medicinesInvoicing'))
+  MedicinesInvoicing = lazy(() => import('./features/medicines/medicinesInvoicing')),
+  DrugstoreSupply = lazy(() => import('./features/medicines/drugstoreSupply')),
+  MedicineInvoices = lazy(() => import('./features/invoices/medicineInvoices')),
+  PrintingMedicineInvoice = lazy(() => import('./features/printing/medicineInvoice/printingMedicineInvoice')),
+  EditConsultation = lazy(() => import('./features/appointments/editConsultation')),
+  LabResultsPage = lazy(() => import('./features/lab/labShowResultsPage')),
+  LabEditResultsPage = lazy(() => import('./features/lab/labEditResultsPage')),
+  Prescriptions = lazy(() => import('./features/prescriptions/prescriptions')),
+  EditPrescriptionPage = lazy(() => import('./features/prescriptions/editPrescriptionPage')),
+  Nursing = lazy(() => import('./features/nursing/nursing')),
+  SingleNursingPage = lazy(() => import('./features/nursing/singleNursingPage')),
+  EditNursingPage = lazy(() => import('./features/nursing/editNursingPage'))
 
 const routes = [
   {
@@ -77,8 +88,17 @@ const routes = [
     outlets: [
       {path: 'consultations', element: <Consultations/>},
       {path: 'consultations/add', element: <AddConsultation/>},
+      {path: 'consultations/:id/:slug', element: <Consultations/>},
+      {path: 'consultations/edit/:id/:slug', element: <EditConsultation/>},
       {path: 'appointments', element: <Appointments/>},
       {path: 'lab', element: <Lab/>},
+      {path: 'lab/:id/show', element: <LabResultsPage/>},
+      {path: 'lab/:id/edit', element: <LabEditResultsPage/>},
+      {path: 'prescriptions', element: <Prescriptions/>},
+      {path: 'prescriptions/:id/edit', element: <EditPrescriptionPage/>},
+      {path: 'nursing', element: <Nursing/>},
+      {path: 'nursing/:id/show', element: <SingleNursingPage/>},
+      {path: 'nursing/:id/edit', element: <EditNursingPage/>},
     ]
   },
   // End TREATMENTS *************************************************************************
@@ -127,6 +147,9 @@ const routes = [
       {path: 'categories', element: <MedicineCategories/>},
       {path: 'providers', element: <Providers/>},
       {path: 'sales', element: <MedicinesInvoicing/>},
+      {path: 'supply', element: <DrugstoreSupply/>},
+      {path: 'invoices', element: <MedicineInvoices/>},
+      {path: 'medicine-invoice/:id/:invoiceNumber', element: <PrintingMedicineInvoice/>},
     ]
   },
   // End MEDICINES *************************************************************************

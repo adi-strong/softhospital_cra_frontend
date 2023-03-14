@@ -1305,3 +1305,26 @@ h6 {
   background: #e60000;
   color: #fff;
 }
+
+#printing-body .printing-header {
+  margin: auto;
+  width: 90%;
+  padding-top: 50px;
+}
+
+#printing-body .printing-content {
+  width: 90%;
+  margin: auto;
+  position: relative;
+  top: 70px;
+}
+
+#lab-results {
+  background: url("../img/microscopic.jpg") no-repeat center;
+  -webkit-background-size: cover;
+  -o-background-size: cover;
+  -moz-background-size: cover;
+  background-size: cover;
+  border-radius: 6px 6px 0 0;
+  filter: alpha(opacity=40);
+}

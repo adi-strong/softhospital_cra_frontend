@@ -29,7 +29,7 @@ export function usernameFiltered(str: string) {
         break
     }
 
-    if (splitStr.length > 0)
+    if (splitStr && splitStr.length > 0)
       return str.substring(0, 1)+'. '+str.split(' ')[1]
     else return str
   }

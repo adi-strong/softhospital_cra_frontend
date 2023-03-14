@@ -21,7 +21,7 @@ export const medicineCategoriesApiSlice = api.injectEndpoints({
           : ['MedicineCategories']
     }), // list of medicine's categories
 
-    addNeMedicineCategory: build.mutation({
+    addNewMedicineCategory: build.mutation({
       query: medicineCategory => ({
         url: pathToApi+'/medicine_categories',
         method: 'POST',
@@ -53,7 +53,7 @@ export const medicineCategoriesApiSlice = api.injectEndpoints({
 
 export const {
   useGetMedicineCategoriesQuery,
-  useAddNeMedicineCategoryMutation,
+  useAddNewMedicineCategoryMutation,
   useUpdateMedicineCategoryMutation,
   useDeleteMedicineCategoryMutation,
 } = medicineCategoriesApiSlice

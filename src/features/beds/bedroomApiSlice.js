@@ -60,8 +60,9 @@ export const bedroomApiSlice = api.injectEndpoints({
       transformResponse: res => {
         const data = res['hydra:member']
         return data.map(bedroom => {
+          const category = data?.category ? ` (${data.category?.name})` : ''
           return {
-            label: bedroom.number,
+            label: bedroom.number+category,
             value: bedroom['@id'],
           }
         })

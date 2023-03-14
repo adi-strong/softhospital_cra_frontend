@@ -54,6 +54,21 @@ export const actApiSlice = api.injectEndpoints({
       }),
       invalidatesTags: ['Act']
     }), // delete act
+
+    handleLoadActs: build.query({
+      query: keyword => pathToApi+`/acts?wording=${keyword}`,
+      transformResponse: res => {
+        return res['hydra:member']?.map(act => {
+
+          return {
+            id: act?.id,
+            label: act?.wording,
+            value: act['@id'],
+          }
+
+        })
+      },
+    }),
   })
 })
 
@@ -62,4 +77,5 @@ export const {
   useAddNewActMutation,
   useUpdateActMutation,
   useDeleteActMutation,
+  useLazyHandleLoadActsQuery
 } = actApiSlice

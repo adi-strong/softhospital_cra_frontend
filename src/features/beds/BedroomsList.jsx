@@ -42,7 +42,7 @@ const BedroomItem = ({id}) => {
   return (
     <>
       <Col key={bedroom.id} md={6} lg={4}>
-        <div className='bed' style={{ height: 352 }}>
+        <div className='bed shadow-sm' style={{ height: 352 }}>
           <img src={elements[randomImg]} className="img-fluid" alt="" style={style}/>
           <div className='bed-content'>
             <h4>{bedroom.number}</h4>

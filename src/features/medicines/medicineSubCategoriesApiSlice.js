@@ -23,7 +23,7 @@ export const medicineSubCategoriesApiSlice = api.injectEndpoints({
           : ['MedicineSubCategories']
     }), // list of medicine's sub-categories
 
-    addNeMedicineSubCategory: build.mutation({
+    addNewMedicineSubCategory: build.mutation({
       query: medicineSubCategory => ({
         url: pathToApi+'/medicine_sub_categories',
         method: 'POST',
@@ -37,7 +37,7 @@ export const medicineSubCategoriesApiSlice = api.injectEndpoints({
         headers: patchHeaders,
         url: pathToApi+`/medicine_sub_categories/${medicineSubCategory.id}`,
         method: 'PATCH',
-        body: JSON.stringify({wording: medicineSubCategory.wording}),
+        body: JSON.stringify(medicineSubCategory),
       }),
       invalidatesTags: ['MedicineSubCategories', 'Drugstore']
     }), // update medicine's sub-category
@@ -50,12 +50,27 @@ export const medicineSubCategoriesApiSlice = api.injectEndpoints({
       }),
       invalidatesTags: ['MedicineSubCategories', 'Drugstore']
     }), // delete medicine's sub-category
+
+    handleLoadSubCategoriesOptions: build.query({
+      query: id => pathToApi+`/medicine_categories/${id}/sub_categories`,
+      transformResponse: res => {
+        return res['hydra:member']
+          ? res['hydra:member']?.map(subCategory => {
+            return {
+              label: subCategory?.wording,
+              value: subCategory['@id'],
+            }
+          })
+          : []
+      }
+    })
   })
 })
 
 export const {
   useGetMedicineSubCategoriesQuery,
-  useAddNeMedicineSubCategoryMutation,
+  useAddNewMedicineSubCategoryMutation,
   useUpdateMedicineSubCategoryMutation,
   useDeleteMedicineSubCategoryMutation,
+  useLazyHandleLoadSubCategoriesOptionsQuery,
 } = medicineSubCategoriesApiSlice

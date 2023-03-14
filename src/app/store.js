@@ -7,7 +7,7 @@ import parametersReducer from '../features/parameters/parametersSlice';
 export const entrypoint = 'https://localhost:8000'
 export const pathToApi = '/api'
 export const patchHeaders = {
-  'Accept': 'application/json',
+  'Accept': 'application/ld+json',
   'Content-Type': 'application/merge-patch+json',
 }
 
@@ -61,9 +61,26 @@ export const api = createApi({
     'Patient',
     'SinglePatient',
     'Drugstore',
+    'DrugstoreList',
     'ConsumptionUnits',
     'MedicineCategories',
     'MedicineSubCategories',
+    'Providers',
+    'DrugstoreInvoices',
+    'MedicineInvoices',
+    'SingleMedicineInvoice',
+    'Consultations',
+    'SingleConsultation',
+    'Invoices',
+    'Lab',
+    'SingleLab',
+    'Nursing',
+    'SingleNursing',
+    'Prescription',
+    'SinglePrescription',
+    'Appointments',
+    'Orders',
+    'SingleOrder',
   ],
   endpoints: build => ({}),
 })
