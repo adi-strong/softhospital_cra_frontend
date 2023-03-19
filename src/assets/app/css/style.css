@@ -1328,3 +1328,17 @@ h6 {
   border-radius: 6px 6px 0 0;
   filter: alpha(opacity=40);
 }
+
+.nursing-form-items:nth-child(odd) {
+  padding-top: 25px;
+  padding-left: 10px;
+  padding-right: 10px;
+  background: #f8eaed;
+}
+
+.nursing-form-items:nth-child(even) {
+  padding-top: 25px;
+  padding-left: 10px;
+  padding-right: 10px;
+  background: #eae8e8;
+}

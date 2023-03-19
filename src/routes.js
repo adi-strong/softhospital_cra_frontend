@@ -28,6 +28,7 @@ const
   AddAgent = lazy(() => import('./features/staff/addAgent')),
   EditAgent = lazy(() => import('./features/staff/editAgent')),
   Invoices = lazy(() => import('./features/finance/invoices')),
+  SingleInvoice = lazy(() => import('./features/invoices/singleInvoice')),
   Expenses = lazy(() => import('./features/finance/expenses')),
   Entries = lazy(() => import('./features/finance/entries')),
   Outputs = lazy(() => import('./features/finance/outputs')),
@@ -132,6 +133,7 @@ const routes = [
     path: '/member/finance/',
     outlets: [
       {path: 'invoices', element: <Invoices/>},
+      {path: 'invoices/:id/view', element: <SingleInvoice/>},
       {path: 'expenses', element: <Expenses/>},
       {path: 'entries', element: <Entries/>},
       {path: 'outputs', element: <Outputs/>},

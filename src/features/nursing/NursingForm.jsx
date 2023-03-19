@@ -1,6 +1,6 @@
-import {Badge, Button, Card, Col, Form, Row, Spinner} from "react-bootstrap";
+import {Button, ButtonGroup, Card, Col, Form, Row, Spinner} from "react-bootstrap";
 import {useEffect, useMemo, useState} from "react";
-import {AppFloatingTextAreaField, AppMainError} from "../../components";
+import {AppAsyncSelectOptions, AppDatePicker, AppFloatingTextAreaField, AppMainError} from "../../components";
 import {handleChange} from "../../services/handleFormsFieldsServices";
 import {cardTitleStyle} from "../../layouts/AuthLayout";
 import PatientInfos from "../patients/PatientInfos";
@@ -8,18 +8,22 @@ import BarLoaderSpinner from "../../loaders/BarLoaderSpinner";
 import {Link, useNavigate} from "react-router-dom";
 import {useUpdateNursingMutation} from "./nursingApiSlice";
 import toast from "react-hot-toast";
-import {useGetTreatmentsQuery} from "../treatments/treatmentApiSlice";
-import {NurseTreatmentItem} from "./NurseTreatmentItem";
+import {useGetTreatmentsQuery, useLazyHandleLoadTreatmentsQuery} from "../treatments/treatmentApiSlice";
 import img from '../../assets/app/img/medic_3.jpg';
+import AppInputField from "../../components/forms/AppInputField";
+import {requiredField} from "../covenants/addCovenant";
 
 export function NursingForm({ data, onRefresh, isError = false, loader = false}) {
   const navigate = useNavigate()
+  const [treatments, setTreatments] = useState([])
   const [nursing, setNursing] = useState({
-    treatments: [{wording: 'Libellé', content: null}],
+    treatments: [{treatment: null, medicines: [{medicine: '', dosage: ''}]}],
     comment: '',
-    isCompleted: false
+    arrivedAt: new Date(),
+    leaveAt: new Date(),
   })
   const [updateNursing, {isLoading}] = useUpdateNursingMutation()
+  const [handleLoadTreatments] = useLazyHandleLoadTreatmentsQuery()
   const {data: items = [], isFetching, isSuccess, isError: isItemsError, refetch} = useGetTreatmentsQuery('Treatment')
 
   useEffect(() => {
@@ -29,18 +33,25 @@ export function NursingForm({ data, onRefresh, isError = false, loader = false})
         return {
           ...prev,
           comment: data?.comment ? data.comment : '',
-          isCompleted: data?.isCompleted ? data.isCompleted : false,
         }
       })
     }
   }, [loader, data, navigate])
 
-  let treatments, options
-  treatments = useMemo(() => !loader && data && data?.nursingTreatments
-    ? data.nursingTreatments?.map(t => {
-      return { id: t?.treatment.id, label: t?.treatment.wording }
-    })
-    : null, [loader, data])
+  let options
+
+  useEffect(() => {
+    if (!loader && data && data?.nursingTreatments) {
+      const values = data?.nursingTreatments?.map(t => {
+        return {
+          id: t?.treatment.id,
+          label: t?.treatment.wording,
+          medicines: [{medicine: '', dosage: ''}]
+        }
+      })
+      setTreatments(values)
+    }
+  }, [loader, data]) // handle get first's treatments
 
   if (isError) alert('ERREUR: Erreur lors du chargement du traitement !!!')
   if (isItemsError) alert('ERREUR: Erreur lors du chargement des traitements !!!')
@@ -59,7 +70,9 @@ export function NursingForm({ data, onRefresh, isError = false, loader = false})
 
   const onRefetch = async () => await refetch()
 
-  const onLoadTreatments = keyword => {
+  const onLoadTreatments = async keyword => {
+    const treatData = await handleLoadTreatments(keyword).unwrap()
+    if (!treatData.error) return treatData
   }
 
   const onRemoveNursingItem = (index) => {
@@ -71,14 +84,54 @@ export function NursingForm({ data, onRefresh, isError = false, loader = false})
   const onAddNursingItem = () => setNursing(prev => {
     return {
       ...prev,
-      treatments: [...prev.treatments, {wording: 'Libellé', content: null}]
+      treatments: [...prev.treatments, {treatment: null, medicines: [{medicine: '', dosage: ''}]}]
     }
   })
 
   const onChangeNursingItem = (event, index) => {
     const values = [...nursing.treatments]
-    values[index]['content'] = event
+    values[index]['treatment'] = event
     setNursing({...nursing, treatments: values})
+  }
+
+  const onAddNursingMedItems = (index) => {
+    const values = [...nursing.treatments]
+    values[index]['medicines'] = [...values[index]?.medicines, {medicine: '', dosage: ''}]
+    setNursing({...nursing, treatments: values})
+  }
+
+  const onRemoveNursingMedItems = (index, index2) => {
+    const values = [...nursing.treatments]
+    values[index]['medicines'].splice(index2, 1)
+    setNursing({...nursing, treatments: values})
+  }
+
+  const handleChangeNursingMedItem = (event, index, index2) => {
+    const values = [...nursing.treatments]
+    const name = event.target.name
+    values[index]['medicines'][index2][name] = event.target.value
+    setNursing({...nursing, treatments: values})
+  }
+
+  // ********************************************************************************
+
+  const onAddNursingItem2 = (index) => {
+    const values = [...treatments]
+    values[index]['medicines'] = [...values[index]?.medicines, {medicine: '', dosage: ''}]
+    setTreatments(values)
+  }
+
+  const onRemoveNursingItem2 = (index, index2) => {
+    const values = [...treatments]
+    values[index]['medicines'].splice(index2, 1)
+    setTreatments(values)
+  }
+
+  const handleChangeNursingItem = (event, index, index2) => {
+    const values = [...treatments]
+    const name = event.target.name
+    values[index]['medicines'][index2][name] = event.target.value
+    setTreatments(values)
   }
 
   async function onSubmit(e) {
@@ -88,7 +141,8 @@ export function NursingForm({ data, onRefresh, isError = false, loader = false})
         treatments,
         id: data?.id,
         comment: nursing.comment,
-        isCompleted: nursing.isCompleted
+        arrivedAt: nursing.arrivedAt,
+        leaveAt: nursing.leaveAt,
       })
       if (!formData?.error) {
         toast.success('Opération bien efféctuée.')
@@ -99,10 +153,11 @@ export function NursingForm({ data, onRefresh, isError = false, loader = false})
     else {
       if (canSave) {
         const formData2 = await updateNursing({
-          treatments: nursing.treatments.map(item => { return { id: item.content ? item.content?.id : 0 }}),
+          treatments: nursing.treatments.map(item => { return { id: item.treatment?.id, medicines: item.medicines }}),
           id: data?.id,
           comment: nursing.comment,
-          isNursingCompleted: nursing.isCompleted
+          arrivedAt: nursing.arrivedAt,
+          leaveAt: nursing.leaveAt,
         })
         if (!formData2?.error) {
           toast.success('Opération bien efféctuée.')
@@ -121,65 +176,169 @@ export function NursingForm({ data, onRefresh, isError = false, loader = false})
           <Col md={7}>
             <Card className='border-0'>
               <Card.Body>
+                <h5 className='card-title' style={cardTitleStyle}>
+                  <i className='bi bi-calendar-event'/> Date & Heure d'arrivée du patient
+                </h5>
+                <div className='mb-3'>
+                  <AppDatePicker
+                    disabled={loader}
+                    onChange={(date) => setNursing({...nursing, arrivedAt: date})}
+                    value={nursing.arrivedAt} />
+                </div>
+
                 <h5 className='card-title' style={cardTitleStyle}><i className='bi bi-heart-pulse'/> Traitement</h5>
                 {!loader && data && !data?.isPublished && (
-                  <div style={{ border: '1px solid #fff7f7' }} className='p-1 pb-3 mb-3'>
-                    <h5 style={{ fontWeight: 800 }} className='text-danger'>
+                  <div className='p-1 pb-3 mb-3'>
+                    <h5 style={{ fontWeight: 800 }} className='text-danger text-uppercase'>
                       <i className='bi bi-clipboard-pulse'/> Premier(s) soin(s)
                     </h5>
-                    {treatments && treatments?.map((item, idx) =>
-                      <Badge
-                        key={idx}
-                        bg='danger'
-                        className='p-3 shadow-lg me-2 mt-2 text-uppercase'
-                        style={{ fontWeight: 800 }}>
-                        <i className='bi bi-lungs'/> {item?.label}
-                      </Badge>)}
+                    {treatments.length > 0 && treatments.map((item, idx) =>
+                      <div key={idx}>
+                        <Row className='mt-3'>
+                          <Col md={10} className='text-uppercase text-secondary fw-bold'>
+                            <i className='bi bi-heart-pulse'/> {item.label}
+                          </Col>
+                          <Col md={2} className='text-end'>
+                            <Button
+                              type='button'
+                              variant='info'
+                              size='sm'
+                              disabled={loader}
+                              onClick={() => onAddNursingItem2(idx)}>
+                              <i className='bi bi-plus text-light'/>
+                            </Button>
+                          </Col>
+                          {/* Add item Button*/}
 
-                    {!loader && data && data?.isPublished && (
-                      <>
-                        Traitement ici.
-                      </>
-                    )}
+                          <div className='mt-2'>
+                            {item?.medicines && item.medicines?.length > 0 && item.medicines?.map((med, i) =>
+                              <Row key={i} className='pb-0'>
+                                <AppInputField
+                                  required
+                                  autofocus
+                                  name='medicine'
+                                  value={med?.medicine}
+                                  onChange={(e) => handleChangeNursingItem(e, idx, i)}
+                                  disabled={loader}
+                                  placeholder='-- * Produit (Médicament) --'
+                                  className='text-uppercase mb-1 col-md-4' />
+                                {/* Medicine's field */}
+
+                                <AppInputField
+                                  required
+                                  name='dosage'
+                                  value={med?.dosage}
+                                  onChange={(e) => handleChangeNursingItem(e, idx, i)}
+                                  disabled={loader}
+                                  placeholder='-- * Dosage (Indications) --'
+                                  className='text-uppercase mb-1 col-md-5' />
+                                {/* Dosage's field */}
+
+                                <Col md={3}>
+                                  <ButtonGroup size='sm' className='w-100'>
+                                    <Button
+                                      type='button'
+                                      variant='secondary'
+                                      disabled={loader}
+                                      onClick={() => onAddNursingItem2(idx)}>
+                                      <i className='bi bi-plus'/>
+                                    </Button>
+                                    {item.medicines.length > 1 &&
+                                      <Button
+                                        type='button'
+                                        variant='dark'
+                                        disabled={loader}
+                                        onClick={() => onRemoveNursingItem2(idx, i)}>
+                                        <i className='bi bi-dash'/>
+                                      </Button>}
+                                  </ButtonGroup>
+                                  {/* Button's group */}
+                                </Col>
+                              </Row>)}
+                          </div>
+                        </Row> <hr/>
+                      </div>)}
                   </div>
                 )}
 
                 {!loader && data && data?.isPublished && (
                   <div className='mb-3'>
-                    <div className='text-end'>
-                      <Button
-                        type='button'
-                        variant='light'
-                        className='border-0 bg-transparent'
-                        size='sm'
-                        disabled={isFetching || isLoading || loader}
-                        onClick={onRefetch}>
-                        {isFetching && <Spinner animation='border' size='sm'/>}
-                        {!isFetching && <i className='bi bi-arrow-clockwise'/>}
-                      </Button>
-                    </div>
-                    {nursing.treatments && nursing.treatments.map((item, idx) => (
-                      <Row key={idx} className='mt-3'>
-                        <NurseTreatmentItem
-                          idx={idx}
-                          items={nursing.treatments}
-                          loader={loader || isLoading || isFetching}
-                          options={options}
-                          item={item}
-                          onChangeNursingItem={onChangeNursingItem}
-                          onRemoveItem={onRemoveNursingItem}
-                          onLoadTreatments={onLoadTreatments} />
-                      </Row>
-                    ))}
+                    {nursing.treatments.length > 0 && nursing.treatments.map((item, idx) =>
+                      <div key={idx} className='mb-3 nursing-form-items'>
+                        <Row>
+                          <Col md={2} className='mb-2'>{requiredField} Libellé</Col>
+                          <Col md={8} className='mb-2'>
+                            <AppAsyncSelectOptions
+                              disabled={loader || isFetching}
+                              value={item.treatment}
+                              onChange={(e) => onChangeNursingItem(e, idx)}
+                              className='text-uppercase'
+                              loadOptions={onLoadTreatments}
+                              defaultOptions={options}
+                              placeholder='-- Traitement --' />
+                          </Col>
+                          <Col md={2} className='mb-2'>
+                            <ButtonGroup className='w-100'>
+                              <Button
+                                type='button'
+                                variant='success'
+                                disabled={loader}
+                                onClick={onAddNursingItem}>
+                                <i className='bi bi-plus text-light'/>
+                              </Button>
+                              {nursing.treatments.length > 1 &&
+                                <Button
+                                  type='button'
+                                  variant='secondary'
+                                  disabled={loader}
+                                  onClick={() => onRemoveNursingItem(idx)}>
+                                  <i className='bi bi-dash text-light'/>
+                                </Button>}
+                            </ButtonGroup>
+                          </Col>
 
-                    <Button
-                      type='button'
-                      variant='info'
-                      className='d-block w-100 mt-3'
-                      onClick={onAddNursingItem}
-                      disabled={loader || isLoading || isFetching}>
-                      <i className='bi bi-plus'/>
-                    </Button>
+                          {item.medicines.length > 0 && item.medicines.map((med, i) =>
+                            <Row key={i} className='mb-2 m-auto'>
+                              <Col md={4} className='mb-2'>
+                                <Form.Control
+                                  required
+                                  name='medicine'
+                                  value={med.medicine}
+                                  onChange={(e) => handleChangeNursingMedItem(e, idx, i)}
+                                  disabled={loader}
+                                  placeholder='-- Produit (Médicament) --' />
+                              </Col>
+                              <Col md={6} className='mb-2'>
+                                <Form.Control
+                                  required
+                                  name='dosage'
+                                  value={med.dosage}
+                                  onChange={(e) => handleChangeNursingMedItem(e, idx, i)}
+                                  disabled={loader}
+                                  placeholder='-- Dosage (Indications) --' />
+                              </Col>
+                              <Col md={2}>
+                                <ButtonGroup className='w-100'>
+                                  <Button
+                                    type='button'
+                                    variant='secondary'
+                                    disabled={loader}
+                                    onClick={() => onAddNursingMedItems(idx)}>
+                                    <i className='bi bi-plus'/>
+                                  </Button>
+                                  {item.medicines.length > 1 &&
+                                    <Button
+                                      type='button'
+                                      variant='dark'
+                                      disabled={loader}
+                                      onClick={() => onRemoveNursingMedItems(idx, i)}>
+                                      <i className='bi bi-dash'/>
+                                    </Button>}
+                                </ButtonGroup>
+                              </Col>
+                            </Row>)}
+                        </Row> <hr/>
+                      </div>)}
                   </div>
                 )}
 
@@ -192,22 +351,19 @@ export function NursingForm({ data, onRefresh, isError = false, loader = false})
                   label='Suivi :'
                   placeholder='Commentaire...' />
 
-                {!loader && data && data?.isPublished && !data?.isCompleted && (
-                  <Form.Group className='mb-3'>
-                    <Form.Check
-                      id='isCompleted'
-                      label={<span className='text-primary'>
-                        Clôturer le traitement <i className='bi bi-question-circle text-warning'/></span>}
-                      name='isCompleted'
-                      value={nursing.isCompleted}
-                      onChange={(e) => handleChange(e, nursing, setNursing)}
-                      checked={nursing.isCompleted} />
-                  </Form.Group>
-                )}
+                <h5 className='card-title' style={cardTitleStyle}>
+                  <i className='bi bi-calendar-event-fill'/> Date & Heure de départ
+                </h5>
+                <div className='mb-3'>
+                  <AppDatePicker
+                    value={nursing.leaveAt}
+                    onChange={(date) => setNursing({...nursing, leaveAt: date})}
+                    disabled={loader} />
+                </div>
 
                 <div className='text-center'>
-                  <Button type='button' variant='light' className='me-1' disabled={loader || isLoading} onClick={onRefresh}>
-                    {loader
+                  <Button type='submit' variant='light' disabled={isLoading || loader} onClick={onRefetch}>
+                    {isLoading
                       ? <><Spinner animation='grow' size='sm'/> Chargement en cours</>
                       : <><i className='bi bi-arrow-clockwise'/> Actualiser</>}
                   </Button>

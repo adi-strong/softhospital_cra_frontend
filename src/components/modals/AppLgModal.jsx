@@ -6,7 +6,7 @@ const AppLgModal = ({show = false, loader = false, onHide, onClick, title, child
   return (
     <>
       <Modal show={show} onHide={onHide} backdrop='static' keyboard={false} size='lg'>
-        <Modal.Header closeButton className={className}>
+        <Modal.Header className={className}>
           <Modal.Title>{title && title}</Modal.Title>
         </Modal.Header>
         <Modal.Body>{children && children}</Modal.Body>

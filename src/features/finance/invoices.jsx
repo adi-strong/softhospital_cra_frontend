@@ -3,9 +3,9 @@ import {AppBreadcrumb, AppHeadTitle} from "../../components";
 import {Card, Tab, Tabs} from "react-bootstrap";
 import {cardTitleStyle} from "../../layouts/AuthLayout";
 import {InvoicesList} from "./InvoicesList";
-import {UnpaidInvoicesList} from "./UnpaidInvoicesList";
+// import {UnpaidInvoicesList} from "./UnpaidInvoicesList";
 
-const tabs = [{title: 'Toutes les factures', key: 'all'}, {title: 'Factures non reglées', key: 'invalids'}]
+const tabs = [{title: 'Privés', key: 'all'}, {title: 'Conventionnés', key: 'invalids'}]
 
 function Invoices() {
   const [key, setKey] = useState('all')
@@ -24,9 +24,7 @@ function Invoices() {
             variant='tabs-bordered'>
             {tabs.map((tab, idx) =>
               <Tab key={idx} title={tab.title} eventKey={tab.key} className='pt-3'>
-                {tab.key === 'all'
-                  ? <InvoicesList/>
-                  : <UnpaidInvoicesList/>}
+                {tab.key === 'all' && <InvoicesList/>}
               </Tab>)}
           </Tabs>
         </Card.Body>

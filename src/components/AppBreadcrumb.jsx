@@ -37,7 +37,7 @@ const AppBreadcrumb = ({title, links = []}) => {
 }
 
 AppBreadcrumb.propTypes = {
-  title: PropTypes.string,
+  title: PropTypes.any,
   links: PropTypes.array,
 }
 

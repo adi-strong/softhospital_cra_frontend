@@ -19,7 +19,7 @@ const EditNursingPage = () => {
   return (
     <>
       <AppHeadTitle title='Traitement' />
-      <AppBreadcrumb title='Traitement' links={[
+      <AppBreadcrumb title={<><i className='bi bi-folder2-open'/> Traitement</>} links={[
         {path: '/member/treatments/nursing', label: 'Nursing'}
       ]} />
 

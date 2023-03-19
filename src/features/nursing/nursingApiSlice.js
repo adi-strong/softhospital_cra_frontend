@@ -34,7 +34,7 @@ export const nursingApiSlice = api.injectEndpoints({
         url: pathToApi+`/nursings/${nursing?.id}`,
         body: JSON.stringify(nursing),
       }),
-      invalidatesTags: (result, error, arg) => ['Nursing', { type: 'SingleNursing', id: arg }]
+      invalidatesTags: (result, error, arg) => ['Nursing', 'Box', { type: 'SingleNursing', id: arg }]
     }),
   })
 })

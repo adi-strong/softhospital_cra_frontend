@@ -4,7 +4,7 @@ import {useCallback, useMemo, useState} from "react";
 import {AppointmentItem} from "./AppointmentItem";
 import BarLoaderSpinner from "../../loaders/BarLoaderSpinner";
 import {AddAppointment} from "./AddAppointment";
-import {Button, Col, Form, InputGroup} from "react-bootstrap";
+import {Button, Col, Form} from "react-bootstrap";
 
 const thead = [
   {label: '#'},
@@ -57,16 +57,12 @@ export function AppointmentsList() {
           <>
             <Col md={6}>
               <Form onSubmit={onSubmit}>
-                <InputGroup>
-                  <Button type='submit' variant='light' style={{ border: '1px solid lightgray' }}>
-                    <i className='bi bi-search'/>
-                  </Button>
-                  <Form.Control
-                    name='search'
-                    placeholder='Rechercher'
-                    value={search}
-                    onChange={handleSearch} />
-                </InputGroup>
+                <Form.Control
+                  name='search'
+                  placeholder='Rechercher'
+                  autoComplete='off'
+                  value={search}
+                  onChange={handleSearch} />
               </Form>
             </Col>
             <Col>

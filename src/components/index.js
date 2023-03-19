@@ -28,8 +28,10 @@ import AppDataTableBordered from "./tables/AppDataTableBordered";
 import AppDatePicker from "./forms/AppDatePicker";
 import AppFloatingTextAreaField from "./forms/AppFloatingTextAreaField";
 import AppRichText from "./forms/AppRichText";
+import AppDropdownFilerMenu from "./AppDropdownFilerMenu";
 
 export {
+  AppDropdownFilerMenu,
   AppRichText,
   AppFloatingTextAreaField,
   AppDatePicker,

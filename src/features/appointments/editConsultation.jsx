@@ -63,7 +63,6 @@ function EditConsultation() {
 
   useEffect(() => {
     if (id && isSuccess && consult) {
-      console.log(consult?.diagnostic)
       setConsultation(prevState => {
         return {
           id: id,

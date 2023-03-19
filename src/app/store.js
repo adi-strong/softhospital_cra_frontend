@@ -72,6 +72,7 @@ export const api = createApi({
     'Consultations',
     'SingleConsultation',
     'Invoices',
+    'SingleInvoice',
     'Lab',
     'SingleLab',
     'Nursing',

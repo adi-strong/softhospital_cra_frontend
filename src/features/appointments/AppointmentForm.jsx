@@ -56,8 +56,8 @@ export const AppointmentForm = ({ state, setState, onReset, loader, apiErrors, d
   patientOptions = useMemo(() => isPatientsSuccess && patients
     ? patients.map(patient => {
       const name = patient?.name
-      const lastName = patient?.lastName
-      const firstName = patient?.firstName
+      const lastName = patient?.lastName ? patient.lastName : ''
+      const firstName = patient?.firstName ? patient.firstName : ''
       const label = `${name} ${lastName} ${firstName}`
 
       return {

@@ -25,7 +25,7 @@ export const NursingItem = ({ nursing }) => {
           {patient && (
             <Link to={`/member/patients/${patient?.id}/${patient?.slug}`} className='text-decoration-none'>
               <img src={profile} width={30} height={30} className='rounded-circle me-1' alt=''/>
-              {patient?.firstName && <span className='text-capitalize'>{patient.firstName}</span>}
+              {patient?.firstName && <span className='text-capitalize me-1'>{patient.firstName}</span>}
               <span className='text-uppercase'>{patient?.name}</span>
             </Link>
           )}
