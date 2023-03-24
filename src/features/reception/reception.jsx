@@ -17,7 +17,7 @@ function Reception() {
           </Card>
         </Col>
 
-        <Col>
+        <Col md={5}>
           <Card className='border-0'>
             <Card.Body>
               <AppointmentsList/>

@@ -1,7 +1,6 @@
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {AppDataTableStripped, AppDelModal, AppMainError, AppTHead} from "../../components";
-import {Button, ButtonGroup, Form, InputGroup} from "react-bootstrap";
-import {handleChange} from "../../services/handleFormsFieldsServices";
+import {Button, ButtonGroup, Col, Form} from "react-bootstrap";
 import {AddTreatmentCategories} from "./AddTreatmentCategories";
 import {limitStrTo} from "../../services";
 import {
@@ -13,13 +12,10 @@ import BarLoaderSpinner from "../../loaders/BarLoaderSpinner";
 import toast from "react-hot-toast";
 import {EditTreatmentCategory} from "./EditTreatmentCategory";
 
-const TreatmentCategoryItem = ({id}) => {
+const TreatmentCategoryItem = ({ category }) => {
   const [showEdit, setShowEdit] = useState(false)
   const [showDelete, setShowDelete] = useState(false)
   const [deleteTreatmentCategory, {isLoading}] = useDeleteTreatmentCategoryMutation()
-  const { category } = useGetTreatmentCategoriesQuery('TreatmentCategories', {
-    selectFromResult: ({ data }) => ({ category: data.entities[id] })
-  })
 
   const toggleEditModal = () => setShowEdit(!showEdit)
   const toggleDeleteModal = () => setShowDelete(!showDelete)
@@ -38,7 +34,7 @@ const TreatmentCategoryItem = ({id}) => {
       <tr>
         <td><i className='bi bi-tags'/></td>
         <td className='text-uppercase' title={category.name}>
-          {limitStrTo(30, category.name)}
+          {limitStrTo(14, category.name)}
         </td>
         <td>{category?.createdAt ? category.createdAt : '-'}</td>
         <td className='text-md-end'>
@@ -81,8 +77,9 @@ const TreatmentCategoryItem = ({id}) => {
   )
 }
 
-export const TreatmentCategoriesList = ({currency}) => {
-  const [keywords, setKeywords] = useState({search: ''})
+export const TreatmentCategoriesList = ({ currency }) => {
+  const [search, setSearch] = useState('')
+  const [contents, setContents] = useState([])
   const [showNew, setShowNew] = useState(false)
   const {
     data: categories = [],
@@ -92,17 +89,19 @@ export const TreatmentCategoriesList = ({currency}) => {
     isError,
     refetch} = useGetTreatmentCategoriesQuery('TreatmentCategories')
 
-  let content, errors
-  if (isError) errors = <AppMainError/>
-  else if (isSuccess) content = categories && categories.ids.map(id => <TreatmentCategoryItem key= {id} id={id}/>)
-
   const handleToggleNewTreatmentCategories = () => setShowNew(!showNew)
 
-  const onRefresh = async () => await refetch()
+  const onRefresh = async () => {
+    setSearch('')
+    await refetch()
+  }
 
-  function handleSubmit(e) {
-    e.preventDefault()
-  } // submit search keywords
+  useEffect(() => {
+    if (isSuccess && categories) {
+      const items = categories.ids?.map(id => { return categories?.entities[id] })
+      setContents(items?.filter(c => c?.name.toLowerCase().includes(search.toLowerCase())))
+    }
+  }, [isSuccess, categories, search])
 
   return (
     <>
@@ -115,7 +114,8 @@ export const TreatmentCategoriesList = ({currency}) => {
                 ? 'Aucun(e) patient(e) enregistré(e).'
                 : <>Il y a au total <code>{totalTreatmentCategories.toLocaleString()}</code> catégorie(s) enregistrée(s) :</>}
             </p>
-            <div className='text-md-end mb-2'>
+
+            <Col md={4} className='mb-2'>
               <Button
                 type='button'
                 title='Enregistrer une catégorie'
@@ -123,35 +123,34 @@ export const TreatmentCategoriesList = ({currency}) => {
                 onClick={handleToggleNewTreatmentCategories}>
                 <i className='bi bi-plus'/> Enregistrer
               </Button>
-            </div> {/* add new patient and printing's launch button */}
-            <div>
-              <form onSubmit={handleSubmit}>
-                <InputGroup>
-                  <Form.Control
-                    placeholder='Votre recherche ici...'
-                    aria-label='Votre recherche ici...'
-                    autoComplete='off'
-                    disabled={categories.length < 1}
-                    name='search'
-                    value={keywords.search}
-                    onChange={(e) => handleChange(e, keywords, setKeywords)} />
-                  <Button type='submit' variant='light' disabled={categories.length < 1}>
-                    <i className='bi bi-search'/>
-                  </Button>
-                </InputGroup>
+            </Col> {/* add new patient and printing's launch button */}
+            <Col className='mb-2'>
+              <form onSubmit={(e) => { e.preventDefault() }}>
+                <Form.Control
+                  placeholder='Votre recherche ici...'
+                  aria-label='Votre recherche ici...'
+                  autoComplete='off'
+                  disabled={categories.length < 1 || isLoading || isFetching}
+                  name='search'
+                  value={search}
+                  onChange={({ target}) => setSearch(target.value)} />
               </form>
-            </div> {/* search form for patients */}
+            </Col> {/* search form for patients */}
           </>
         }
         thead={<AppTHead isImg isFetching={isFetching} loader={isLoading} onRefresh={onRefresh} items={[
           {label: 'Libellé'},
-          {label: "Date d'enregistrement"},
+          {label: "Date"},
         ]}/>}
-        tbody={<tbody>{content}</tbody>} />
+        tbody={
+          <tbody>
+            {!isLoading && contents.length > 0 && contents.map(item =>
+              <TreatmentCategoryItem key={item?.id} category={item}/>)}
+          </tbody>} />
 
       {isLoading && <BarLoaderSpinner loading={isLoading}/>}
 
-      {errors && errors}
+      {isError && <div><AppMainError/></div>}
 
       <AddTreatmentCategories onHide={handleToggleNewTreatmentCategories} show={showNew} />
     </>

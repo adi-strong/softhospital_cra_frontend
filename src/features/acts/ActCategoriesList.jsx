@@ -1,21 +1,20 @@
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {AppDataTableStripped, AppDelModal, AppMainError, AppTHead} from "../../components";
-import {Button, ButtonGroup, Form, InputGroup} from "react-bootstrap";
-import {handleChange} from "../../services/handleFormsFieldsServices";
+import {Button, ButtonGroup, Col, Form} from "react-bootstrap";
 import {AddActCategories} from "./AddActCategories";
-import {totalActCategories, useDeleteActCategoryMutation, useGetActCategoriesQuery} from "./actCategoriesApiSlice";
+import {
+  useDeleteActCategoryMutation,
+  useGetActCategoriesQuery,
+} from "./actCategoriesApiSlice";
 import BarLoaderSpinner from "../../loaders/BarLoaderSpinner";
 import {limitStrTo} from "../../services";
 import toast from "react-hot-toast";
 import {EditActCategory} from "./EditActCategory";
 
-const CategoryActItem = ({id}) => {
+const CategoryActItem = ({ category }) => {
   const [showEdit, setShowEdit] = useState(false)
   const [showDelete, setShowDelete] = useState(false)
   const [deleteActCategory, {isLoading}] = useDeleteActCategoryMutation()
-  const { category } = useGetActCategoriesQuery('ActCategories', {
-    selectFromResult: ({ data }) => ({ category: data.entities[id] })
-  })
 
   const toggleEditModal = () => setShowEdit(!showEdit)
   const toggleDeleteModal = () => setShowDelete(!showDelete)
@@ -33,7 +32,7 @@ const CategoryActItem = ({id}) => {
       <tr>
         <td><i className='bi bi-tags'/></td>
         <td className='text-uppercase' title={category.name}>
-          {limitStrTo(18, category.name)}
+          {limitStrTo(14, category.name)}
         </td>
         <td>{category?.createdAt ? category.createdAt : '❓'}</td>
         <td className='text-md-end'>
@@ -66,21 +65,23 @@ const CategoryActItem = ({id}) => {
 }
 
 export const ActCategoriesList = () => {
-  const [keywords, setKeywords] = useState({search: ''})
   const [showNew, setShowNew] = useState(false)
   const {data: categories = [], isLoading, isFetching, isSuccess, isError, refetch} = useGetActCategoriesQuery('ActCategories')
 
-  let content, errors
-  if (isError) errors = <AppMainError/>
-  else if (isSuccess) content = categories && categories.ids.map(id => <CategoryActItem key={id} id={id}/>)
+  const [contents, setContents] = useState([])
+  const [search, setSearch] = useState('')
 
   const handleToggleNewCategory = () => setShowNew(!showNew)
 
-  function handleSubmit(e) {
-    e.preventDefault()
-  } // submit search keywords
+  const onRefresh = async () => {
+    setSearch('')
+    await refetch()
+  }
 
-  const onRefresh = async () => await refetch()
+  useEffect(() => {
+    if (isSuccess && categories)
+      setContents(categories.filter(f => f?.name.toLowerCase().includes(search.toLowerCase())))
+  }, [isSuccess, categories, search])
 
   return (
     <>
@@ -88,12 +89,7 @@ export const ActCategoriesList = () => {
         title='Liste des catégories'
         overview={
           <>
-            <p>
-              {categories.length < 1
-                ? 'Aucun(e) patient(e) enregistré(e).'
-                : <>Au total, <code>{totalActCategories.toLocaleString()}</code> catégorie(s) enregistrée(s) :</>}
-            </p>
-            <div className='text-md-end'>
+            <Col md={4} className='mb-2'>
               <Button
                 type='button'
                 title='Enregistrer un acte médical'
@@ -101,35 +97,40 @@ export const ActCategoriesList = () => {
                 onClick={handleToggleNewCategory}>
                 <i className='bi bi-plus'/> Enregistrer
               </Button>
-            </div> {/* add new patient and printing's launch button */}
-            <div className='text-md-end'>
-              <form onSubmit={handleSubmit}>
-                <InputGroup>
-                  <Form.Control
-                    placeholder='Votre recherche ici...'
-                    aria-label='Votre recherche ici...'
-                    autoComplete='off'
-                    disabled={categories.length < 1}
-                    name='search'
-                    value={keywords.search}
-                    onChange={(e) => handleChange(e, keywords, setKeywords)} />
-                  <Button type='submit' variant='light' disabled={categories.length < 1}>
-                    <i className='bi bi-search'/>
-                  </Button>
-                </InputGroup>
+            </Col> {/* add new patient and printing's launch button */}
+            <Col className='mb-2'>
+              <form onSubmit={(e) => { e.preventDefault() }}>
+                <Form.Control
+                  placeholder='Votre recherche ici...'
+                  aria-label='Votre recherche ici...'
+                  autoComplete='off'
+                  disabled={isLoading || isFetching}
+                  name='search'
+                  value={search}
+                  onChange={({ target }) => setSearch(target.value)} />
               </form>
-            </div> {/* search form for patients */}
+            </Col> {/* search form for patients */}
           </>
         }
-        thead={<AppTHead isImg loader={isLoading} isFetching={isFetching} onRefresh={onRefresh} items={[
-          {label: 'Libéllé'},
-          {label: "Date d'enregistrement"},
-        ]} />}
-        tbody={<tbody>{content}</tbody>} />
+        thead={
+        <AppTHead
+          isImg
+          loader={isLoading}
+          isFetching={isFetching}
+          onRefresh={onRefresh}
+          items={[
+            {label: 'Libéllé'},
+            {label: 'Date'},
+          ]} />}
+        tbody={
+        <tbody>
+          {!isLoading && contents.length > 0 && contents.map(item =>
+            <CategoryActItem key={item?.id} category={item} onRefresh={onRefresh}/>)}
+        </tbody>} />
 
       {isLoading && <BarLoaderSpinner loading={isLoading} />}
 
-      {errors && errors}
+      {isError && <div className='mb-3'><AppMainError/></div>}
 
       <AddActCategories onHide={handleToggleNewCategory} show={showNew} />
     </>

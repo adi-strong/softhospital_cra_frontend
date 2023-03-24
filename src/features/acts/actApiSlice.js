@@ -1,10 +1,10 @@
 import {api, patchHeaders, pathToApi} from "../../app/store";
-import {createEntityAdapter} from "@reduxjs/toolkit";
 import moment from "moment";
 
 export let totalActs = 0
-const actsAdapter = createEntityAdapter()
-const initialState = actsAdapter.getInitialState()
+export let totalResearchActs = 0
+export let researchActsPages = 1
+export let actsPages = 1
 
 export const actApiSlice = api.injectEndpoints({
   endpoints: build => ({
@@ -12,17 +12,16 @@ export const actApiSlice = api.injectEndpoints({
       query: () => pathToApi+'/acts',
       transformResponse: res => {
         totalActs = res['hydra:totalItems']
-        const data = res['hydra:member']
-        const loadActs = data.map(type => {
-          if (type?.createdAt) type.createdAt = moment(type.createdAt).calendar()
-          return type
+        actsPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[1]) : 1
+        return res['hydra:member']?.map(act => {
+          if (act?.createdAt) act.createdAt = moment(act.createdAt).calendar()
+          return act
         })
-        return actsAdapter.setAll(initialState, loadActs)
       },
-      providesTags: result => [
-        {type: 'Act', id: 'LIST'},
-        ...result.ids.map(id => ({ type: 'Act', id }))
-      ]
+      providesTags: result =>
+        result
+          ? [...result?.map(({ id }) => ({ type: 'Act', id })), 'Act']
+          : ['Act']
     }), // list of acts
 
     addNewAct: build.mutation({
@@ -69,10 +68,52 @@ export const actApiSlice = api.injectEndpoints({
         })
       },
     }),
+
+    getActsByPagination: build.query({
+      query: page => pathToApi+`/acts?page=${page}`,
+      transformResponse: res => {
+        const data = res['hydra:member']
+        totalActs = res['hydra:totalItems']
+        actsPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[1]) : 1
+        return data?.map(act => {
+          if (act?.createdAt) act.createdAt = moment(act.createdAt).calendar()
+          return act
+        })
+      },
+    }), // pagination list,
+
+    getResearchActs: build.query({
+      query: keyword => pathToApi+`/acts?wording=${keyword}`,
+      transformResponse: res => {
+        const data = res['hydra:member']
+        totalResearchActs = res['hydra:totalItems']
+        researchActsPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[2]) : 1
+        return data?.map(act => {
+          if (act?.createdAt) act.createdAt = moment(act.createdAt).calendar()
+          return act
+        })
+      },
+    }),
+
+    getResearchActsByPagination: build.query({
+      query: search => pathToApi+`/acts?wording=${search?.keyword}&page=${search?.page}`,
+      transformResponse: res => {
+        const data = res['hydra:member']
+        totalResearchActs = res['hydra:totalItems']
+        researchActsPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[2]) : 1
+        return data?.map(act => {
+          if (act?.createdAt) act.createdAt = moment(act.createdAt).calendar()
+          return act
+        })
+      },
+    }),
   })
 })
 
 export const {
+  useLazyGetActsByPaginationQuery,
+  useLazyGetResearchActsQuery,
+  useLazyGetResearchActsByPaginationQuery,
   useGetActsQuery,
   useAddNewActMutation,
   useUpdateActMutation,

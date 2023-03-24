@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import img1 from '../../assets/app/img/bedrooms/1.jpg';
 import img2 from '../../assets/app/img/bedrooms/2.jpg';
 import img3 from '../../assets/app/img/bedrooms/3.jpg';
@@ -6,9 +6,8 @@ import img4 from '../../assets/app/img/bedrooms/4.jpg';
 import img5 from '../../assets/app/img/bedrooms/5.jpg';
 import img6 from '../../assets/app/img/bedrooms/6.jpg';
 import img7 from '../../assets/app/img/bedrooms/7.webp';
-import {Button, ButtonGroup, Col, Form, InputGroup, Row, Spinner} from "react-bootstrap";
+import {Button, ButtonGroup, Col, Form, Row, Spinner} from "react-bootstrap";
 import {style} from "./BedsList";
-import {handleChange} from "../../services/handleFormsFieldsServices";
 import {AddBedroom} from "./AddBedroom";
 import {useDeleteBedroomMutation, useGetBedroomsQuery} from "./bedroomApiSlice";
 import {AppDelModal, AppMainError} from "../../components";
@@ -18,14 +17,11 @@ import {EditBedroom} from "./EditBedroom";
 
 const elements = [img1, img2, img3, img4, img5, img6, img7]
 
-const BedroomItem = ({id}) => {
+const BedroomItem = ({ bedroom }) => {
   const randomImg = Math.floor(Math.random() * elements.length)
   const [showEdit, setShowEdit] = useState(false)
   const [showDelete, setShowDelete] = useState(false)
   const [deleteBedroom, {isLoading}] = useDeleteBedroomMutation()
-  const { bedroom } = useGetBedroomsQuery('Bedroom', {
-    selectFromResult: ({ data }) => ({ bedroom: data.entities[id] })
-  })
 
   const toggleEditModal = () => setShowEdit(!showEdit)
   const toggleDeleteModal = () => setShowDelete(!showDelete)
@@ -95,40 +91,38 @@ const BedroomItem = ({id}) => {
 }
 
 export const BedroomsList = () => {
-  const [keywords, setKeywords] = useState({search: ''})
+  const [search, setSearch] = useState('')
+  const [contents, setContents] = useState([])
   const [showNew, setShowNew] = useState(false)
   const {data: bedrooms = [], isLoading, isFetching, isSuccess, isError, refetch} = useGetBedroomsQuery('Bedroom')
 
-  let content, errors
-  if (isError) errors = <AppMainError/>
-  else if (isSuccess) content = bedrooms && bedrooms.ids.map(id => <BedroomItem key={id} id={id} />)
+  useEffect(() => {
+    if (isSuccess && bedrooms) {
+      const items = bedrooms.ids?.map(id => { return bedrooms?.entities[id] })
+      setContents(items?.filter(n => n?.number.toLowerCase().includes(search.toLowerCase())))
+    }
+  }, [isSuccess, bedrooms, search])
 
   const handleToggleNewBedroom = () => setShowNew(!showNew)
 
-  const onRefresh = async () => await refetch()
-
-  function handleSubmit(e) {
-    e.preventDefault()
-  } // submit search keywords
+  const onRefresh = async () => {
+    setSearch('')
+    await refetch()
+  }
 
   return (
     <>
       <Row className='mb-4'>
         <Col md={8} className=' mb-1'>
-          <form onSubmit={handleSubmit}>
-            <InputGroup>
-              <Button type='submit' variant='light' disabled={bedrooms.length < 1}>
-                <i className='bi bi-search'/>
-              </Button>
-              <Form.Control
-                placeholder='Votre recherche ici...'
-                aria-label='Votre recherche ici...'
-                autoComplete='off'
-                disabled={bedrooms.length < 1}
-                name='search'
-                value={keywords.search}
-                onChange={(e) => handleChange(e, keywords, setKeywords)} />
-            </InputGroup>
+          <form onSubmit={(e) => { e.preventDefault() }}>
+            <Form.Control
+              placeholder='Votre recherche ici...'
+              aria-label='Votre recherche ici...'
+              autoComplete='off'
+              disabled={bedrooms.length < 1 || isLoading || isFetching}
+              name='search'
+              value={search}
+              onChange={({ target }) => setSearch(target.value)} />
           </form>
         </Col> {/* search bar */}
         <Col md={4} className='text-md-end mb-1'>
@@ -140,11 +134,13 @@ export const BedroomsList = () => {
           </Button>
         </Col>
       </Row>
-      <Row data-aos='fade-up' data-aos-duration={100} className='pt-2'>{content}</Row>
+      <Row data-aos='fade-up' data-aos-duration={100} className='pt-2'>
+        {!isLoading && contents.length > 0 && contents.map(item => <BedroomItem key={item?.id} bedroom={item}/>)}
+      </Row>
 
       {isLoading && <ImageGridLoader/>}
 
-      {errors && errors}
+      {isError && <AppMainError/>}
 
       <AddBedroom onHide={handleToggleNewBedroom} show={showNew} />
     </>

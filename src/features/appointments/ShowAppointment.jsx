@@ -29,7 +29,7 @@ const ShowAppointmentForm = ({ onSubmit, state, setState, loader, apiErrors, dat
   )
 }
 
-export const ShowAppointment = ({ data, onHide }) => {
+export const ShowAppointment = ({ data, onHide, onRefresh }) => {
   const [key, setKey] = useState('show')
   const [appointment, setAppointment] = useState({
     doctor: null,
@@ -46,14 +46,14 @@ export const ShowAppointment = ({ data, onHide }) => {
     if (data) {
       // Doctor
       const agent = data?.doctor
-      const name = agent?.name
-      const lastName = agent?.lastName ? agent.lastName : ''
-      const firstName = agent?.firstName ? agent.firstName : ''
-      const office = agent?.office ? `(${agent.office?.title})` : ''
+      const name = agent && agent?.name
+      const lastName = agent && agent?.lastName ? agent.lastName : ''
+      const firstName = agent && agent?.firstName ? agent.firstName : ''
+      const office = agent && agent?.office ? `(${agent.office?.title})` : ''
       const doctor = {
         label: `${name} ${lastName} ${firstName} ${office}`,
         id: agent?.id,
-        value: agent['@id']
+        value: agent ? agent['@id'] : null
       } // End Doctor
 
       // Patient
@@ -92,6 +92,7 @@ export const ShowAppointment = ({ data, onHide }) => {
         const formData = await updateAppointment(appointment)
         if (!formData?.error) {
           toast.success('Modification bien efféctuée.')
+          onRefresh()
           onHide()
         }
       }

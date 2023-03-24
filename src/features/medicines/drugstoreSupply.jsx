@@ -1,63 +1,21 @@
-import {AppBreadcrumb, AppDataTableStripped, AppHeadTitle, AppTHead} from "../../components";
-import {Button, Card, Col, Row, Spinner} from "react-bootstrap";
-import {DrugStoreDataForSupplying} from "./DrugStoreDataForSupplying";
-import {useSelector} from "react-redux";
-import {useEffect, useState} from "react";
+import {AppBreadcrumb, AppHeadTitle} from "../../components";
+import {Card, Col, Row} from "react-bootstrap";
+import {useState} from "react";
 import {DrugstoreForm1} from "./DrugstoreForm1";
-import {useOnSupplyingDrugInStoreMutation} from "./drugStoreApiSlice";
-import toast from "react-hot-toast";
-
-const thead = [
-  {label: 'n° doc'},
-  {label: 'Produit'},
-  {label: 'Coût'},
-  {label: 'Qté'},
-  {label: 'P.T.'},
-]
+import {DrugstoreForm2} from "./DrugstoreForm2";
+import {cardTitleStyle} from "../../layouts/AuthLayout";
 
 function DrugstoreSupply() {
-  const { fCurrency } = useSelector(state => state.parameters)
-  const [drugstoreItems, setDrugstoreItems] = useState([])
-  const [values, setValues] = useState([])
-  const [amount, setAmount] = useState(0)
-  const [onSupplyingDrugInStore, {isLoading, isSuccess}] = useOnSupplyingDrugInStoreMutation()
+  const [invoice, setInvoice] = useState({
+    released: new Date(),
+    document: '',
+    amount: 0.00,
+    provider: null,
+    currency: {value: '$', label: "'(US) United States of America ' $ '"},
+  })
 
-  useEffect(() => {
-    if (values) {
-      let total = 0
-      for (const key in values) {
-        const cost = parseFloat(values[key].quantity) * parseFloat(values[key].cost)
-        total += cost
-      }
-
-      setAmount(total)
-    }
-    else setAmount(0)
-  }, [values]) // total's calculus
-
-  function handleRemoveItem(id) {
-    const values = drugstoreItems.filter(item => item.id !== id)
-    const obj = values.filter(item => item.id !== id)
-    setDrugstoreItems(values)
-    setValues(obj)
-  }
-
-  const onReset = () => {
-    setDrugstoreItems([])
-    setValues([])
-  }
-
-  async function onSubmit() {
-    if (drugstoreItems.length > 0 && values.length > 0) {
-      try {
-        const data = await onSupplyingDrugInStore({...drugstoreItems, values, amount})
-        if (!data.error) {
-          toast.success('Opération bien efféctuée.')
-          onReset()
-        }
-      } catch (e) { toast.error(e.message) }
-    } else alert("🤕 Aucun produit renseigné ❗")
-  }
+  const [items, setItems] = useState([])
+  const [total, setTotal] = useState(0)
 
   return (
     <>
@@ -67,60 +25,30 @@ function DrugstoreSupply() {
       ]} />
 
       <Row>
-        <Col>
+        <Col md={8}>
           <Card className='border-0'>
             <Card.Body>
-              <AppDataTableStripped
-                title='Produits à approvisionner'
-                thead={<AppTHead items={thead} loader={isLoading} onRefresh={onReset} />}
-                tbody={
-                  <tbody>
-                    {drugstoreItems && drugstoreItems.map(item =>
-                      <DrugstoreForm1
-                        key={item.id}
-                        currency={fCurrency}
-                        item={item}
-                        isLoading={isLoading}
-                        onRemove={() => handleRemoveItem(item.id)}/>)}
-                  </tbody>} />
-
-              <div
-                className='bg-warning p-2 d-flex justify-content-around mb-3'
-                style={{ borderRadius: 4, fontWeight: 800 }}>
-                <span>Total</span>
-                <span>=</span>
-                <span>
-                  <i className='me-1'>{fCurrency && fCurrency.value}</i>
-                  {parseFloat(amount).toFixed(2).toLocaleString()}
-                </span>
-              </div>
-
-              {drugstoreItems.length > 0 &&
-                <div className='text-md-center'>
-                  <Button type='button' variant='secondary' onClick={onReset} className='me-1' disabled={isLoading}>
-                    <i className='bi bi-trash'/> Effacer
-                  </Button>
-                  <Button type='button' onClick={onSubmit} disabled={isLoading}>
-                    {!isLoading
-                      ? <><i className='bi bi-plus-circle-dotted'/> Valider</>
-                      : <>Veuillez patienter <Spinner animation='border' size='sm'/></>}
-                  </Button>
-                </div>}
+              <h5 className='card-title' style={cardTitleStyle}><i className='bi bi-file-check'/> Facture</h5>
+              <DrugstoreForm1
+                total={total}
+                setTotal={setTotal}
+                items={items}
+                setItems={setItems}
+                invoice={invoice}
+                setInvoice={setInvoice} />
             </Card.Body>
           </Card>
         </Col>
 
-        <Col md={5}>
+        <Col md={4}>
           <Card className='border-0'>
             <Card.Body>
-              <DrugStoreDataForSupplying
-                isSuccess={isSuccess}
-                isLoading={isLoading}
-                values={values}
-                setValues={setValues}
-                drugstore={drugstoreItems}
-                setDrugstore={setDrugstoreItems}
-                currency={fCurrency}/>
+              <DrugstoreForm2
+                total={total}
+                setTotal={setTotal}
+                invoice={invoice}
+                items={items}
+                setItems={setItems} />
             </Card.Body>
           </Card>
         </Col>

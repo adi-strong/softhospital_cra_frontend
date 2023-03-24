@@ -2,6 +2,9 @@ import {api, patchHeaders, pathToApi} from "../../app/store";
 import moment from "moment";
 
 export let totalPatients = 0
+export let totalResearchPatients = 0
+export let researchPatientsPages = 1
+export let patientsPages = 1
 export let totalCovenantPatients = 0
 
 export const patientApiSlice = api.injectEndpoints({
@@ -10,6 +13,7 @@ export const patientApiSlice = api.injectEndpoints({
       query: () => pathToApi+'/patients',
       transformResponse: res => {
         totalPatients = res['hydra:totalItems']
+        patientsPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[1]) : 1
         const data = res['hydra:member']
         return data?.map(patient => {
           if (patient?.createdAt) patient.createdAt = moment(patient.createdAt).calendar()
@@ -21,6 +25,19 @@ export const patientApiSlice = api.injectEndpoints({
           ? [...result?.map(({ id }) => ({ type: 'Patient', id })), 'Patient']
           : ['Patient']
     }), // list of patients
+
+    getPatientsByPagination: build.query({
+      query: page => pathToApi+`/patients?page=${page}`,
+      transformResponse: res => {
+        const data = res['hydra:member']
+        totalPatients = res['hydra:totalItems']
+        patientsPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[1]) : 1
+        return data?.map(patient => {
+          if (patient?.createdAt) patient.createdAt = moment(patient.createdAt).calendar()
+          return patient
+        })
+      },
+    }), // pagination list,
 
     addNewPatient: build.mutation({
       query: patient => ({
@@ -105,6 +122,33 @@ export const patientApiSlice = api.injectEndpoints({
         })
       },
     }),
+
+    getResearchPatients: build.query({
+      query: keyword => pathToApi+`/patients?fullName=${keyword}`,
+      transformResponse: res => {
+        const data = res['hydra:member']
+        totalResearchPatients = res['hydra:totalItems']
+        researchPatientsPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[2]) : 1
+        return data?.map(patient => {
+          if (patient?.createdAt) patient.createdAt = moment(patient.createdAt).calendar()
+          return patient
+        })
+      },
+    }),
+
+    getResearchPatientsByPagination: build.query({
+      query: search => pathToApi+`/patients?fullName=${search?.keyword}&page=${search?.page}`,
+      transformResponse: res => {
+        const data = res['hydra:member']
+        totalResearchPatients = res['hydra:totalItems']
+        researchPatientsPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[2]) : 1
+        return data?.map(patient => {
+          if (patient?.createdAt) patient.createdAt = moment(patient.createdAt).calendar()
+          return patient
+        })
+      },
+    }),
+
   })
 })
 
@@ -116,4 +160,7 @@ export const {
   useGetSinglePatientQuery,
   useGetCovenantPatientsQuery,
   useLazyHandleLoadPatientsQuery,
+  useLazyGetPatientsByPaginationQuery,
+  useLazyGetResearchPatientsQuery,
+  useLazyGetResearchPatientsByPaginationQuery,
 } = patientApiSlice

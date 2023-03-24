@@ -7,7 +7,7 @@ import {AppSelectOptions} from "../../components";
 import {handleChange, onSelectAsyncOption} from "../../services/handleFormsFieldsServices";
 import AppInputField from "../../components/forms/AppInputField";
 
-export const EditTreatment = ({show, onHide, data, currency}) => {
+export const EditTreatment = ({ show, onHide, data, currency, onRefresh }) => {
   const [treatment, setTreatment] = useState(data)
   const [category, setCategory] = useState(null)
   const [updateTreatment, {isLoading, isError, error}] = useUpdateTreatmentMutation()
@@ -46,6 +46,7 @@ export const EditTreatment = ({show, onHide, data, currency}) => {
         category: category ? category.value : null})
       if (!formData.error) {
         toast.success('Modification bien efféctuée.')
+        onRefresh()
         onHide()
       }
     }

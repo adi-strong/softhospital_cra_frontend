@@ -5,7 +5,7 @@ import {AppEditModal} from "../../components";
 import AppInputField from "../../components/forms/AppInputField";
 import {handleChange} from "../../services/handleFormsFieldsServices";
 
-export const EditActCategory = ({show, onHide, data}) => {
+export const EditActCategory = ({ show, onHide, data }) => {
   const [category, setCategory] = useState(data)
   const [updateActCategory, {isLoading, isError, error}] = useUpdateActCategoryMutation()
   let apiErrors = {name: null}

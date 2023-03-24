@@ -62,10 +62,10 @@ export const AddConsultForm = ({ loader = false, consult, setConsult, apiErrors,
   }) : [], [isPatientsSuccess, patients])
 
   if (isFilesError)  alert('ERREUR: Erreur lors du chargement des types de fiches !!!')
-  filesOptions = useMemo(() => isFilesSuccess && files ? files.ids.map(id => {
+  filesOptions = useMemo(() => isFilesSuccess && files ? files.map(file => {
     return {
-      label: files.entities[id]?.wording,
-      value: files.entities[id]['@id'],
+      label: file?.wording,
+      value: file['@id'],
     }
   }) : [], [isFilesSuccess, files])
 

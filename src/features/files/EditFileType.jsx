@@ -6,7 +6,7 @@ import AppInputField from "../../components/forms/AppInputField";
 import {handleChange} from "../../services/handleFormsFieldsServices";
 import {Button, Col, Form, InputGroup, Row} from "react-bootstrap";
 
-export const EditFileType = ({show, onHide, data, currency}) => {
+export const EditFileType = ({show, onHide, data, currency, onRefresh}) => {
   const [file, setFile] = useState(data)
   const [updateConsultationType, {isLoading, isError, error}] = useUpdateConsultationTypeMutation()
   let apiErrors = {wording: null, price: null}
@@ -21,6 +21,7 @@ export const EditFileType = ({show, onHide, data, currency}) => {
       })
       if (!formData.error) {
         toast.success('Modification bien efféctuée.')
+        onRefresh()
         onHide()
       }
     }

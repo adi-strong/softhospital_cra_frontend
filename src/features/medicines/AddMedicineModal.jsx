@@ -143,19 +143,6 @@ export const AddMedicineModal = ({show, onHide, currency}) => {
               textBefore={currency ? currency.currency : ''}
               textAfter={currency ? currency.value : ''}
               type='number'
-              label='Coût'
-              name='cost'
-              value={medicine.cost}
-              onChange={(e) => handleChange(e, medicine, setMedicine)}
-              disabled={isLoading}
-              error={apiErrors.cost} />
-
-            <AppInputGroupField
-              isTextBefore
-              isTextAfter
-              textBefore={currency ? currency.currency : ''}
-              textAfter={currency ? currency.value : ''}
-              type='number'
               label='Prix'
               name='price'
               value={medicine.price}

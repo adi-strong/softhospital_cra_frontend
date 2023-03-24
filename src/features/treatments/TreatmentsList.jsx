@@ -1,20 +1,25 @@
-import {useState} from "react";
-import {AppDataTableStripped, AppDelModal, AppMainError, AppTHead} from "../../components";
-import {Badge, Button, ButtonGroup, Col, Form, InputGroup} from "react-bootstrap";
-import {handleChange} from "../../services/handleFormsFieldsServices";
+import {useEffect, useState} from "react";
+import {AppDataTableStripped, AppDelModal, AppMainError, AppPaginationComponent, AppTHead} from "../../components";
+import {Badge, Button, ButtonGroup, Col, Form} from "react-bootstrap";
 import {AddTreatments} from "./AddTreatments";
 import {limitStrTo} from "../../services";
-import {useDeleteTreatmentMutation, useGetTreatmentsQuery} from "./treatmentApiSlice";
+import {
+  researchTreatmentsPages, totalResearchTreatments,
+  treatmentsPages,
+  useDeleteTreatmentMutation,
+  useGetTreatmentsQuery,
+  useLazyGetResearchTreatmentsByPaginationQuery,
+  useLazyGetResearchTreatmentsQuery,
+  useLazyGetTreatmentsByPaginationQuery
+} from "./treatmentApiSlice";
 import toast from "react-hot-toast";
 import {EditTreatment} from "./EditTreatment";
+import BarLoaderSpinner from "../../loaders/BarLoaderSpinner";
 
-const TreatmentItem = ({id, currency}) => {
+const TreatmentItem = ({ treatment, currency, onRefresh }) => {
   const [showEdit, setShowEdit] = useState(false)
   const [showDelete, setShowDelete] = useState(false)
   const [deleteTreatment, {isLoading}] = useDeleteTreatmentMutation()
-  const { treatment } = useGetTreatmentsQuery('Treatment', {
-    selectFromResult: ({ data }) => ({ treatment: data.entities[id] })
-  })
 
   const toggleEditModal = () => setShowEdit(!showEdit)
   const toggleDeleteModal = () => setShowDelete(!showDelete)
@@ -23,7 +28,10 @@ const TreatmentItem = ({id, currency}) => {
     toggleDeleteModal()
     try {
       const formData = await deleteTreatment(treatment)
-      if (!formData.error) toast.success('Suppression bien efféctuée.', {icon: '😶'})
+      if (!formData.error) {
+        toast.success('Suppression bien efféctuée.', {icon: '😶'})
+        onRefresh()
+      }
     }
     catch (e) { toast.error(e.message) }
   }
@@ -64,7 +72,12 @@ const TreatmentItem = ({id, currency}) => {
         </td>
       </tr>
 
-      <EditTreatment currency={currency} data={treatment} show={showEdit} onHide={toggleEditModal} />
+      <EditTreatment
+        currency={currency}
+        data={treatment}
+        show={showEdit}
+        onHide={toggleEditModal}
+        onRefresh={onRefresh} />
       <AppDelModal
         show={showDelete}
         onHide={toggleDeleteModal}
@@ -81,31 +94,101 @@ const TreatmentItem = ({id, currency}) => {
   )
 }
 
-export const TreatmentsList = ({currency}) => {
-  const [keywords, setKeywords] = useState({search: ''})
+export const TreatmentsList = ({ currency }) => {
   const [showNew, setShowNew] = useState(false)
   const {data: treatments = [], isLoading, isFetching, isSuccess, isError, refetch} = useGetTreatmentsQuery('Treatment')
 
-  let content, errors
-  if (isError) errors = <AppMainError/>
-  else if (isSuccess) content = treatments && treatments.ids.map(id =>
-    <TreatmentItem key={id} id={id} currency={currency}/>)
+  const [contents, setContents] = useState([])
+  const [search, setSearch] = useState('')
+  const [tempSearch, setTempSearch] = useState('')
+  const [page, setPage] = useState(1)
+  const [checkTreatments, setCheckTreatments] = useState({isSearching: false, isPaginated: false,})
 
   const handleToggleNewTreatments = () => setShowNew(!showNew)
 
-  const onRefresh = async () => await refetch()
+  const [paginatedTreatments, setPaginatedTreatments] = useState([])
+  const [researchPaginatedTreatments, setResearchPaginatedTreatments] = useState([])
 
-  function handleSubmit(e) {
+  const [getTreatmentsByPagination, {isFetching: isFetching2, isError: isError2,}] = useLazyGetTreatmentsByPaginationQuery()
+  const [getResearchTreatments, {isFetching: isFetching3, isError: isError3,}] = useLazyGetResearchTreatmentsQuery()
+  const [getResearchTreatmentsByPagination, {
+    isFetching: isFetching4,
+    isError: isError4,
+  }] = useLazyGetResearchTreatmentsByPaginationQuery()
+
+  async function handlePagination(pagination) {
+    const param = pagination + 1
+    setPage(param)
+    setCheckTreatments({isSearching: false, isPaginated: true})
+    const { data: searchData, isSuccess } = await getTreatmentsByPagination(param)
+    if (isSuccess && searchData) {
+      setPaginatedTreatments(searchData)
+    }
+  } // handle main pagination
+
+  async function handlePagination2(pagination) {
+    const param = pagination + 1
+    const keywords = {page: param, keyword: tempSearch}
+    setPage(param)
+    setCheckTreatments({isSearching: true, isPaginated: false})
+    const { data: searchData, isSuccess } = await getResearchTreatmentsByPagination(keywords)
+    if (isSuccess && searchData) {
+      setResearchPaginatedTreatments(searchData)
+    }
+  } // 2nd handle main pagination
+
+  async function handleSubmit(e) {
     e.preventDefault()
+    setPage(1)
+    setTempSearch(search)
+    setSearch('')
+    setCheckTreatments({isSearching: true, isPaginated: false})
+    const { data: searchData, isSuccess } = await getResearchTreatments(search)
+    if (isSuccess && searchData) {
+      setResearchPaginatedTreatments(searchData)
+    }
   } // submit search keywords
+
+  const onRefresh = async () => {
+    setCheckTreatments({isSearching: false, isPaginated: false})
+    setSearch('')
+    setTempSearch('')
+    setPage(1)
+    await refetch()
+  }
+
+  useEffect(() => {
+    if (!checkTreatments.isSearching && !checkTreatments.isPaginated && isSuccess && treatments) {
+      const items = treatments.ids?.map(id => { return treatments?.entities[id] })
+      setContents(items?.filter(f => f?.wording.toLowerCase().includes(search.toLowerCase())))
+    }
+    else if (!checkTreatments.isSearching && checkTreatments.isPaginated && isSuccess && treatments)
+      setContents(paginatedTreatments?.filter(f => f?.wording.toLowerCase().includes(search.toLowerCase())))
+    else if (checkTreatments.isSearching && !checkTreatments.isPaginated && isSuccess && treatments)
+      setContents(researchPaginatedTreatments?.filter(f => f?.wording.toLowerCase().includes(search.toLowerCase())))
+  }, [
+    checkTreatments,
+    isSuccess,
+    treatments,
+    search,
+    researchPaginatedTreatments,
+    paginatedTreatments,
+  ])
 
   return (
     <>
       <AppDataTableStripped
-        loader={isLoading}
+        loader={isLoading || isFetching2 || isFetching4}
         title='Liste de traitements'
         overview={
           <>
+            {checkTreatments.isSearching &&
+              <p>
+                Au total
+                <code className="mx-1 me-1">{totalResearchTreatments.toLocaleString()}</code>
+                traitement(s) suite à votre recherche ⏩ <b>{tempSearch}</b> :
+              </p>}
+
             <Col md={3}>
               <Button
                 type='button'
@@ -117,32 +200,63 @@ export const TreatmentsList = ({currency}) => {
             </Col> {/* add new patient and printing's launch button */}
             <Col className='text-md-end'>
               <form onSubmit={handleSubmit}>
-                <InputGroup>
-                  <Form.Control
-                    placeholder='Votre recherche ici...'
-                    aria-label='Votre recherche ici...'
-                    autoComplete='off'
-                    disabled={treatments.length < 1}
-                    name='search'
-                    value={keywords.search}
-                    onChange={(e) => handleChange(e, keywords, setKeywords)} />
-                  <Button type='submit' variant='light' disabled={treatments.length < 1}>
-                    <i className='bi bi-search'/>
-                  </Button>
-                </InputGroup>
+                <Form.Control
+                  placeholder='Votre recherche ici...'
+                  aria-label='Votre recherche ici...'
+                  autoComplete='off'
+                  disabled={isFetching3}
+                  name='search'
+                  value={search}
+                  onChange={({ target }) => setSearch(target.value)} />
               </form>
             </Col> {/* search form for patients */}
           </>
         }
-        thead={<AppTHead isImg loader={isLoading} isFetching={isFetching} onRefresh={onRefresh} items={[
-          {label: '#'},
-          {label: 'Libéllé'},
-          {label: 'Catégorie'},
-          {label: 'Prix'},
-        ]}/>}
-        tbody={<tbody>{content}</tbody>} />
+        thead={
+        <AppTHead
+          isImg
+          loader={isLoading || isFetching2 || isFetching4 || isFetching3}
+          isFetching={isFetching || isFetching2 || isFetching4 || isFetching3}
+          onRefresh={onRefresh}
+          items={[
+            {label: '#'},
+            {label: 'Libéllé'},
+            {label: 'Catégorie'},
+            {label: 'Prix'},
+          ]}/>}
+        tbody={
+          <tbody>
+            {!isLoading && contents.length > 0 && contents.map(item =>
+              <TreatmentItem key={item?.id} treatment={item} onRefresh={onRefresh} currency={currency}/>)}
+          </tbody>} />
 
-      {errors && errors}
+      {isLoading || isFetching || isFetching2 || isFetching3 || isFetching4
+        ? <BarLoaderSpinner loading={isLoading || isFetching || isFetching2 || isFetching3 || isFetching4}/>
+        : (
+          <>
+            {treatmentsPages > 1 && isSuccess && treatments
+              && !checkTreatments.isSearching &&
+              <AppPaginationComponent
+                nextLabel=''
+                previousLabel=''
+                onPaginate={handlePagination}
+                currentPage={page - 1}
+                pageCount={treatmentsPages} />}
+
+            {researchTreatmentsPages > 1 && isSuccess && treatments && checkTreatments.isSearching &&
+              <AppPaginationComponent
+                nextLabel=''
+                previousLabel=''
+                onPaginate={handlePagination2}
+                currentPage={page - 1}
+                pageCount={researchTreatmentsPages} />}
+          </>
+        )}
+
+      {isError && <div className='mb-3'><AppMainError/></div>}
+      {isError2 && <div className='mb-3'><AppMainError/></div>}
+      {isError3 && <div className='mb-3'><AppMainError/></div>}
+      {isError4 && <div className='mb-3'><AppMainError/></div>}
 
       <AddTreatments onHide={handleToggleNewTreatments} show={showNew} />
     </>

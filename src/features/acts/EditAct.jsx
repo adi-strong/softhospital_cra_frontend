@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 import {useGetActCategoriesQuery} from "./actCategoriesApiSlice";
 import {Col, Form, InputGroup, Row} from "react-bootstrap";
 
-export const EditAct = ({show, onHide, data, currency}) => {
+export const EditAct = ({ show, onHide, data, currency, onRefresh }) => {
   const [act, setAct] = useState(data)
   const [category, setCategory] = useState(null)
   const {data: categories = [], isLoading: isCategoriesLoad, isSuccess, isError} = useGetActCategoriesQuery('ActCategories')
@@ -16,10 +16,10 @@ export const EditAct = ({show, onHide, data, currency}) => {
 
   let options
   if (isError) alert("Les catégories n'ont pas pû être chargé, une érreur est survenue !!")
-  else if (isSuccess) options = categories && categories.ids.map(id => {
+  else if (isSuccess) options = categories && categories.map(category => {
     return {
-      label: categories.entities[id].name,
-      value: categories.entities[id]['@id'],
+      label: category?.name,
+      value: category['@id'],
     }
   })
 
@@ -42,6 +42,7 @@ export const EditAct = ({show, onHide, data, currency}) => {
         category: category ? category.value : null})
       if (!formData.error) {
         toast.success('Modification bien efféctuée.')
+        onRefresh()
         onHide()
       }
     }

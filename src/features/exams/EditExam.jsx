@@ -7,7 +7,7 @@ import AppInputField from "../../components/forms/AppInputField";
 import toast from "react-hot-toast";
 import {useGetExamCategoriesQuery} from "./examCategoryApiSlice";
 
-export const EditExam = ({show, onHide, data, currency}) => {
+export const EditExam = ({ show, onHide, data, currency, onRefresh }) => {
   const [exam, setExam] = useState(data)
   const [category, setCategory] = useState(null)
   const [updateExam, {isLoading, isError, error}] = useUpdateExamMutation()
@@ -46,6 +46,7 @@ export const EditExam = ({show, onHide, data, currency}) => {
         category: category ? category.value : null})
       if (!formData.error) {
         toast.success('Modification bien efféctuée.')
+        onRefresh()
         onHide()
       }
     }
@@ -75,6 +76,7 @@ export const EditExam = ({show, onHide, data, currency}) => {
           name='category'
           options={options}
           onChange={(e) => onSelectAsyncOption(e, setCategory)} />
+
         <Row>
           <AppInputField
             required

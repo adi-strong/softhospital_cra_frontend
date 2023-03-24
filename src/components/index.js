@@ -29,8 +29,10 @@ import AppDatePicker from "./forms/AppDatePicker";
 import AppFloatingTextAreaField from "./forms/AppFloatingTextAreaField";
 import AppRichText from "./forms/AppRichText";
 import AppDropdownFilerMenu from "./AppDropdownFilerMenu";
+import AppPaginationComponent from "./AppPaginationComponent";
 
 export {
+  AppPaginationComponent,
   AppDropdownFilerMenu,
   AppRichText,
   AppFloatingTextAreaField,

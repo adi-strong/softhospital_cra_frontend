@@ -1,7 +1,6 @@
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {AppDataTableStripped, AppDelModal, AppMainError, AppTHead} from "../../components";
-import {Button, ButtonGroup, Form, InputGroup} from "react-bootstrap";
-import {handleChange} from "../../services/handleFormsFieldsServices";
+import {Button, ButtonGroup, Form} from "react-bootstrap";
 import {AddBedroomCategories} from "./AddBedroomCategories";
 import {
   totalBedroomCategories,
@@ -13,13 +12,10 @@ import {limitStrTo} from "../../services";
 import toast from "react-hot-toast";
 import {EditBedroomCategory} from "./EditBedroomCategory";
 
-const BedroomCategoryItem = ({id}) => {
+const BedroomCategoryItem = ({ category }) => {
   const [showEdit, setShowEdit] = useState(false)
   const [showDelete, setShowDelete] = useState(false)
   const [deleteBedroomCategory, {isLoading}] = useDeleteBedroomCategoryMutation()
-  const { category } = useGetBedroomCategoriesQuery('BedroomCategories', {
-    selectFromResult: ({ data }) => ({ category: data.entities[id] })
-  })
 
   const toggleEditModal = () => setShowEdit(!showEdit)
   const toggleDeleteModal = () => setShowDelete(!showDelete)
@@ -81,7 +77,8 @@ const BedroomCategoryItem = ({id}) => {
 }
 
 export const BedroomCategoriesList = () => {
-  const [keywords, setKeywords] = useState({search: ''})
+  const [search, setSearch] = useState('')
+  const [contents, setContents] = useState([])
   const [showNew, setShowNew] = useState(false)
   const {
     data: categories = [],
@@ -91,17 +88,19 @@ export const BedroomCategoriesList = () => {
     isError,
     refetch} = useGetBedroomCategoriesQuery('BedroomCategories')
 
-  let content, errors
-  if (isError) errors = <AppMainError/>
-  else if (isSuccess) content = categories && categories.ids.map(id => <BedroomCategoryItem key={id} id={id}/>)
+  useEffect(() => {
+    if (isSuccess && categories) {
+      const items = categories.ids?.map(id => { return categories?.entities[id] })
+      setContents(items?.filter(c => c?.name.toLowerCase().includes(search.toLowerCase())))
+    }
+  }, [isSuccess, categories, search])
 
   const handleToggleNewBedroomCategory = () => setShowNew(!showNew)
 
-  const onRefresh = async () => await refetch()
-
-  function handleSubmit(e) {
-    e.preventDefault()
-  } // submit search keywords
+  const onRefresh = async () => {
+    setSearch('')
+    await refetch()
+  }
 
   return (
     <>
@@ -125,20 +124,15 @@ export const BedroomCategoriesList = () => {
               </Button>
             </div> {/* add new patient and printing's launch button */}
             <div className='text-md-end'>
-              <form onSubmit={handleSubmit}>
-                <InputGroup>
-                  <Form.Control
-                    placeholder='Votre recherche ici...'
-                    aria-label='Votre recherche ici...'
-                    autoComplete='off'
-                    disabled={categories.length < 1}
-                    name='search'
-                    value={keywords.search}
-                    onChange={(e) => handleChange(e, keywords, setKeywords)} />
-                  <Button type='submit' variant='light' disabled={categories.length < 1}>
-                    <i className='bi bi-search'/>
-                  </Button>
-                </InputGroup>
+              <form onSubmit={(e) => { e.preventDefault() }}>
+                <Form.Control
+                  placeholder='Votre recherche ici...'
+                  aria-label='Votre recherche ici...'
+                  autoComplete='off'
+                  disabled={categories.length < 1 || isLoading || isFetching}
+                  name='search'
+                  value={search}
+                  onChange={({ target }) => setSearch(target.value)} />
               </form>
             </div> {/* search form for patients */}
           </>
@@ -147,11 +141,15 @@ export const BedroomCategoriesList = () => {
           {label: 'Libellé'},
           {label: "Date d'ajout"},
         ]}/>}
-        tbody={<tbody>{content}</tbody>} />
+        tbody={
+          <tbody>
+            {!isLoading && contents.length > 0 && contents.map(item =>
+              <BedroomCategoryItem key={item?.id} category={item}/>)}
+          </tbody>} />
 
       {isLoading && <BarLoaderSpinner loading={isLoading}/>}
 
-      {errors && errors}
+      {isError && <AppMainError/>}
 
       <AddBedroomCategories onHide={handleToggleNewBedroomCategory} show={showNew} />
     </>

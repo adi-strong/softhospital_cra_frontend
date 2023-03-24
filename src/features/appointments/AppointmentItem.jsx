@@ -3,15 +3,21 @@ import {Link} from "react-router-dom";
 import {Form} from "react-bootstrap";
 import {AppLgModal} from "../../components";
 import {ShowAppointment} from "./ShowAppointment";
+import {limitStrTo} from "../../services";
 
-export const AppointmentItem = ({ appointment, onToggleAppointment }) => {
+export const AppointmentItem = ({ appointment, onToggleAppointment, search, page, onRefresh }) => {
   const patient = appointment?.patient
   const createdAt = appointment?.createdAt ? appointment.createdAt : '❓'
 
   const [show, setShow] = useState(false)
 
   const toggleModal = () => setShow(!show)
-  const onToggleChange = () => onToggleAppointment({ id: appointment?.id, isComplete: !appointment?.isComplete })
+  const onToggleChange = () => onToggleAppointment({
+    id: appointment?.id,
+    isComplete: !appointment?.isComplete,
+    search,
+    page,
+  })
 
   return (
     <>
@@ -27,7 +33,7 @@ export const AppointmentItem = ({ appointment, onToggleAppointment }) => {
         <td className={`${appointment?.isComplete ? 'text-decoration-line-through text-success' : 'fw-bold text-primary'}`}>
           <Link to={`/member/patients/${patient?.id}/${patient?.slug}`} className='text-decoration-none'>
             {patient?.firstName && <span className='text-capitalize'>{patient.firstName}</span>}
-            <span className='text-uppercase mx-1'>{patient?.name}</span>
+            <span className='text-uppercase mx-1'>{limitStrTo(9, patient?.name)}</span>
           </Link>
         </td>
         <td>{createdAt}</td>
@@ -45,6 +51,7 @@ export const AppointmentItem = ({ appointment, onToggleAppointment }) => {
         onHide={toggleModal}
         className='bg-primary text-light'>
         <ShowAppointment
+          onRefresh={onRefresh}
           onHide={toggleModal}
           data={appointment} />
       </AppLgModal>

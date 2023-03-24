@@ -1,5 +1,5 @@
-import {useState} from "react";
-import {Button, ButtonGroup, Col, Form, InputGroup, Row, Spinner} from "react-bootstrap";
+import {useEffect, useState} from "react";
+import {Button, ButtonGroup, Col, Form, Row, Spinner} from "react-bootstrap";
 import img1 from '../../assets/app/img/beds/1.jpg';
 import img2 from '../../assets/app/img/beds/2.jpg';
 import img3 from '../../assets/app/img/beds/3.jpg';
@@ -7,7 +7,6 @@ import img4 from '../../assets/app/img/beds/4.jpg';
 import img5 from '../../assets/app/img/beds/5.jpg';
 import img6 from '../../assets/app/img/beds/6.jpg';
 import img7 from '../../assets/app/img/beds/7.jpg';
-import {handleChange} from "../../services/handleFormsFieldsServices";
 import {AddBed} from "./AddBed";
 import {useDeleteBedMutation, useGetBedsQuery} from "./bedApiSlice";
 import {ImageGridLoader} from "../../loaders/ImageGridLoader";
@@ -23,14 +22,11 @@ export const style = {
   height: 200.96,
 }
 
-const BedItem = ({id, currency}) => {
+const BedItem = ({ bed, currency }) => {
   const randomImg = Math.floor(Math.random() * elements.length)
   const [showEdit, setShowEdit] = useState(false)
   const [showDelete, setShowDelete] = useState(false)
   const [deleteBed, {isLoading}] = useDeleteBedMutation()
-  const { bed } = useGetBedsQuery('Bed', {
-    selectFromResult: ({ data }) => ({ bed: data.entities[id] })
-  })
 
   const toggleEditModal = () => setShowEdit(!showEdit)
   const toggleDeleteModal = () => setShowDelete(!showDelete)
@@ -117,41 +113,39 @@ const BedItem = ({id, currency}) => {
 }
 
 export const BedsList = () => {
-  const [keywords, setKeywords] = useState({search: ''})
+  const [search, setSearch] = useState('')
+  const [contents, setContents] = useState([])
   const [showNew, setShowNew] = useState(false)
   const { fCurrency} = useSelector(state => state.parameters)
   const {data: beds = [], isLoading, isFetching, isSuccess, isError, refetch} = useGetBedsQuery('Bed')
 
-  let content, errors
-  if (isError) errors = <AppMainError/>
-  else if (isSuccess) content = beds && beds.ids.map(id => <BedItem key={id} id={id} currency={fCurrency}/>)
+  useEffect(() => {
+    if (isSuccess && beds) {
+      const items = beds.ids?.map(id => { return beds?.entities[id] })
+      setContents(items?.filter(n => n?.number.toLowerCase().includes(search.toLowerCase())))
+    }
+  }, [isSuccess, beds, search])
 
   const handleToggleNewBed = () => setShowNew(!showNew)
 
-  const onRefresh = async () => await refetch()
-
-  function handleSubmit(e) {
-    e.preventDefault()
-  } // submit search keywords
+  const onRefresh = async () => {
+    setSearch('')
+    await refetch()
+  }
 
   return (
     <>
       <Row className='mb-4'>
-        <Col md={8} className=' mb-1'>
-          <form onSubmit={handleSubmit}>
-            <InputGroup>
-              <Button type='submit' variant='light' disabled={beds.length < 1}>
-                <i className='bi bi-search'/>
-              </Button>
-              <Form.Control
-                placeholder='Votre recherche ici...'
-                aria-label='Votre recherche ici...'
-                autoComplete='off'
-                disabled={beds.length < 1}
-                name='search'
-                value={keywords.search}
-                onChange={(e) => handleChange(e, keywords, setKeywords)} />
-            </InputGroup>
+        <Col md={8} className='mb-1'>
+          <form onSubmit={(e) => { e.preventDefault() }}>
+            <Form.Control
+              placeholder='Votre recherche ici...'
+              aria-label='Votre recherche ici...'
+              autoComplete='off'
+              disabled={beds.length < 1 || isLoading || isFetching}
+              name='search'
+              value={search}
+              onChange={({ target }) => setSearch(target.value)} />
           </form>
         </Col> {/* search bar */}
         <Col md={4} className='text-md-end mb-1'>
@@ -163,11 +157,13 @@ export const BedsList = () => {
           </Button>
         </Col>
       </Row>
-      <Row data-aos='fade-up' data-aos-duration={100} className='pt-2'>{content}</Row>
+      <Row data-aos='fade-up' data-aos-duration={100} className='pt-2'>
+        {!isLoading && contents.map(item => <BedItem key={item?.id} bed={item} currency={fCurrency}/>)}
+      </Row>
 
       {isLoading && <ImageGridLoader/>}
 
-      {errors && errors}
+      {isError && <AppMainError/>}
 
       <AddBed onHide={handleToggleNewBed} show={showNew} currency={fCurrency} />
     </>

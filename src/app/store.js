@@ -80,6 +80,7 @@ export const api = createApi({
     'Prescription',
     'SinglePrescription',
     'Appointments',
+    'AppointmentsPaginated',
     'Orders',
     'SingleOrder',
   ],

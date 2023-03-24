@@ -1,10 +1,10 @@
 import {api, patchHeaders, pathToApi} from "../../app/store";
-import {createEntityAdapter} from "@reduxjs/toolkit";
 import moment from "moment";
 
 export let totalExams = 0
-const examsAdapter = createEntityAdapter()
-const initialState = examsAdapter.getInitialState()
+export let totalResearchExams = 0
+export let researchExamsPages = 1
+export let examsPages = 1
 
 export const examApiSlice = api.injectEndpoints({
   endpoints: build => ({
@@ -12,17 +12,16 @@ export const examApiSlice = api.injectEndpoints({
       query: () => pathToApi+'/exams',
       transformResponse: res => {
         totalExams = res['hydra:totalItems']
-        const data = res['hydra:member']
-        const loadExams = data.map(type => {
-          if (type?.createdAt) type.createdAt = moment(type.createdAt).calendar()
-          return type
+        examsPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[1]) : 1
+        return res['hydra:member']?.map(exam => {
+          if (exam?.createdAt) exam.createdAt = moment(exam.createdAt).calendar()
+          return exam
         })
-        return examsAdapter.setAll(initialState, loadExams)
       },
-      providesTags: result => [
-        {type: 'Exam', id: 'LIST'},
-        ...result.ids.map(id => ({ type: 'Exam', id }))
-      ]
+      providesTags: result =>
+        result
+          ? [...result?.map(({ id }) => ({ type: 'Exam', id })), 'Exam']
+          : ['Exam']
     }), // list of exams
 
     addNewExam: build.mutation({
@@ -69,10 +68,53 @@ export const examApiSlice = api.injectEndpoints({
         })
       },
     }),
+
+    getExamsByPagination: build.query({
+      query: page => pathToApi+`/exams?page=${page}`,
+      transformResponse: res => {
+        const data = res['hydra:member']
+        totalExams = res['hydra:totalItems']
+        examsPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[1]) : 1
+        return data?.map(exam => {
+          if (exam?.createdAt) exam.createdAt = moment(exam.createdAt).calendar()
+          return exam
+        })
+      },
+    }), // pagination list,
+
+    getResearchExams: build.query({
+      query: keyword => pathToApi+`/exams?wording=${keyword}`,
+      transformResponse: res => {
+        const data = res['hydra:member']
+        totalResearchExams = res['hydra:totalItems']
+        researchExamsPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[2]) : 1
+        return data?.map(exam => {
+          if (exam?.createdAt) exam.createdAt = moment(exam.createdAt).calendar()
+          return exam
+        })
+      },
+    }),
+
+    getResearchExamsByPagination: build.query({
+      query: search => pathToApi+`/exams?wording=${search?.keyword}&page=${search?.page}`,
+      transformResponse: res => {
+        const data = res['hydra:member']
+        totalResearchExams = res['hydra:totalItems']
+        researchExamsPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[2]) : 1
+        return data?.map(exam => {
+          if (exam?.createdAt) exam.createdAt = moment(exam.createdAt).calendar()
+          return exam
+        })
+      },
+    }),
+
   })
 })
 
 export const {
+  useLazyGetExamsByPaginationQuery,
+  useLazyGetResearchExamsQuery,
+  useLazyGetResearchExamsByPaginationQuery,
   useGetExamsQuery,
   useAddNewExamMutation,
   useUpdateExamMutation,

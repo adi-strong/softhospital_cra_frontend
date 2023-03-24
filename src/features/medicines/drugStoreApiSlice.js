@@ -20,13 +20,7 @@ export const drugStoreApiSlice = api.injectEndpoints({
       query: drugs => ({
         url: pathToApi+`/drugstore_supplies`,
         method: 'POST',
-        body: {
-          document: drugs[0].document,
-          released: drugs[0].released,
-          provider: drugs[0].provider?.value,
-          values: drugs?.values,
-          amount: drugs?.amount.toString(),
-        }
+        body: drugs,
       }),
       invalidatesTags: ['Drugstore', 'DrugstoreList', 'DrugstoreInvoices', 'Box']
     }),

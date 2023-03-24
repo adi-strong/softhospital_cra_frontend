@@ -1,10 +1,10 @@
 import {api, patchHeaders, pathToApi} from "../../app/store";
-import {createEntityAdapter} from "@reduxjs/toolkit";
 import moment from "moment";
 
 export let totalConsultationTypes = 0
-const consultationTypesAdapter = createEntityAdapter()
-const initialState = consultationTypesAdapter.getInitialState()
+export let totalResearchConsultationTypes = 0
+export let researchConsultationTypesPages = 1
+export let consultationTypesPages = 1
 
 export const consultationTypeApiSlice = api.injectEndpoints({
   endpoints: build => ({
@@ -12,17 +12,16 @@ export const consultationTypeApiSlice = api.injectEndpoints({
       query: () => pathToApi+'/consultations_types',
       transformResponse: res => {
         totalConsultationTypes = res['hydra:totalItems']
-        const data = res['hydra:member']
-        const loadConsultationsTypes = data.map(type => {
+        consultationTypesPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[1]) : 1
+        return res['hydra:member']?.map(type => {
           if (type?.createdAt) type.createdAt = moment(type.createdAt).calendar()
           return type
         })
-        return consultationTypesAdapter.setAll(initialState, loadConsultationsTypes)
       },
-      providesTags: result => [
-        {type: 'ConsultationType', id: 'LIST'},
-        ...result.ids.map(id => ({ type: 'ConsultationType', id }))
-      ]
+      providesTags: result =>
+        result
+          ? [...result?.map(({ id }) => ({ type: 'ConsultationType', id })), 'ConsultationType']
+          : ['ConsultationType']
     }), // list of consultation's types
 
     addNewConsultationType: build.mutation({
@@ -65,10 +64,52 @@ export const consultationTypeApiSlice = api.injectEndpoints({
         })
       }
     }),
+
+    getConsultationTypesByPagination: build.query({
+      query: page => pathToApi+`/consultations_types?page=${page}`,
+      transformResponse: res => {
+        const data = res['hydra:member']
+        totalConsultationTypes = res['hydra:totalItems']
+        consultationTypesPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[1]) : 1
+        return data?.map(type => {
+          if (type?.createdAt) type.createdAt = moment(type.createdAt).calendar()
+          return type
+        })
+      },
+    }), // pagination list,
+
+    getResearchConsultationTypes: build.query({
+      query: keyword => pathToApi+`/consultations_types?wording=${keyword}`,
+      transformResponse: res => {
+        const data = res['hydra:member']
+        totalResearchConsultationTypes = res['hydra:totalItems']
+        researchConsultationTypesPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[2]) : 1
+        return data?.map(type => {
+          if (type?.createdAt) type.createdAt = moment(type.createdAt).calendar()
+          return type
+        })
+      },
+    }),
+
+    getResearchConsultationTypesByPagination: build.query({
+      query: search => pathToApi+`/consultations_types?wording=${search?.keyword}&page=${search?.page}`,
+      transformResponse: res => {
+        const data = res['hydra:member']
+        totalResearchConsultationTypes = res['hydra:totalItems']
+        researchConsultationTypesPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[2]) : 1
+        return data?.map(type => {
+          if (type?.createdAt) type.createdAt = moment(type.createdAt).calendar()
+          return type
+        })
+      },
+    }),
   })
 })
 
 export const {
+  useLazyGetResearchConsultationTypesByPaginationQuery,
+  useLazyGetResearchConsultationTypesQuery,
+  useLazyGetConsultationTypesByPaginationQuery,
   useGetConsultationTypesQuery,
   useDeleteConsultationTypeMutation,
   useAddNewConsultationTypeMutation,

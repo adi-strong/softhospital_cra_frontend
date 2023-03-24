@@ -18,14 +18,14 @@ export const ConsultationItem2 = ({ consult }) => {
         <td className='text-uppercase' title={file ? file.toUpperCase() : ''}>
           <Link to={`/member/treatments/consultations/${consult?.id}`} className='text-decoration-none'>
             <i className='bi bi-journal-medical me-1'/>
-            {limitStrTo(15, file)}
+            {limitStrTo(8, file)}
           </Link>
         </td>
         <td className='text-primary fw-bold'>
           <Link to={`/member/treatments/consultations/${consult?.id}/${patient?.slug}`} className='text-decoration-none'>
             <img src={profile} width={30} height={30} className='rounded-circle me-2' alt='' />
             {patient?.firstName && <span className='text-capitalize me-1'>{patient.firstName}</span>}
-            <span className='text-uppercase'>{patient?.name}</span>
+            <span className='text-uppercase'>{limitStrTo(9, patient?.name)}</span>
           </Link>
         </td>
         <td>{date}</td>

@@ -20,10 +20,10 @@ export const AddActs = ({onHide, show = false, currency}) => {
 
   let options
   if (isError) alert("Les catégories n'ont pas pû être chargé, une érreur est survenue !!")
-  else if (isSuccess) options = categories && categories.ids.map(id => {
+  else if (isSuccess) options = categories && categories.map(category => {
     return {
-      label: categories.entities[id].name,
-      value: categories.entities[id]['@id'],
+      label: category?.name,
+      value: category['@id'],
     }
   })
 

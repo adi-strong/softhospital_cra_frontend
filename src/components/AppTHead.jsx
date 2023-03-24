@@ -4,8 +4,8 @@ import {Spinner} from "react-bootstrap";
 
 const AppTHead = ({img, onRefresh, style = {}, className, isImg = false, items = [], loader = false, isFetching = false}) => {
   return (
-    <thead className={className} style={style}>
-    <tr>
+    <thead style={style}>
+    <tr className={className}>
       {isImg && <th scope='col'>{img}</th>}
       {items && items?.map((item, idx) =>
         <th key={idx} scope='col'>

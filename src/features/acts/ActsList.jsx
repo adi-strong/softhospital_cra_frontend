@@ -1,21 +1,24 @@
-import {useState} from "react";
-import {AppDataTableStripped, AppDelModal, AppMainError, AppTHead} from "../../components";
-import {Badge, Button, ButtonGroup, Col, Form, InputGroup} from "react-bootstrap";
-import {handleChange} from "../../services/handleFormsFieldsServices";
+import {useEffect, useState} from "react";
+import {AppDataTableStripped, AppDelModal, AppMainError, AppPaginationComponent, AppTHead} from "../../components";
+import {Badge, Button, ButtonGroup, Col, Form} from "react-bootstrap";
 import {AddActs} from "./AddActs";
-import {useDeleteActMutation, useGetActsQuery} from "./actApiSlice";
+import {
+  actsPages, researchActsPages, totalResearchActs,
+  useDeleteActMutation,
+  useGetActsQuery,
+  useLazyGetActsByPaginationQuery, useLazyGetResearchActsByPaginationQuery,
+  useLazyGetResearchActsQuery
+} from "./actApiSlice";
 import {useSelector} from "react-redux";
 import {limitStrTo} from "../../services";
 import toast from "react-hot-toast";
 import {EditAct} from "./EditAct";
+import BarLoaderSpinner from "../../loaders/BarLoaderSpinner";
 
-const ActItem = ({id, currency}) => {
+const ActItem = ({ act, currency, onRefresh }) => {
   const [showEdit, setShowEdit] = useState(false)
   const [showDelete, setShowDelete] = useState(false)
   const [deleteAct, {isLoading}] = useDeleteActMutation()
-  const { act } = useGetActsQuery('Act', {
-    selectFromResult: ({ data }) => ({ act: data.entities[id] })
-  })
 
   const toggleEditModal = () => setShowEdit(!showEdit)
   const toggleDeleteModal = () => setShowDelete(!showDelete)
@@ -24,7 +27,10 @@ const ActItem = ({id, currency}) => {
     toggleDeleteModal()
     try {
       const formData = await deleteAct(act)
-      if (!formData.error) toast.success('Suppression bien efféctuée.', {icon: '😶'})
+      if (!formData.error) {
+        toast.success('Suppression bien efféctuée.', {icon: '😶'})
+        onRefresh()
+      }
     }
     catch (e) { toast.error(e.message) }
   }
@@ -34,7 +40,7 @@ const ActItem = ({id, currency}) => {
       <tr>
         <td><i className='bi bi-file-earmark-medical'/></td>
         <th>#{act.id}</th>
-        <td className='text-uppercase' title={act.wording}>{limitStrTo(30, act.wording)}</td>
+        <td className='text-uppercase' title={act.wording}>{limitStrTo(21, act.wording)}</td>
         <td className='fw-bold'>
           {act.price
             ? <><span className='text-secondary me-1'>{currency && currency.value}</span>
@@ -58,7 +64,12 @@ const ActItem = ({id, currency}) => {
         </td>
       </tr>
 
-      <EditAct onHide={toggleEditModal} show={showEdit} data={act} currency={currency} />
+      <EditAct
+        onHide={toggleEditModal}
+        show={showEdit}
+        data={act}
+        currency={currency}
+        onRefresh={onRefresh} />
       <AppDelModal
         show={showDelete}
         onHide={toggleDeleteModal}
@@ -76,30 +87,99 @@ const ActItem = ({id, currency}) => {
 }
 
 export const ActsList = () => {
-  const [keywords, setKeywords] = useState({search: ''})
+  const [search, setSearch] = useState('')
   const [showNew, setShowNew] = useState(false)
-  const { fCurrency } = useSelector(state => state.parameters)
   const {data: acts = [], isLoading, isFetching, isSuccess, isError, refetch} = useGetActsQuery('Act')
+  const { fCurrency } = useSelector(state => state.parameters)
 
-  let content, errors
-  if (isError) errors = <AppMainError/>
-  else if (isSuccess) content = acts && acts.ids.map(id => <ActItem key={id} id={id} currency={fCurrency}/>)
+  const [contents, setContents] = useState([])
+  const [tempSearch, setTempSearch] = useState('')
+  const [page, setPage] = useState(1)
+  const [checkActs, setCheckActs] = useState({isSearching: false, isPaginated: false,})
 
   const handleToggleNewAct = () => setShowNew(!showNew)
 
-  const onRefresh = async () => await refetch()
+  const [paginatedActs, setPaginatedActs] = useState([])
+  const [researchPaginatedActs, setResearchPaginatedActs] = useState([])
 
-  function handleSubmit(e) {
+  const [getActsByPagination, {isFetching: isFetching2, isError: isError2,}] = useLazyGetActsByPaginationQuery()
+  const [getResearchActs, {isFetching: isFetching3, isError: isError3,}] = useLazyGetResearchActsQuery()
+  const [getResearchActsByPagination, {
+    isFetching: isFetching4,
+    isError: isError4,
+  }] = useLazyGetResearchActsByPaginationQuery()
+
+  async function handlePagination(pagination) {
+    const param = pagination + 1
+    setPage(param)
+    setCheckActs({isSearching: false, isPaginated: true})
+    const { data: searchData, isSuccess } = await getActsByPagination(param)
+    if (isSuccess && searchData) {
+      setPaginatedActs(searchData)
+    }
+  } // handle main pagination
+
+  async function handlePagination2(pagination) {
+    const param = pagination + 1
+    const keywords = {page: param, keyword: tempSearch}
+    setPage(param)
+    setCheckActs({isSearching: true, isPaginated: false})
+    const { data: searchData, isSuccess } = await getResearchActsByPagination(keywords)
+    if (isSuccess && searchData) {
+      setResearchPaginatedActs(searchData)
+    }
+  } // 2nd handle main pagination
+
+  async function handleSubmit(e) {
     e.preventDefault()
+    setPage(1)
+    setTempSearch(search)
+    setSearch('')
+    setCheckActs({isSearching: true, isPaginated: false})
+    const { data: searchData, isSuccess } = await getResearchActs(search)
+    if (isSuccess && searchData) {
+      setResearchPaginatedActs(searchData)
+    }
   } // submit search keywords
+
+  const onRefresh = async () => {
+    setCheckActs({isSearching: false, isPaginated: false})
+    setSearch('')
+    setTempSearch('')
+    setPage(1)
+    await refetch()
+  }
+
+  useEffect(() => {
+    if (!checkActs.isSearching && !checkActs.isPaginated && isSuccess && acts)
+      setContents(acts.filter(f => f?.wording.toLowerCase().includes(search.toLowerCase())))
+    else if (!checkActs.isSearching && checkActs.isPaginated && isSuccess && acts)
+      setContents(paginatedActs?.filter(f => f?.wording.toLowerCase().includes(search.toLowerCase())))
+    else if (checkActs.isSearching && !checkActs.isPaginated && isSuccess && acts)
+      setContents(researchPaginatedActs?.filter(f => f?.wording.toLowerCase().includes(search.toLowerCase())))
+  }, [
+    checkActs,
+    isSuccess,
+    acts,
+    search,
+    researchPaginatedActs,
+    paginatedActs,
+  ])
 
   return (
     <>
       <AppDataTableStripped
-        loader={isLoading}
+        loader={isLoading || isFetching2 || isFetching4}
         title='Liste des actes médicaux'
         overview={
           <>
+            {checkActs.isSearching &&
+              <p>
+                Au total
+                <code className="mx-1 me-1">{totalResearchActs.toLocaleString()}</code>
+                acte(s) médicaux trouvé(s) suite à votre recherche ⏩ <b>{tempSearch}</b> :
+              </p>}
+
             <Col md={3}>
               <Button
                 type='button'
@@ -111,32 +191,68 @@ export const ActsList = () => {
             </Col> {/* add new patient and printing's launch button */}
             <Col className='text-md-end'>
               <form onSubmit={handleSubmit}>
-                <InputGroup>
-                  <Form.Control
-                    placeholder='Votre recherche ici...'
-                    aria-label='Votre recherche ici...'
-                    autoComplete='off'
-                    disabled={acts.length < 1}
-                    name='search'
-                    value={keywords.search}
-                    onChange={(e) => handleChange(e, keywords, setKeywords)} />
-                  <Button type='submit' variant='light' disabled={acts.length < 1}>
-                    <i className='bi bi-search'/>
-                  </Button>
-                </InputGroup>
+                <Form.Control
+                  placeholder='Votre recherche ici...'
+                  aria-label='Votre recherche ici...'
+                  autoComplete='off'
+                  disabled={isFetching3}
+                  name='search'
+                  value={search}
+                  onChange={({ target}) => setSearch(target.value)} />
               </form>
             </Col> {/* search form for patients */}
           </>
         }
-        thead={<AppTHead onRefresh={onRefresh} loader={isLoading} isFetching={isFetching} isImg items={[
-          {label: '#'},
-          {label: "Libéllé"},
-          {label: 'Prix'},
-          {label: 'Catégorie'},
-        ]}/>}
-        tbody={<tbody>{content}</tbody>} />
+        thead={
+        <AppTHead
+          onRefresh={onRefresh}
+          loader={isLoading || isFetching2 || isFetching4 || isFetching3}
+          isFetching={isFetching || isFetching2 || isFetching4 || isFetching3}
+          isImg
+          items={[
+            {label: '#'},
+            {label: 'Libéllé'},
+            {label: 'Prix'},
+            {label: 'Catégorie'},
+          ]}/>}
+        tbody={
+          <tbody>
+            {!isLoading && contents.length > 0 && contents.map(act =>
+              <ActItem
+                key={act?.id}
+                currency={fCurrency}
+                act={act}
+                onRefresh={onRefresh}/>)}
+          </tbody>
+      } />
 
-      {errors && errors}
+      {isLoading || isFetching || isFetching2 || isFetching3 || isFetching4
+        ? <BarLoaderSpinner loading={isLoading || isFetching || isFetching2 || isFetching3 || isFetching4}/>
+        : (
+          <>
+            {actsPages > 1 && isSuccess && acts
+              && !checkActs.isSearching &&
+              <AppPaginationComponent
+                nextLabel=''
+                previousLabel=''
+                onPaginate={handlePagination}
+                currentPage={page - 1}
+                pageCount={actsPages} />}
+
+            {researchActsPages > 1 && isSuccess && acts && checkActs.isSearching &&
+              <AppPaginationComponent
+                nextLabel=''
+                previousLabel=''
+                onPaginate={handlePagination2}
+                currentPage={page - 1}
+                pageCount={researchActsPages} />}
+          </>
+        )}
+
+      {isError && <div className='mb-3'><AppMainError/></div>}
+      {isError2 && <div className='mb-3'><AppMainError/></div>}
+      {isError3 && <div className='mb-3'><AppMainError/></div>}
+      {isError4 && <div className='mb-3'><AppMainError/></div>}
 
       <AddActs show={showNew} onHide={handleToggleNewAct} currency={fCurrency} />
     </>

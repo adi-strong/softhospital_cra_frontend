@@ -1,10 +1,10 @@
 import {api, patchHeaders, pathToApi} from "../../app/store";
-import {createEntityAdapter} from "@reduxjs/toolkit";
 import moment from "moment";
 
 export let totalActCategories = 0
-const actCategoriesAdapter = createEntityAdapter()
-const initialState = actCategoriesAdapter.getInitialState()
+export let totalResearchActCategories = 0
+export let researchActCategoriesPages = 1
+export let actCategoriesPages = 1
 
 export const actCategoriesApiSlice = api.injectEndpoints({
   endpoints: build => ({
@@ -12,17 +12,16 @@ export const actCategoriesApiSlice = api.injectEndpoints({
       query: () => pathToApi+'/act_categories',
       transformResponse: res => {
         totalActCategories = res['hydra:totalItems']
-        const data = res['hydra:member']
-        const loadActCategories = data.map(type => {
+        actCategoriesPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[1]) : 1
+        return res['hydra:member']?.map(type => {
           if (type?.createdAt) type.createdAt = moment(type.createdAt).calendar()
           return type
         })
-        return actCategoriesAdapter.setAll(initialState, loadActCategories)
       },
-      providesTags: result => [
-        {type: 'ActCategories', id: 'LIST'},
-        ...result.ids.map(id => ({ type: 'ActCategories', id }))
-      ]
+      providesTags: result =>
+        result
+          ? [...result?.map(({ id }) => ({ type: 'ActCategories', id })), 'ActCategories']
+          : ['ActCategories']
     }), // list of acts
 
     addNewActCategory: build.mutation({
@@ -52,10 +51,53 @@ export const actCategoriesApiSlice = api.injectEndpoints({
       }),
       invalidatesTags: ['ActCategories', 'Act']
     }), // delete act
+
+    getActCategoriesByPagination: build.query({
+      query: page => pathToApi+`/act_categories?page=${page}`,
+      transformResponse: res => {
+        const data = res['hydra:member']
+        totalActCategories = res['hydra:totalItems']
+        actCategoriesPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[1]) : 1
+        return data?.map(act => {
+          if (act?.createdAt) act.createdAt = moment(act.createdAt).calendar()
+          return act
+        })
+      },
+    }), // pagination list,
+
+    getResearchActCategories: build.query({
+      query: keyword => pathToApi+`/act_categories?name=${keyword}`,
+      transformResponse: res => {
+        const data = res['hydra:member']
+        totalResearchActCategories = res['hydra:totalItems']
+        researchActCategoriesPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[2]) : 1
+        return data?.map(act => {
+          if (act?.createdAt) act.createdAt = moment(act.createdAt).calendar()
+          return act
+        })
+      },
+    }),
+
+    getResearchActCategoriesByPagination: build.query({
+      query: search => pathToApi+`/act_categories?name=${search?.keyword}&page=${search?.page}`,
+      transformResponse: res => {
+        const data = res['hydra:member']
+        totalResearchActCategories = res['hydra:totalItems']
+        researchActCategoriesPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[2]) : 1
+        return data?.map(act => {
+          if (act?.createdAt) act.createdAt = moment(act.createdAt).calendar()
+          return act
+        })
+      },
+    }),
+
   })
 })
 
 export const {
+  useLazyGetActCategoriesByPaginationQuery,
+  useLazyGetResearchActCategoriesQuery,
+  useLazyGetResearchActCategoriesByPaginationQuery,
   useGetActCategoriesQuery,
   useAddNewActCategoryMutation,
   useUpdateActCategoryMutation,

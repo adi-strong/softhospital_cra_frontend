@@ -5,6 +5,9 @@ import {createEntityAdapter} from "@reduxjs/toolkit";
 export let totalTreatments = 0
 const treatmentsAdapter = createEntityAdapter()
 const initialState = treatmentsAdapter.getInitialState()
+export let totalResearchTreatments = 0
+export let researchTreatmentsPages = 1
+export let treatmentsPages = 1
 
 export const treatmentApiSlice = api.injectEndpoints({
   endpoints: build => ({
@@ -13,6 +16,7 @@ export const treatmentApiSlice = api.injectEndpoints({
       transformResponse: res => {
         totalTreatments = res['hydra:totalItems']
         const data = res['hydra:member']
+        treatmentsPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[1]) : 1
         const loadTreatments = data.map(treatment => {
           if (treatment?.createdAt) treatment.createdAt = moment(treatment.createdAt).calendar()
           return treatment
@@ -69,10 +73,53 @@ export const treatmentApiSlice = api.injectEndpoints({
         })
       },
     }),
+
+    getTreatmentsByPagination: build.query({
+      query: page => pathToApi+`/treatments?page=${page}`,
+      transformResponse: res => {
+        const data = res['hydra:member']
+        totalTreatments = res['hydra:totalItems']
+        treatmentsPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[1]) : 1
+        return data?.map(treatment => {
+          if (treatment?.createdAt) treatment.createdAt = moment(treatment.createdAt).calendar()
+          return treatment
+        })
+      },
+    }), // pagination list,
+
+    getResearchTreatments: build.query({
+      query: keyword => pathToApi+`/treatments?wording=${keyword}`,
+      transformResponse: res => {
+        const data = res['hydra:member']
+        totalResearchTreatments = res['hydra:totalItems']
+        researchTreatmentsPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[2]) : 1
+        return data?.map(treatment => {
+          if (treatment?.createdAt) treatment.createdAt = moment(treatment.createdAt).calendar()
+          return treatment
+        })
+      },
+    }),
+
+    getResearchTreatmentsByPagination: build.query({
+      query: search => pathToApi+`/treatments?wording=${search?.keyword}&page=${search?.page}`,
+      transformResponse: res => {
+        const data = res['hydra:member']
+        totalResearchTreatments = res['hydra:totalItems']
+        researchTreatmentsPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[2]) : 1
+        return data?.map(treatment => {
+          if (treatment?.createdAt) treatment.createdAt = moment(treatment.createdAt).calendar()
+          return treatment
+        })
+      },
+    }),
+
   })
 })
 
 export const {
+  useLazyGetTreatmentsByPaginationQuery,
+  useLazyGetResearchTreatmentsQuery,
+  useLazyGetResearchTreatmentsByPaginationQuery,
   useLazyHandleLoadTreatmentsQuery,
   useGetTreatmentsQuery,
   useAddNewTreatmentMutation,

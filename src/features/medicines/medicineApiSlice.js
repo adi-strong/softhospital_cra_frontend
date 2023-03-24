@@ -79,6 +79,7 @@ export const medicineApiSlice = api.injectEndpoints({
           code: medicine?.code ? medicine.code : '-- --',
           label: medicine?.wording,
           value: medicine['@id'],
+          data: medicine,
         }
       })
     }), // get medicines options
@@ -94,6 +95,7 @@ export const medicineApiSlice = api.injectEndpoints({
           wording: medicine.wording,
           label: medicine.code,
           value: medicine['@id'],
+          data: medicine,
         }
       })
     }), // get medicines options
@@ -104,16 +106,19 @@ export const medicineApiSlice = api.injectEndpoints({
         method: 'POST',
         body: {
           amount: data?.amount.toString(),
-          discount: data?.discount > 0 ? data.discount : null,
-          currency: data?.currency ? data.currency.value : null,
-          values: data?.values ? data.values?.map(item => {
+          subTotal: data?.subTotal.toString(),
+          discount: data?.check1 ? parseFloat(data?.discount) : null,
+          vTA: data?.check2 ? parseFloat(data?.vTA) : null,
+          totalAmount: data?.totalAmount.toString(),
+          currency: data?.currency ? data.currency?.value: null,
+          values: data?.values.map(item => {
             return {
               id: item?.id,
-              quantity: item?.quantity,
+              quantity: parseFloat(item?.qty),
               price: item?.price.toString(),
+              cost: item?.cost.toString(),
             }
-          }) : null
-        }
+          })},
       }),
       invalidatesTags: ['Drugstore', 'DrugstoreList', 'Box'],
     })

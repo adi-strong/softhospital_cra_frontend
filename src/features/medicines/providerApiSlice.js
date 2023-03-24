@@ -63,6 +63,7 @@ export const providerApiSlice = api.injectEndpoints({
           id: provider.id,
           label: provider?.wording,
           value: provider['@id'],
+          data: provider,
         }
       })
     }), // get providers options

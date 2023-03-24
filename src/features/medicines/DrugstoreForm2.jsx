@@ -1,404 +1,408 @@
-import {useGetProvidersQuery, useLazyHandleLoadProvidersOptionsQuery} from "./providerApiSlice";
-import {useEffect, useMemo, useState} from "react";
-import toast from "react-hot-toast";
-import {Button, Col, Form, FormGroup, Row, Spinner} from "react-bootstrap";
-import {AppAsyncSelectOptions, AppFloatingInputField} from "../../components";
-import {requiredField} from "../covenants/addCovenant";
-import AppInputField from "../../components/forms/AppInputField";
-import {handleChange, onStrictNumChange} from "../../services/handleFormsFieldsServices";
+import {Button, Col, Form, InputGroup, Row} from "react-bootstrap";
+import {useMemo, useState} from "react";
 import {
+  useGetMedicinesQuery,
   useLazyHandleLoadMedicinesCodesOptionsQuery,
   useLazyHandleLoadMedicinesOptionsQuery
 } from "./medicineApiSlice";
-import {useGetDrugstoreListQuery} from "./drugStoreApiSlice";
+import {AppAsyncSelectOptions} from "../../components";
+import {requiredField} from "../covenants/addCovenant";
+import {handleChange, onStrictNumChange} from "../../services/handleFormsFieldsServices";
+import moment from "moment";
 
-export const DrugstoreForm2 = ({ currency, drugstore, setDrugstore, values, setValues, isLoading, isSuccess }) => {
-  const [qty, setQty] = useState(0)
+export const DrugstoreForm2 = ({ invoice, items, total, setTotal, setItems, loader = false }) => {
+  const [item, setItem] = useState({
+    product: null,
+    productCode: null,
+    select: 'piece',
+    quantityLabel: 'Pièce',
+    isVTASelected: false,
+    otherQty: 0,
+    cost: 1,
+    vTA: 10,
+    quantity: 1,
+    finalQty: 0,
+    expiryDate: ''})
+
   const [check, setCheck] = useState(false)
-  const {
-    data: providers = [],
-    isLoading: isProvidersLoading,
-    isFetching: isProvidersFetching,
-    isError: isProvidersError
-  } = useGetProvidersQuery('Providers')
+
   const {
     data: medicines = [],
-    isLoading: isMedicinesLoading,
-    isFetching: isMedicinesFetching,
-    isError: isMedicinesError
-  } = useGetDrugstoreListQuery('DrugstoreList')
+    isSuccess: isMedOk,
+    isFetching: isMedPending,
+    isError: isMedError} = useGetMedicinesQuery('Drugstore')
 
-  const [handleLoadProvidersOptions] = useLazyHandleLoadProvidersOptionsQuery()
+  let medOptions, medCodeOptions
+
   const [handleLoadMedicinesOptions] = useLazyHandleLoadMedicinesOptionsQuery()
   const [handleLoadMedicinesCodesOptions] = useLazyHandleLoadMedicinesCodesOptionsQuery()
-  const [supplyData, setSupplyData] = useState({
-    document: '',
-    provider: null,
-    medicine: null,
-    released: new Date().toISOString().substring(0, 10),
-    expiryDate: '',
-    code: null,
+
+  if (isMedError) alert('ERREUR: Erreur lors du chargement des produits ❗')
+
+  medOptions = useMemo(() => isMedOk && medicines
+    ? medicines.map(item => {
+      return {
+        id: item?.id,
+        quantity: item?.quantity,
+        cost: parseFloat(item?.cost),
+        price: parseFloat(item?.price),
+        code: item?.code ? item?.code : '-- --',
+        label: item?.wording,
+        value: item['@id'],
+        data: item,
+      }
+    })
+    : [], [isMedOk, medicines])
+
+  medCodeOptions = useMemo(() => isMedOk && medicines
+    ? medicines.map(item => {
+      return {
+        id: item?.id,
+        quantity: item?.quantity,
+        cost: parseFloat(item?.cost),
+        price: parseFloat(item?.price),
+        wording: item?.wording,
+        label: item?.code,
+        value: item['@id'],
+        data: item,
+      }
+    })
+    : [], [isMedOk, medicines])
+
+  const handleChangeProduct = (event) => {
+    if (event) {
+      setItem({...item,
+        product: event,
+        productCode: {label: event?.code, value: event?.value}})
+    }
+    else {
+      setItem({...item,
+        product: event,
+        productCode: event})
+    }
+  }
+
+  const handleChangeProductsCode = (event) => {
+    if (event) {
+      setItem({...item,
+        productCode: event,
+        product: {id: event?.id, label: event?.wording, value: event?.value, data: event?.data}})
+    }
+    else {
+      setItem({...item,
+        productCode: event,
+        product: null})
+    }
+  }
+
+  async function onLoadProduct(key) {
+    const {data: prodData, isSuccess: isProdOk} = await handleLoadMedicinesOptions(key)
+    if (isProdOk) return prodData
+  }
+
+  async function onLoadProductsCode(key) {
+    const {data: prodData, isSuccess: isProdOk} = await handleLoadMedicinesCodesOptions(key)
+    if (isProdOk) return prodData
+  }
+
+  function handleChangeOtherQty({ target }) {
+    const value = target.value > 0 && !isNaN(target.value) ? parseFloat(target.value) : 0
+    const qty = item.quantity * value
+    setItem({...item, otherQty: value, finalQty: qty})
+  }
+
+  const onChangeKindOfQty = () => setItem({...item,
+    quantityLabel: 'Pièce',
+    select: 'piece',
+    cost: 1,
     quantity: 1,
-    cost: null,
-    price: null,
-    id: null,
-  })
+    finalQty: 0,
+    otherQty: 0})
 
-  let apiErrors = {document: null, released: null, expiryDate: null}
+  const onChangeKindOfQty2 = () => setItem({...item,
+    quantityLabel: '',
+    select: 'other',
+    cost: 1,
+    quantity: 1,
+    finalQty: 0,
+    otherQty: 0})
 
-  let providersOptions, medicinesOptions, medicinesCodesOptions
-
-  if (isProvidersError) alert('ERREUR: Erreur lors du chargement des fournisseurs !!!')
-  if (isMedicinesError) alert('ERREUR: Erreur lors du chargement des produits !!!')
-
-  providersOptions = useMemo(() => {
-    if (!isProvidersLoading && providers) return providers.map(provider => {
-      return {
-        id: provider.id,
-        label: provider.wording,
-        value: provider['@id'],
-      }
-    })
-  }, [isProvidersLoading, providers])
-
-  medicinesOptions = useMemo(() => {
-    if (!isMedicinesLoading && medicines) return medicines.map(medicine => {
-      return {
-        id: medicine.id,
-        quantity: medicine.quantity,
-        cost: parseFloat(medicine.cost),
-        price: parseFloat(medicine.price),
-        code: medicine?.code ? medicine.code : '-- --',
-        label: medicine.wording,
-        value: medicine['@id'],
-      }
-    })
-  }, [isMedicinesLoading, medicines])
-
-  medicinesCodesOptions = useMemo(() => {
-    if (!isMedicinesLoading && medicines) return medicines.map(code => {
-      return {
-        id: code.id,
-        quantity: code.quantity,
-        cost: parseFloat(code.cost),
-        price: parseFloat(code.price),
-        wording: code.wording,
-        label: code.code,
-        value: code['@id'],
-      }
-    })
-  }, [isMedicinesLoading, medicines])
-
-  async function onLoadProviders(keyword) {
-    try {
-      const providersData = await handleLoadProvidersOptions(keyword).unwrap()
-      if (providersData)
-        return providersData
-    }
-    catch (e) { toast.error(e.message) }
-  }
-
-  async function onLoadMedicines(keyword) {
-    try {
-      const medicinesData = await handleLoadMedicinesOptions(keyword).unwrap()
-      if (medicinesData)
-        return medicinesData
-    }
-    catch (e) { toast.error(e.message) }
-  }
-
-  async function onLoadMedicinesCodes(keyword) {
-    try {
-      const medicinesData = await handleLoadMedicinesCodesOptions(keyword).unwrap()
-      if (medicinesData)
-        return medicinesData
-    }
-    catch (e) { toast.error(e.message) }
-  }
-
-  useEffect(() => {
-    if (supplyData.medicine) {
-      setQty(supplyData.quantity + supplyData.medicine.quantity)
-    }
-    else setQty(0)
-  }, [supplyData])
-
-  function onChangeMedicine(event) {
-    let code
-    if (event) {
-      code = {
-        id: event.id,
-        quantity: event.quantity,
-        cost: parseFloat(event.cost),
-        price: parseFloat(event.price),
-        wording: event.wording,
-        label: event.code,
-        value: event.value,
-      }
-    }
-    else code = null
-    setSupplyData({
-      ...supplyData,
-      code,
-      id: event ? event.id : null,
-      medicine: event,
-      cost: event ? event.cost : null,
-      price: event ? event.price : null})
-  }
-
-  function onChangeMedicineCode(event) {
-    let medicine
-    if (event) {
-      medicine = {
-        id: event.id,
-        quantity: event.quantity,
-        cost: parseFloat(event.cost),
-        price: parseFloat(event.price),
-        code: event?.code ? event.code : '-- --',
-        label: event.wording,
-        value: event.value,
-      }
-    }
-    else medicine = null
-    setSupplyData({
-      ...supplyData,
-      medicine,
-      id: event ? event.id : null,
-      code: event,
-      cost: event ? event.cost : null,
-      price: event ? event.price : null})
-  }
-
-  function handleChangeCheck({target}) {
-    const checked = target.checked
-    setCheck(checked)
-    if (!checked && supplyData.medicine) setSupplyData({...supplyData,
-      cost: supplyData.medicine.cost,
-      price: supplyData.medicine.price,
-    })
-  }
-
-  function onReset() {
-    setCheck(false)
-    setSupplyData({
-      document: '',
-      provider: null,
-      medicine: null,
-      released: new Date().toISOString().substring(0, 10),
-      expiryDate: '',
-      code: null,
+  const onReset = () => {
+    setItem({
+      product: null,
+      productCode: null,
+      select: 'piece',
+      quantityLabel: 'Pièce',
+      isVTASelected: false,
+      otherQty: 0,
+      cost: 1,
+      vTA: 10,
       quantity: 1,
-      cost: null,
-      price: null,
-      id: null,
-    })
-  }
-
-  function onReset2() {
+      finalQty: 0,
+      expiryDate: ''})
     setCheck(false)
-    setSupplyData({
-      ...supplyData,
-      medicine: null,
-      code: null,
-      quantity: 1,
-      expiryDate: '',
-      cost: null,
-      price: null,
-    })
   }
 
   const canSave = [
-    supplyData.document,
-    supplyData.provider,
-    supplyData.expiryDate,
-    supplyData.medicine,
-    supplyData.quantity,
-  ].every(Boolean)
+    invoice?.released,
+    item.expiryDate,
+    item.quantity,
+    item.otherQty,
+    item.cost,
+    item.quantityLabel].every(Boolean) || !loader
 
   function onSubmit(e) {
     e.preventDefault()
-    if (canSave) {
-      const obj = [...drugstore]
-      if (supplyData.released && supplyData.released <= supplyData.expiryDate) {
-        const isItemExists = drugstore.find(item => item.id === supplyData.id)
-        // Si le produit existe déjà dans la liste des
-        // produits à approvisionner ?
-        if (drugstore.length > 0 && isItemExists) {
-          alert('🤕 ce produit a déjà été ajouté ❗')
-          onReset2()
-        }
-        else {
-          obj.unshift(supplyData)
-          setDrugstore(obj)
-          setValues([...values, {
-            id: supplyData.id,
-            quantity: supplyData.quantity,
-            cost: supplyData.cost.toString(),
-            price: supplyData.price.toString(),
-            expiryDate: supplyData.expiryDate,
-          }])
-          onReset2()
-        }
-
-      } // Si la date d'approvisionnement est
-      // inférieure ou égale à la date de péremption
-      else alert("🤕 La date d'approvisionnement ne peut être supérieure à la date de péremption 👎")
-      // Sinon
-      // il ne se passe rien et on affiche un message une alerte !
+    if (canSave) { // Si tout les champs obligatoires sont rempli
+      const values = [...items]
+      const releasedDate = moment(invoice?.released)
+      const endDate = moment(item.expiryDate);
+      const dateDiff = parseInt(endDate.diff(releasedDate, 'days'))
+      if (!item.product) alert('Le produit doit être renseigné ❗')
+      else if (values?.find(element => element?.product.label === item.product?.label))
+        alert('Ce produit a déjà été ajouté 😑')
+      else if (dateDiff > 0) {
+        values.unshift(item)
+        setItems(values)
+        onReset()
+      }
+      else alert('La date de péremption ne peut être inférieure ou égal à la date d\'origine ❗')
     }
-    else alert('Veuillez renseigner les champs obligatoires !!!')
+    // Fin Si tout les champs obligatoires sont rempli
+    else alert('Veuillez remplir les champs (⭐) obligatoires ❗❗❗') // Sinon...
   }
 
-  useEffect(() => {
-    if (isSuccess) onReset()
-  }, [isSuccess])
+  function handleChangeProductPrice({ target }) {
+    const value = target.value > 0 && !isNaN(target.value) ? parseFloat(target.value) : 1
+    if (item.product) setItem({...item, product: {...item.product, price: value}})
+  }
 
   return (
-    <Form onSubmit={onSubmit}>
-      <p>
-        Veuillez renseigner les champs obligatoires marqués par <i className='text-danger'>*</i>.
-      </p>
-
-      <Row>
-        <Col md={6}>
-          <AppInputField
-            required
-            autofocus
-            disabled={isLoading}
-            label={<>n° document {requiredField}</>}
-            name='document'
-            value={supplyData.document}
-            onChange={(e) => handleChange(e, supplyData, setSupplyData)}
-            error={apiErrors.document}
-            placeholder='n° document' />
-        </Col>
-
-        <Col md={6} className='mb-3'>
+    <>
+      <Form onSubmit={onSubmit}>
+        <div className='mb-3'>
           <AppAsyncSelectOptions
-            placeholder='-- Fournisseur --'
-            className='text-uppercase'
-            disabled={isProvidersFetching || isLoading}
-            label={<>Fournisseur {requiredField}</>}
-            onChange={(e) => setSupplyData({...supplyData, provider: e})}
-            value={supplyData.provider}
-            loadOptions={onLoadProviders}
-            defaultOptions={providersOptions} />
-        </Col>
-
-        <Col xl={6}>
-          <AppInputField
-            type='date'
-            disabled={isLoading}
-            label='Date'
-            name='released'
-            value={supplyData.released}
-            onChange={(e) => handleChange(e, supplyData, setSupplyData)}
-            error={apiErrors.released} />
-        </Col>
-
-        <Col xl={6}>
-          <AppInputField
-            type='date'
-            disabled={isLoading}
-            label={<>Date de péremption {requiredField}</>}
-            name='expiryDate'
-            value={supplyData.expiryDate}
-            onChange={(e) => handleChange(e, supplyData, setSupplyData)}
-            error={apiErrors.expiryDate} />
-        </Col>
-
-        <Col md={6} className='mb-3'>
+            value={item.product}
+            onChange={(e) => handleChangeProduct(e)}
+            loadOptions={onLoadProduct}
+            defaultOptions={medOptions}
+            disabled={isMedPending || loader}
+            className='text-capitalize'
+            label={<>Produit {requiredField}</>}
+            placeholder='-- Produit... --' />
+        </div> {/* Produit */}
+        <div className='mb-3'>
           <AppAsyncSelectOptions
-            placeholder='-- Code produit --'
-            className='text-uppercase'
-            disabled={isMedicinesLoading || isMedicinesFetching || isLoading}
-            label={<><i className='bi bi-qr-code'/> Code produit</>}
-            onChange={(e) => onChangeMedicineCode(e)}
-            value={supplyData.code}
-            loadOptions={onLoadMedicinesCodes}
-            defaultOptions={medicinesCodesOptions} />
-        </Col>
-
-        <Col md={6} className='mb-3'>
-          <AppAsyncSelectOptions
-            placeholder='-- Article --'
-            className='text-uppercase'
-            disabled={isMedicinesLoading || isMedicinesFetching || isLoading}
-            label={<>Article {requiredField}</>}
-            onChange={(e) => onChangeMedicine(e)}
-            value={supplyData.medicine}
-            loadOptions={onLoadMedicines}
-            defaultOptions={medicinesOptions} />
-        </Col>
-
-        <Col md={6}>
-          <AppInputField
-            required
-            disabled={isLoading}
-            label={<>Quantité {requiredField}</>}
-            type='number'
-            name='quantity'
-            value={supplyData.quantity}
-            onChange={(e) => onStrictNumChange(e, supplyData, setSupplyData)} />
-        </Col>
-
-        <Col md={6}>
-          <AppInputField
-            type='number'
             disabled
-            label={<><i className='bi bi-database'/> Quantité en stock</>}
-            name='quantity'
-            value={qty}
-            onChange={() => { }} />
-        </Col>
+            value={item.productCode}
+            onChange={(e) => handleChangeProductsCode(e)}
+            loadOptions={onLoadProductsCode}
+            defaultOptions={medCodeOptions}
+            className='text-capitalize'
+            label='Code produit'
+            placeholder='-- Code Produit... --' />
+        </div> {/* Code Produit */}
 
-        <FormGroup className='mb-3'>
-          <Form.Check
-            disabled={isLoading}
-            id='check'
-            label='Ajuster le prix'
-            name='check'
-            value={check}
-            onChange={handleChangeCheck}
-            checked={check} />
+        <Row>
+          {item.select === 'piece' && (
+            <>
+              <Col md={6} className='mb-3'>
+                <Form.Label htmlFor='quantity'>Quantité</Form.Label>
+                <Form.Control
+                  required
+                  autoComplete='off'
+                  id='quantity'
+                  type='number'
+                  name='quantity'
+                  value={item.quantity}
+                  onChange={(e) => onStrictNumChange(e, item, setItem)}
+                  disabled={loader} />
+              </Col> {/* Quantité */}
 
-          {check &&
-            <Row>
-              <Col md={6}>
-                <AppFloatingInputField
-                  disabled={isLoading}
+              <Col md={6} className='mb-3'>
+                <Form.Label htmlFor='cost'>Coût d'achat {requiredField}</Form.Label>
+                <Form.Control
+                  required
+                  disabled={loader}
+                  type='number'
+                  id='cost'
                   name='cost'
-                  value={supplyData.cost ? supplyData.cost : 0}
-                  onChange={(e) => handleChange(e, supplyData, setSupplyData)}
-                  label={<span style={{ fontWeight: 900 }}>Coût ( {currency && currency.value} )</span>}
-                  type='number'
-                  placeholder='Ajustement du coût' />
-              </Col>
+                  value={item.cost}
+                  onChange={(e) => onStrictNumChange(e, item, setItem)} />
+              </Col> {/* Coût d'achat */}
+            </>
+          )} {/* Quantité & Coût d'achat */}
 
-              <Col md={6}>
-                <AppFloatingInputField
-                  disabled={isLoading}
-                  name='price'
-                  value={supplyData.price ? supplyData.price : 0}
-                  onChange={(e) => handleChange(e, supplyData, setSupplyData)}
-                  label={<span style={{ fontWeight: 900 }}>Prix ( {currency && currency.value} )</span>}
-                  type='number'
-                  placeholder='Ajustement du prix' />
-              </Col>
-            </Row>}
-        </FormGroup>
+          <Col className='mb-3'>
+            <Form.Label htmlFor='expiryDate'>Date de péremption {requiredField}</Form.Label>
+            <Form.Control
+              required
+              type='date'
+              id='expiryDate'
+              name='expiryDate'
+              value={item.expiryDate}
+              onChange={(e) => handleChange(e, item, setItem)}
+              disabled={loader} />
+          </Col> {/* Date de péremption */}
+        </Row>
+        {/* Qté & Date de péremption */}
 
-        <div className='text-md-center'>
-          <Button type='button' variant='light' onClick={onReset} disabled={isLoading}>
+        <div className='mb-3 inline-radio'>
+          <Form.Label className='me-3'>Par : </Form.Label>
+          <Form.Check
+            inline
+            disabled={loader}
+            type='radio'
+            label='Pièce'
+            name='select'
+            value={'piece'}
+            checked={item.select === 'piece'}
+            onChange={onChangeKindOfQty}
+            id='inline-radio-1'/> {/* Kind 1 */}
+
+          <Form.Check
+            inline
+            disabled={loader}
+            type='radio'
+            label='Autre'
+            name='select'
+            value={'other'}
+            checked={item.select === 'other'}
+            onChange={onChangeKindOfQty2}
+            id='inline-radio-2'/> {/* Kind 2 */}
+        </div>
+        {item.select === 'other' && (
+          <>
+            <div className='mb-3'>
+              <Form.Control
+                required
+                autoFocus
+                autoComplete='off'
+                disabled={item.select === 'piece' || loader}
+                id='quantityLabel'
+                name='quantityLabel'
+                value={item.quantityLabel}
+                onChange={(e) => handleChange(e, item, setItem)}
+                placeholder='* Ce champs est requis' />
+            </div> {/* Label de la quantité */}
+
+            <div className='mb-3'>
+              <InputGroup>
+                <InputGroup.Text>1 {item.quantityLabel} =</InputGroup.Text>
+                <Form.Control
+                  required
+                  autoComplete='off'
+                  disabled={item.select === 'piece'}
+                  type='number'
+                  name='quantity'
+                  value={item.quantity}
+                  onChange={(e) => onStrictNumChange(e, item, setItem)}
+                  placeholder='Quantité' />
+                <InputGroup.Text>pièce(s)</InputGroup.Text>
+              </InputGroup>
+            </div> {/* Quantité */}
+
+            <div className='mb-3'>
+              <InputGroup>
+                <InputGroup.Text>Quantité :</InputGroup.Text>
+                <Form.Control
+                  type='number'
+                  name='otherQty'
+                  value={item.otherQty}
+                  onChange={handleChangeOtherQty}
+                  placeholder='Quantité' />
+              </InputGroup>
+            </div> {/* Autre Quantité */}
+
+            <Row>
+              <Col md={7} className='mb-3'>
+                <Form.Label htmlFor='cost'>Coût d'achat {requiredField}</Form.Label>
+                <Form.Control
+                  required
+                  disabled={loader}
+                  type='number'
+                  id='cost'
+                  name='cost'
+                  value={item.cost}
+                  onChange={(e) => onStrictNumChange(e, item, setItem)} />
+              </Col> {/* Coût d'achat */}
+
+              <Col className='mb-3'>
+                <Form.Label htmlFor='otherQty'>
+                  <b>{item.otherQty} {item.quantityLabel}</b>
+                </Form.Label>
+                <p>: {item.finalQty} pièce(s)</p>
+              </Col> {/* Sommation du nombre de pièce */}
+            </Row>
+            {/* Coût d'achat & Sommation du nombre de pièce */}
+          </>
+        )}
+        {/* Autres Qtés & Date de péremption */}
+
+        {item.product && (
+          <div className='mb-3'>
+            <Form.Check
+              className='mb-3'
+              name='check'
+              value={check}
+              onChange={() => setCheck(!check)}
+              checked={check}
+              id='check'
+              label='Ajuster le prix de vente'
+              disabled={loader} />
+
+            {check &&
+              <Row>
+                <Col md={6} className='mb-2'>
+                  <Form.Label htmlFor='price'>Ajuster le prix de vente</Form.Label>
+                </Col>
+                <Col className='mb-2'>
+                  <Form.Control
+                    type='number'
+                    name='price'
+                    value={item?.product.price}
+                    onChange={handleChangeProductPrice}
+                    disabled={loader} />
+                </Col>
+              </Row>}
+          </div>
+        )}
+
+        <div className='mb-3'>
+          <Form.Label><i className='bi bi-database'/> Quantité en stock</Form.Label>
+          <InputGroup>
+            <InputGroup.Text>
+              {item.product && item.select === 'piece'
+                && (
+                  <>
+                    {item.product?.quantity
+                      ? parseInt(item.product.quantity + item.quantity).toLocaleString()
+                      : item.quantity.toLocaleString()}
+                  </>
+                )}
+              {item.product && item.select === 'other'
+                && (
+                  <>
+                    {item.product?.quantity
+                      ? parseInt(item.product.quantity + item.finalQty).toLocaleString()
+                      : item.finalQty.toLocaleString()}
+                  </>
+                )}
+            </InputGroup.Text>
+          </InputGroup>
+        </div>
+        {/* Qté En stock */}
+
+        <div className='text-end'>
+          <Button type='button' variant='transparent' className='me-1' disabled={loader} onClick={onReset}>
             <i className='bi bi-arrow-clockwise'/>
           </Button>
-          <Button type='submit' variant='secondary' className='mx-1' disabled={isLoading}>
-            {!isLoading
-              ? <><i className='bi bi-plus'/> Ajouter</>
-              : <>Veuillez patienter <Spinner animation='border' size='sm'/></>}
+          <Button type='submit' variant='secondary' disabled={loader}>
+            <i className='bi bi-plus'/>
+            Ajouter
           </Button>
         </div>
-      </Row>
-    </Form>
+      </Form>
+    </>
   )
 }
