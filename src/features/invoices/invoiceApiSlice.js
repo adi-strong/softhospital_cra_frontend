@@ -23,10 +23,7 @@ export const invoiceApiSlice = api.injectEndpoints({
     getSingleInvoice: build.query({
       query: id => pathToApi+`/invoices/${id}`,
       transformResponse: res => {
-        return { ...res,
-          releasedAt: res?.releasedAt ? moment(res.releasedAt).calendar() : null,
-          updatedAt: res?.updatedAt ? moment(res.updatedAt).calendar() : null,
-        }
+        return { ...res, updatedAt: res?.updatedAt ? moment(res.updatedAt).calendar() : null, }
       },
       providesTags: (result, error, arg) => [{ type: 'SingleInvoice', id: arg }]
     }),
@@ -36,7 +33,21 @@ export const invoiceApiSlice = api.injectEndpoints({
         headers: patchHeaders,
         url: pathToApi+`/invoices/${invoice.id}`,
         method: 'PATCH',
-        body: JSON.stringify(invoice),
+        body: JSON.stringify(!invoice?.isPublished
+          ? {
+            ...invoice,
+            sum: invoice?.sum.toString(),
+            subTotal: invoice?.subTotal.toString(),
+            amount: invoice?.amount.toString(),
+            totalAmount: invoice?.totalAmount.toString(),
+            discount: parseFloat(invoice?.discount),
+            vTA: parseFloat(invoice?.vTA)}
+          : {
+            sum: invoice?.sum.toString(),
+            daysCounter: parseInt(invoice?.daysCounter),
+            isBedroomLeaved: invoice?.isBedroomLeaved,
+            isComplete: invoice?.isComplete}
+        ),
       }),
       invalidatesTags: ['Invoices', 'Consultations', 'Box']
     }),

@@ -10,9 +10,9 @@ export const InvoiceItem = ({ invoice, currency }) => {
       : img
     : img
 
-  const totalSum = parseFloat(invoice?.totalSum).toFixed(2).toLocaleString()
+  const totalSum = parseFloat(invoice?.totalAmount).toFixed(2).toLocaleString()
   const paid = parseFloat(invoice?.paid).toFixed(2).toLocaleString()
-  const leftover = parseFloat(invoice?.totalSum - invoice?.paid).toFixed(2).toLocaleString()
+  const leftover = parseFloat(invoice?.leftover).toFixed(2).toLocaleString()
 
   const releasedAt = invoice?.releasedAt ? invoice.releasedAt : '❓'
 

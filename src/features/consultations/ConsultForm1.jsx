@@ -40,9 +40,7 @@ export function ConsultForm1({isDataExists = false, consultation, setConsultatio
 
   let examOptions, treatmentOptions, actOptions
   if (isExamsError) alert('ERREUR: Erreur lors du chargement des examens !!!')
-  examOptions = useMemo(() => isExamsSuccess && exams ? exams.ids.map(id => {
-    const exam = exams?.entities[id]
-
+  examOptions = useMemo(() => isExamsSuccess && exams ? exams.map(exam => {
     return {
       id: exam?.id,
       label: exam?.wording,
@@ -64,9 +62,7 @@ export function ConsultForm1({isDataExists = false, consultation, setConsultatio
   }) : [], [isTreatmentsSuccess, treatments])
 
   if (isActsError) alert('ERREUR: Erreur lors du chargement des actes !!!')
-  actOptions = useMemo(() => isActsSuccess && acts ? acts.ids.map(id => {
-    const act = acts?.entities[id]
-
+  actOptions = useMemo(() => isActsSuccess && acts ? acts.map(act => {
     return {
       id: act?.id,
       label: act?.wording,
