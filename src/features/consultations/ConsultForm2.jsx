@@ -11,7 +11,7 @@ import {BedDetails} from "./BedDetails";
 // import {entrypoint} from "../../app/store";
 // import img from '../../assets/app/img/default_profile.jpg';
 
-export const ConsultForm2 = ({ consultation, setConsultation, onReset, apiErrors, loader = false }) => {
+export const ConsultForm2 = ({ data, consultation, setConsultation, onReset, apiErrors, loader = false }) => {
   const {
     data: patients = [],
     isFetching: isPatientsFetching,
@@ -96,7 +96,7 @@ export const ConsultForm2 = ({ consultation, setConsultation, onReset, apiErrors
             defaultOptions={filesOptions}
             value={consultation?.file}
             onChange={(e) => setConsultation({...consultation, file: e})}
-            disabled={isFilesFetching || loader}
+            disabled={isFilesFetching || loader || (data ? !data?.isPublished : false)}
             loadOptions={onLoadConsultationFiles}
             placeholder='-- Fiche de consultation --'
             className='text-capitalize' />
@@ -108,7 +108,7 @@ export const ConsultForm2 = ({ consultation, setConsultation, onReset, apiErrors
           <h2 className='card-title' style={cardTitleStyle}><i className='bi bi-person'/> Patient(e) {requiredField}</h2>
           <div className="mb-3">
             <AppAsyncSelectOptions
-              disabled={loader || isPatientsFetching}
+              disabled={loader || isPatientsFetching || (data ? !data?.isPublished : false)}
               className='text-uppercase'
               onChange={(e) => setConsultation({...consultation, patient: e})}
               value={consultation?.patient}
@@ -130,7 +130,7 @@ export const ConsultForm2 = ({ consultation, setConsultation, onReset, apiErrors
             defaultOptions={bedOptions}
             value={consultation?.bed}
             onChange={(e) => setConsultation({...consultation, bed: e})}
-            disabled={isBedsFetching || loader}
+            disabled={isBedsFetching || loader || (data ? !data?.isPublished : false)}
             loadOptions={onLoadBeds}
             placeholder="-- Lit d'hospitalisation --"
             className='text-capitalize' />

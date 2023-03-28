@@ -16,7 +16,7 @@ export const ConsultationItem2 = ({ consult }) => {
       <tr>
         <th scope='row'>#{consult.id}</th>
         <td className='text-uppercase' title={file ? file.toUpperCase() : ''}>
-          <Link to={`/member/treatments/consultations/${consult?.id}`} className='text-decoration-none'>
+          <Link to={`/member/treatments/consultations/${consult?.id}/${patient?.slug}`} className='text-decoration-none'>
             <i className='bi bi-journal-medical me-1'/>
             {limitStrTo(8, file)}
           </Link>

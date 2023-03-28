@@ -7,7 +7,9 @@ import img from '../../assets/app/img/default_profile.jpg';
 export const PrescriptionItem = ({ prescription }) => {
   const consultation = prescription?.consultation
   const file = consultation && consultation?.file
-    ? <Link to={`/member/treatments/consultations/${consultation?.id}/show`} className='text-decoration-none'>
+    ? <Link
+        to={`/member/treatments/consultations/${consultation?.id}/${prescription?.patient.slug}`}
+        className='text-decoration-none'>
         <i className='bi bi-journal-medical'/> {consultation.file?.wording }
       </Link>
     : '❓'

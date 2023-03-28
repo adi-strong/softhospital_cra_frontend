@@ -16,7 +16,7 @@ const styles = {
   marginTop: '1em',
 }
 
-export function ConsultForm1({isDataExists = false, consultation, setConsultation, apiErrors, onReset, loader = false, onRefresh}) {
+export function ConsultForm1({data, isDataExists = false, consultation, setConsultation, apiErrors, onReset, loader = false}) {
   const [handleLoadAgents] = useLazyHandleLoadAgentsQuery()
   const [handleLoadExams] = useLazyHandleLoadExamsQuery()
   const [handleLoadTreatments] = useLazyHandleLoadTreatmentsQuery()
@@ -93,19 +93,11 @@ export function ConsultForm1({isDataExists = false, consultation, setConsultatio
 
   return (
     <>
-      <div className='mb-3 text-end'>
-        <Button type='button' variant='outline-secondary' disabled={loader} onClick={onRefresh}>
-          {!loader
-            ? <>Actualiser <i className='bi bi-arrow-clockwise'/></>
-            : <>Chargement en cours <Spinner animation='grow' size='sm'/></>}
-        </Button>
-      </div>
-
       <Row className='mb-3'>
         <Col>
           <AppInputGroupField
             autoFocus
-            disabled={loader}
+            disabled={loader || (data ? data?.isComplete : false)}
             type='number'
             label='Température (°)'
             name='temperature'
@@ -118,7 +110,7 @@ export function ConsultForm1({isDataExists = false, consultation, setConsultatio
 
         <Col md={6}>
           <AppInputGroupField
-            disabled={loader}
+            disabled={loader || (data ? data?.isComplete : false)}
             type='number'
             label='Poids (Kg)'
             name='weight'
@@ -131,7 +123,7 @@ export function ConsultForm1({isDataExists = false, consultation, setConsultatio
 
         <Col md={6}>
           <AppInputGroupField
-            disabled={loader}
+            disabled={loader || (data ? data?.isComplete : false)}
             label='Tenseion artérielle (Cm Hg | ...)'
             name='arterialTension'
             value={consultation.arterialTension}
@@ -143,7 +135,7 @@ export function ConsultForm1({isDataExists = false, consultation, setConsultatio
 
         <Col md={6}>
           <AppInputGroupField
-            disabled={loader}
+            disabled={loader || (data ? data?.isComplete : false)}
             label='Fréquence cardiaque (bpm | ...)'
             name='cardiacFrequency'
             value={consultation.cardiacFrequency}
@@ -155,7 +147,7 @@ export function ConsultForm1({isDataExists = false, consultation, setConsultatio
 
         <Col md={6}>
           <AppInputGroupField
-            disabled={loader}
+            disabled={loader || (data ? data?.isComplete : false)}
             label='Fréquence respiratoire (Pm | ...)'
             name='respiratoryFrequency'
             value={consultation.respiratoryFrequency}
@@ -167,7 +159,7 @@ export function ConsultForm1({isDataExists = false, consultation, setConsultatio
 
         <Col md={6}>
           <AppInputGroupField
-            disabled={loader}
+            disabled={loader || (data ? data?.isComplete : false)}
             label='Saturation en oxygène (SpO2 | ...)'
             name='oxygenSaturation'
             value={consultation.oxygenSaturation}
@@ -182,12 +174,12 @@ export function ConsultForm1({isDataExists = false, consultation, setConsultatio
             label={<>Heure &amp; date du rendez-vous {requiredField}</>}
             value={consultation.appointmentDate}
             onChange={(date) => setConsultation({...consultation, appointmentDate: date})}
-            disabled={loader} />
+            disabled={loader || (data ? !data?.isPublished : false)} />
         </Col>
 
         <Col md={6}>
           <AppAsyncSelectOptions
-            disabled={loader}
+            disabled={loader || (data ? !data?.isPublished : false)}
             loadOptions={onLoadAgents}
             onChange={(e) => setConsultation({...consultation, agent: e})}
             value={consultation?.agent}
@@ -206,7 +198,7 @@ export function ConsultForm1({isDataExists = false, consultation, setConsultatio
           defaultOptions={examOptions}
           onChange={(e) => setConsultation({...consultation, exams: e})}
           value={consultation?.exams}
-          disabled={isExamsFetching || loader}
+          disabled={isExamsFetching || loader || (data ? !data?.isPublished : false)}
           placeholder='Examen(s)...'
           className='text-uppercase' />
       </Col>
@@ -219,7 +211,7 @@ export function ConsultForm1({isDataExists = false, consultation, setConsultatio
           defaultOptions={treatmentOptions}
           onChange={(e) => setConsultation({...consultation, treatments: e})}
           value={consultation?.treatments}
-          disabled={isTreatmentsFetching || loader}
+          disabled={isTreatmentsFetching || loader || (data ? !data?.isPublished : false)}
           placeholder='Premier(s) soin(s)...'
           className='text-uppercase' />
       </Col>
@@ -232,7 +224,7 @@ export function ConsultForm1({isDataExists = false, consultation, setConsultatio
           defaultOptions={actOptions}
           onChange={(e) => setConsultation({...consultation, acts: e})}
           value={consultation?.acts}
-          disabled={isActsFetching || loader}
+          disabled={isActsFetching || loader || (data ? !data?.isPublished : false)}
           placeholder='Actes médicaux..'
           className='text-uppercase' />
       </Col>
@@ -243,20 +235,29 @@ export function ConsultForm1({isDataExists = false, consultation, setConsultatio
             value={consultation?.note}
             name='note'
             label='Renseingement clinique'
-            disabled={loader}
+            disabled={loader || (data ? !data?.isPublished : false)}
             onChange={(e) => handleChange(e, consultation, setConsultation)}
             placeholder='Renseingement clinique...' />
         </>
       )}
 
       <AppFloatingTextAreaField
-        disabled={loader}
+        disabled={loader || (data ? data?.isComplete : false)}
         placeholder='Votre diagnostic ici...'
         value={consultation?.diagnostic}
         onChange={(e) => handleChange(e, consultation, setConsultation)}
-        label='Diagnostic'
+        label='Plaintes & Diagnostic'
         error={apiErrors?.diagnostic}
         name='diagnostic' />
+
+      <AppFloatingTextAreaField
+        disabled={loader || (data ? data?.isComplete : false)}
+        placeholder='Votre commentaire ici...'
+        value={consultation?.comment}
+        onChange={(e) => handleChange(e, consultation, setConsultation)}
+        label='Commentaire(s)'
+        error={apiErrors?.diagnostic}
+        name='comment' />
 
       <hr/>
 

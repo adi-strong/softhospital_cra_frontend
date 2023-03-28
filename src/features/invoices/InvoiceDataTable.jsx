@@ -73,7 +73,7 @@ export const InvoiceDataTable = ({ invoice }) => {
       <Table bordered className='w-100' style={{ fontSize: '0.7rem' }}>
         <AppTHead items={theadItems} className='bg-primary text-light text-center' />
         <tbody>
-          <tr>
+          <tr className='bg-light'>
             <th>Fiche médical</th>
 
             <th className='text-end'>{file ? file?.wording : '-'}</th>

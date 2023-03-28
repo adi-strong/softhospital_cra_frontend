@@ -1,14 +1,15 @@
-import {Button, Card, Col, Form, Row, Spinner} from "react-bootstrap";
+import {Button, Card, Col, Form, Modal, Row, Spinner} from "react-bootstrap";
 import {cardTitleStyle} from "../../layouts/AuthLayout";
 import BarLoaderSpinner from "../../loaders/BarLoaderSpinner";
 import {AppFloatingTextAreaField, AppMainError} from "../../components";
-import img from '../../assets/app/img/microscopic_4.jpg';
+import img from '../../assets/app/img/medic_2.jpg';
 import {useState} from "react";
 import {useUpdatePrescriptionMutation} from "./prescriptionApiSlice";
 import {Link, useNavigate} from "react-router-dom";
 import toast from "react-hot-toast";
 import {OrderItem} from "./OrderItem";
 import PatientInfos from "../patients/PatientInfos";
+import parser from 'html-react-parser';
 
 export function PrescriptionsForm({ data, loader, isError, onRefresh }) {
   const [prescription, setPrescription] = useState({descriptions: '', orders: [{item: '', value: ''}]})
@@ -50,6 +51,14 @@ export function PrescriptionsForm({ data, loader, isError, onRefresh }) {
     }
     else alert('Veuillez renseigner ce champ !')
   }
+
+  const [show, setShow] = useState(false)
+  const [show2, setShow2] = useState(false)
+  const [show3, setShow3] = useState(false)
+
+  const onToggleShow = () => setShow(!show)
+  const onToggleShow2 = () => setShow2(!show2)
+  const onToggleShow3 = () => setShow3(!show3)
 
   return (
     <>
@@ -115,11 +124,28 @@ export function PrescriptionsForm({ data, loader, isError, onRefresh }) {
                   <i className='bi bi-file-medical'/> Résultat des examens
                 </h5>
                 <div className='mb-2'>
-                  <Button type='button' variant='dark' className='d-block mb-2 w-100' disabled={loader || isLoading}>
+                  <Button
+                    type='button'
+                    variant='dark' className='d-block mb-2 w-100'
+                    onClick={onToggleShow}
+                    disabled={loader || isLoading}>
                     <i className='bi bi-file-medical-fill'/> Examens prescritent
                   </Button>
-                  <Button type='button' variant='secondary' className='d-block mb-2 w-100' disabled={loader || isLoading}>
+                  <Button
+                    type='button'
+                    variant='secondary'
+                    className='d-block mb-2 w-100'
+                    onClick={onToggleShow2}
+                    disabled={loader || isLoading}>
                     <i className='bi bi-virus2'/> Résultat des examens
+                  </Button>
+                  <Button
+                    type='button'
+                    variant='primary'
+                    className='d-block mb-2 w-100'
+                    onClick={onToggleShow3}
+                    disabled={loader || isLoading}>
+                    <i className='bi bi-list-check'/> Commentaire(s)
                   </Button>
                   {!loader && data &&
                     <Link
@@ -136,6 +162,54 @@ export function PrescriptionsForm({ data, loader, isError, onRefresh }) {
           </Col>
         </Row>
       </Form>
+
+      <Modal show={show} onHide={onToggleShow} size='lg'>
+        <Modal.Header closeButton className='bg-dark text-light'>
+          <Modal.Title><i className='bi bi-file-medical-fill'/> Examens prescritent</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <ul id='prescriptions-lab-exams'>
+            {data && data?.lab && data.lab?.labResults && data.lab.labResults?.map((item, idx) =>
+              <li key={idx}>
+                <i className='bi bi-virus2 me-1'/>
+                {item?.exam.wording}
+              </li>)}
+          </ul>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button type='button' variant='light' onClick={onToggleShow}>
+            <i className='bi bi-x'/> Fermer
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal show={show2} onHide={onToggleShow2} size='lg'>
+        <Modal.Header closeButton className='bg-secondary text-light'>
+          <Modal.Title><i className='bi bi-virus2'/> Résultat des examens</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {data && data?.lab && parser(data.lab?.descriptions)}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button type='button' variant='light' onClick={onToggleShow2}>
+            <i className='bi bi-x'/> Fermer
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal show={show3} onHide={onToggleShow3} size='lg'>
+        <Modal.Header closeButton className='bg-primary text-light'>
+          <Modal.Title><i className='bi bi-list-check'/> Commentaire(s)</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {data && data?.lab && parser(data.lab?.comment)}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button type='button' variant='light' onClick={onToggleShow3}>
+            <i className='bi bi-x'/> Fermer
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </>
   )
 }

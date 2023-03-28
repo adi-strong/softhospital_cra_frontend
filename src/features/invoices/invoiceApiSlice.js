@@ -40,8 +40,8 @@ export const invoiceApiSlice = api.injectEndpoints({
             subTotal: invoice?.subTotal.toString(),
             amount: invoice?.amount.toString(),
             totalAmount: invoice?.totalAmount.toString(),
-            discount: parseFloat(invoice?.discount),
-            vTA: parseFloat(invoice?.vTA)}
+            discount: invoice?.check1 ? parseFloat(invoice?.discount) : null,
+            vTA: invoice?.check2 ? parseFloat(invoice?.vTA) : null}
           : {
             sum: invoice?.sum.toString(),
             daysCounter: parseInt(invoice?.daysCounter),

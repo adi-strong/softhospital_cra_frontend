@@ -67,17 +67,20 @@ export const InvoiceSumsData = ({ data, hosp, bedPrice = 0, daysCounter = 0 }) =
   async function onSubmit(e) {
     e.preventDefault()
     if (invoice.sum > 0.00) {
-      const submit = await updateInvoice({
-        id: data?.id,
-        daysCounter,
-        isPublished: data?.isPublished,
-        ...invoice,
-      })
-      if (!submit?.error) {
-        toast.success('Paiement bien efféctué.')
-        await refetch()
+      if (data && data?.isComplete) toast.error('Facture déjà clôturée 👌')
+      else {
+        const submit = await updateInvoice({
+          id: data?.id,
+          daysCounter,
+          isPublished: data?.isPublished,
+          ...invoice,
+        })
+        if (!submit?.error) {
+          toast.success('Paiement bien efféctué.')
+          await refetch()
+        }
       }
-    }
+    } // Fin si...
     else {
       toast.error('Montant invalide ❗')
     }
@@ -190,19 +193,29 @@ export const InvoiceSumsData = ({ data, hosp, bedPrice = 0, daysCounter = 0 }) =
               <tr>
                 <th className='text-primary'>Taux (d'imposition)</th>
                 <th>
-                  {!data?.isPublished &&
-                    <>
-                      {invoice.check2 ?
-                        <>
-                          + (%{invoice.vTA})
-                          <span className='mx-1 text-primary'>
-                            {parseFloat(taxSum).toFixed(2).toLocaleString()}
-                            {data?.currency}
-                          </span>
-                        </> : '-'}
-                    </>}
+                  <>
+                    {!data?.isPublished &&
+                      <>
+                        {invoice.check2 ?
+                          <span>
+                            + (%{invoice.vTA})
+                            <span className='mx-1 me-1 text-primary'>
+                              {parseFloat(taxSum).toFixed(2).toLocaleString()+' '}
+                              {data?.currency}
+                            </span>
+                          </span> : '-'}
+                      </>}
 
-                  {}
+                    {data?.isPublished && data?.vTA &&
+                      <>
+                        + (%{data.vTA})
+                        <span className='mx-1 text-primary'>
+                          {parseFloat((data?.subTotal * data.vTA) / 100)
+                            .toFixed(2).toLocaleString()+' '}
+                          {data?.currency}
+                        </span>
+                      </>}
+                  </>
                 </th>
               </tr>{/* TAUX */}
 

@@ -5,7 +5,9 @@ import {entrypoint} from "../../app/store";
 
 export function LabItem({ lab }) {
   const file = lab?.consultation
-    ? <Link to={`/member/treatments/consultations/${lab.consultation?.id}/show`} className='text-decoration-none'>
+    ? <Link
+        to={`/member/treatments/consultations/${lab.consultation?.id}/${lab.patient.slug}`}
+        className='text-decoration-none'>
         <i className='bi bi-journal-medical me-1'/>
         {lab.consultation?.file?.wording}
       </Link>

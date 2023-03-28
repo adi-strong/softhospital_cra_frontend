@@ -9,6 +9,7 @@ const
   AddCovenant = lazy(() => import('./features/covenants/addCovenant')),
   Acts = lazy(() => import('./features/acts/acts')),
   Orders = lazy(() => import('./features/orders/orders')),
+  SingleOrderPage = lazy(() => import('./features/orders/singleOrderPage')),
   SinglePatient = lazy(() => import('./features/patients/singlePatient')),
   AddPatient = lazy(() => import('./features/patients/addPatient')),
   Exams = lazy(() => import('./features/exams/exams')),
@@ -17,6 +18,7 @@ const
   Files = lazy(() => import('./features/files/files')),
   Consultations = lazy(() => import('./features/consultations/consultations')),
   AddConsultation = lazy(() => import('./features/consultations/addConsultation')),
+  SingleConsultationPage = lazy(() => import('./features/consultations/singleConsultationPage')),
   Appointments = lazy(() => import('./features/appointments/appointments')),
   Lab = lazy(() => import('./features/lab/lab')),
   Galleries = lazy(() => import('./features/images/galleries')),
@@ -54,6 +56,7 @@ const routes = [
     outlets: [
       {path: 'dashboard', element: <Dashboard/>},
       {path: 'orders', element: <Orders/>},
+      {path: 'orders/:id/show', element: <SingleOrderPage/>},
       {path: 'reception', element: <Reception/>},
     ]
   },
@@ -89,7 +92,7 @@ const routes = [
     outlets: [
       {path: 'consultations', element: <Consultations/>},
       {path: 'consultations/add', element: <AddConsultation/>},
-      {path: 'consultations/:id/:slug', element: <Consultations/>},
+      {path: 'consultations/:id/:slug', element: <SingleConsultationPage/>},
       {path: 'consultations/edit/:id/:slug', element: <EditConsultation/>},
       {path: 'appointments', element: <Appointments/>},
       {path: 'lab', element: <Lab/>},

@@ -5,7 +5,7 @@ import {cardTitleStyle} from "../../layouts/AuthLayout";
 import {InvoicesList} from "./InvoicesList";
 // import {UnpaidInvoicesList} from "./UnpaidInvoicesList";
 
-const tabs = [{title: 'Privés', key: 'all'}, {title: 'Conventionnés', key: 'invalids'}]
+const tabs = [{title: 'Toutes', key: 'all'}, {title: 'Conventionnés', key: 'invalids'}]
 
 function Invoices() {
   const [key, setKey] = useState('all')

@@ -6,7 +6,9 @@ import {ButtonGroup} from "react-bootstrap";
 export const NursingItem = ({ nursing }) => {
   const consultation = nursing?.consultation
   const file = consultation && consultation?.file
-    ? <Link to={`/member/treatments/consultations/${consultation?.id}/show`} className='text-decoration-none'>
+    ? <Link
+        to={`/member/treatments/consultations/${consultation?.id}/${nursing?.patient.slug}`}
+        className='text-decoration-none'>
         <i className='bi bi-journal-medical me-1'/>
         {consultation.file?.wording}
       </Link>
@@ -33,9 +35,10 @@ export const NursingItem = ({ nursing }) => {
         </td>
         <td className='text-end'>
           <ButtonGroup size='sm'>
-            <Link to={`/member/treatments/nursing/${nursing?.id}/show`} className='btn btn-light'>
-              <i className='bi bi-eye text-success'/>
-            </Link>
+            {nursing?.isPublished &&
+              <Link to={`/member/treatments/nursing/${nursing?.id}/show`} className='btn btn-light'>
+                <i className='bi bi-eye text-success'/>
+              </Link>}
             {!nursing?.isCompleted &&
               <Link to={`/member/treatments/nursing/${nursing?.id}/edit`} className='btn btn-primary'>
                 <i className='bi bi-plus'/>

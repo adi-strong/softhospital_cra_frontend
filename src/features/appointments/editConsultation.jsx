@@ -4,10 +4,11 @@ import {useGetSingleConsultQuery, useUpdateConsultationMutation} from "../consul
 import {useEffect, useState} from "react";
 import {onInitSidebarMenu} from "../navigation/navigationSlice";
 import toast from "react-hot-toast";
-import {AppBreadcrumb, AppHeadTitle} from "../../components";
+import {AppBreadcrumb, AppDropdownFilerMenu, AppHeadTitle} from "../../components";
 import {Card, Col, Form, Row} from "react-bootstrap";
 import {ConsultForm2} from "../consultations/ConsultForm2";
 import {ConsultForm1} from "../consultations/ConsultForm1";
+import BarLoaderSpinner from "../../loaders/BarLoaderSpinner";
 
 function EditConsultation() {
   const dispatch = useDispatch(), navigate = useNavigate()
@@ -67,6 +68,7 @@ function EditConsultation() {
         return {
           id: id,
           ...prevState,
+          isPublished: consult ? consult?.isPublished : true,
           comment: consult?.comment ? consult.comment : '',
           weight: consult?.weight ? consult.weight : 0.0,
           temperature: consult?.temperature ? consult.temperature : 0.0,
@@ -142,6 +144,13 @@ function EditConsultation() {
     }
   }, [id, isSuccess, consult]) // get hospitalization
 
+  useEffect(() => {
+    if (consult && consult?.isComplete) {
+      toast.error('Ce dossier est clos 👌')
+      navigate('/member/treatments/consultations', {replace: true})
+    }
+  }, [consult, navigate])
+
   if (isConsultError) alert('ERREUR: Erreur lors du chargement de la consultation ❗')
 
   const onRefresh = async () => await refetch()
@@ -192,12 +201,18 @@ function EditConsultation() {
     }
 
     if (canSave && id) {
-      const data = await updateConsultation(consultation)
-      if (!data?.error) {
-        onReset()
-        toast.success('Modification bien efféctuée.')
-        await refetch()
-        navigate(`/member/treatments/appointments`)
+      if (consult && consult?.isComplete) {
+        toast.error('Ce dossier est clos 👌')
+        navigate('/member/treatments/consultations', {replace: true})
+      }
+      else {
+        const data = await updateConsultation(consultation)
+        if (!data?.error) {
+          onReset()
+          toast.success('Modification bien efféctuée.')
+          await refetch()
+          navigate(`/member/treatments/appointments`)
+        }
       }
     }
     else alert('Veuillez renseigner les champs obligatoires !!!')
@@ -212,8 +227,10 @@ function EditConsultation() {
     }
   }
 
+  const onClick = name => onRefresh()
+
   return (
-    <>
+    <div className='section dashboard'>
       <AppHeadTitle title='Fiche de consultation | Édition' />
       <AppBreadcrumb title='Fiche de consultation | Édition' links={[
         {label: 'Liste des consultations', path: '/member/treatments/consultations'}
@@ -223,6 +240,7 @@ function EditConsultation() {
         <Row>
           <Col md={5}>
             <ConsultForm2
+              data={consult}
               loader={isLoading || isConsultLoading || isConsultFetching}
               onReset={onReset}
               setConsultation={setConsultation}
@@ -232,9 +250,17 @@ function EditConsultation() {
 
           <Col>
             <Card className='border-0'>
+              {consult &&
+                <AppDropdownFilerMenu
+                  onClick={onClick}
+                  items={[{label: <><i className='bi bi-arrow-clockwise' /> Actualiser</>, name: 'refresh', action: '#'}]}
+                  heading='Actions' />}
+
               <Card.Body>
+                {isConsultFetching && <BarLoaderSpinner loading={isConsultFetching}/>}
                 <ConsultForm1
                   isDataExists
+                  data={consult}
                   onRefresh={onRefresh}
                   loader={isLoading || isConsultLoading || isConsultFetching}
                   onReset={onReset}
@@ -246,7 +272,7 @@ function EditConsultation() {
           </Col>
         </Row>
       </Form>
-    </>
+    </div>
   )
 }
 

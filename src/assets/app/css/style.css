@@ -1342,3 +1342,25 @@ h6 {
   padding-right: 10px;
   background: #eae8e8;
 }
+
+#prescriptions-lab-exams {
+  list-style: none;
+  padding: 0;
+}
+
+#prescriptions-lab-exams li {
+  display: inline-block;
+  color: #505050;
+  font-size: 14px;
+  padding: 6px 14px;
+  margin: 0 6px 8px 0;
+  border: 1px solid white;
+  transition: 0.3s;
+  text-transform: uppercase;
+}
+
+#prescriptions-lab-exams li:hover {
+  color: #fff;
+  border: 1px solid #e96b56;
+  background: #e96b56;
+}

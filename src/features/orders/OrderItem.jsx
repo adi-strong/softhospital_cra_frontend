@@ -40,7 +40,7 @@ export const OrderItem = ({ order }) => {
         </td>
         <td className='text-end'>
           <ButtonGroup size='sm'>
-            <Link to={`/member/treatments/orders/${order.id}/show`} className='btn btn-success'>
+            <Link to={`/member/orders/${order.id}/show`} className='btn btn-light'>
               <i className='bi bi-eye'/>
             </Link>
           </ButtonGroup>

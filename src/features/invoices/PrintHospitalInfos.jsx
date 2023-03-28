@@ -32,7 +32,7 @@ export const PrintHospitalInfos = ({ hospital, invoice, document, patient, relea
                 </tr>
                 <tr>
                   <td>Date d'échéance</td>
-                  <td>--</td>
+                  <td>{endDate ? endDate : '--'}</td>
                 </tr>
               </tbody>
             </Table>

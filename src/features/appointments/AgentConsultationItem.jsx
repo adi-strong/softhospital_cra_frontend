@@ -3,6 +3,7 @@ import {entrypoint} from "../../app/store";
 import img from "../../assets/app/img/default_profile.jpg";
 import {limitStrTo} from "../../services";
 import {Link} from "react-router-dom";
+import {ButtonGroup} from "react-bootstrap";
 
 export const AgentConsultationItem = ({ consult }) => {
   const file = consult?.file ? consult.file?.wording : '❓'
@@ -34,11 +35,18 @@ export const AgentConsultationItem = ({ consult }) => {
         <td>{user}</td>
         <td>{date}</td>
         <td className='text-end'>
-          <Link
-            to={`/member/treatments/consultations/edit/${consult?.id}/${patient?.slug}`}
-            className='w-100 btn btn-light btn-sm text-decoration-none'>
-            <i className='bi bi-eye'/>
-          </Link>
+          <ButtonGroup size='sm' className='w-100'>
+            <Link
+              to={`/member/treatments/consultations/${consult?.id}/${patient?.slug}`}
+              className='btn btn-light text-decoration-none'>
+              <i className='bi bi-eye-fill'/>
+            </Link>
+            <Link
+              to={`/member/treatments/consultations/edit/${consult?.id}/${patient?.slug}`}
+              className='btn btn-light text-decoration-none'>
+              <i className='bi bi-pencil-square text-primary'/>
+            </Link>
+          </ButtonGroup>
         </td>
       </tr>
     </>
