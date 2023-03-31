@@ -18,6 +18,7 @@ import {useEffect, useState} from "react";
 import {useSelector} from "react-redux";
 import {DashSection1Item2} from "./DashSection1Item2";
 import {DashSection1Item3} from "./DashSection1Item3";
+import {DashSection2} from "../section2/DashSection2";
 
 export function DashSection1({ menus, currentDate, id }) {
   const [stats1, setStats1] = useState(null)
@@ -261,6 +262,12 @@ export function DashSection1({ menus, currentDate, id }) {
             onGetThisYearStats={handleGetPatientsByYearStats}
             refetch={onPatientsRefresh} />
         </Col>
+
+        {/* section 2: fiches traitées, entrées $, nbre patients (EchartsJS) */}
+        <Col xl={12}>
+          <DashSection2 menus={menus}/>
+        </Col>
+        {/* Fin section 2: fiches traitées, entrées $, nbre patients (EchartsJS) */}
       </Row>
     </>
   )
