@@ -216,6 +216,7 @@ export const ActsList = () => {
             {label: 'Catégorie'},
           ]}/>}
         tbody={
+
           <tbody>
             {!isLoading && contents.length > 0 && contents.map(act =>
               <ActItem

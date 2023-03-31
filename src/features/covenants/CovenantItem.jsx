@@ -1,16 +1,12 @@
 import {Link} from "react-router-dom";
 import {Button, ButtonGroup} from "react-bootstrap";
-import {useGetCovenantsQuery} from "./covenantApiSlice";
 import img from '../../assets/app/img/default_covenant_img.png';
 import {entrypoint} from "../../app/store";
 import {useState} from "react";
 import {EditCovenant} from "./EditCovenant";
 
-export const CovenantItem = ({id}) => {
+export const CovenantItem = ({ covenant, onRefresh }) => {
   const [show, setShow] = useState(false)
-  const { covenant } = useGetCovenantsQuery('Covenant', {
-    selectFromResult: ({ data }) => ({ covenant: data.entities[id] })
-  })
 
   const toggleModal = () => setShow(!show)
 
@@ -44,7 +40,7 @@ export const CovenantItem = ({id}) => {
         </td>
       </tr>
 
-      <EditCovenant show={show} onHide={toggleModal} data={covenant} />
+      <EditCovenant show={show} onHide={toggleModal} data={covenant} onRefresh={onRefresh} />
     </>
   )
 }

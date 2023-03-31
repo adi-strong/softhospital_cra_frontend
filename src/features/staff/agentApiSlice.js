@@ -6,24 +6,12 @@ export let totalAgents = 0
 const agentsAdapter = createEntityAdapter()
 const initialState = agentsAdapter.getInitialState()
 
+export let totalResearchAgents = 0
+export let researchAgentsPages = 1
+export let agentsPages = 1
+
 export const agentApiSlice = api.injectEndpoints({
   endpoints: build => ({
-    getAgents: build.query({
-      query: () => pathToApi+'/agents',
-      transformResponse: res => {
-        totalAgents = res['hydra:totalItems']
-        const data = res['hydra:member']
-        const loadAgents = data.map(agent => {
-          if (agent?.createdAt) agent.createdAt = moment(agent.createdAt).calendar()
-          return agent
-        })
-        return agentsAdapter.setAll(initialState, loadAgents)
-      },
-      providesTags: result => [
-        {type: 'Agents', id: 'LIST'},
-        ...result.ids.map(id => ({ type: 'Agents', id }))
-      ]
-    }), // list of agents
 
     addNewAgent: build.mutation({
       query: agent => ({
@@ -84,10 +72,71 @@ export const agentApiSlice = api.injectEndpoints({
         })
       },
     }),
+
+    getAgents: build.query({
+      query: () => pathToApi+'/agents',
+      transformResponse: res => {
+        totalAgents = res['hydra:totalItems']
+        agentsPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[1]) : 1
+        const data = res['hydra:member']
+        const loadAgents = data.map(agent => {
+          if (agent?.createdAt) agent.createdAt = moment(agent.createdAt).calendar()
+          return agent
+        })
+        return agentsAdapter.setAll(initialState, loadAgents)
+      },
+      providesTags: result => [
+        {type: 'Agents', id: 'LIST'},
+        ...result.ids.map(id => ({ type: 'Agents', id }))
+      ]
+    }), // list of agents
+
+    getAgentsByPagination: build.query({
+      query: page => pathToApi+`/agents?page=${page}`,
+      transformResponse: res => {
+        const data = res['hydra:member']
+        totalAgents = res['hydra:totalItems']
+        agentsPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[1]) : 1
+        return data?.map(act => {
+          if (act?.createdAt) act.createdAt = moment(act.createdAt).calendar()
+          return act
+        })
+      },
+    }), // pagination list,
+
+    getResearchAgents: build.query({
+      query: keyword => pathToApi+`/agents?fullName=${keyword}`,
+      transformResponse: res => {
+        const data = res['hydra:member']
+        totalResearchAgents = res['hydra:totalItems']
+        researchAgentsPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[2]) : 1
+        return data?.map(act => {
+          if (act?.createdAt) act.createdAt = moment(act.createdAt).calendar()
+          return act
+        })
+      },
+    }),
+
+    getResearchAgentsByPagination: build.query({
+      query: search => pathToApi+`/agents?fullName=${search?.keyword}&page=${search?.page}`,
+      transformResponse: res => {
+        const data = res['hydra:member']
+        totalResearchAgents = res['hydra:totalItems']
+        researchAgentsPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[2]) : 1
+        return data?.map(act => {
+          if (act?.createdAt) act.createdAt = moment(act.createdAt).calendar()
+          return act
+        })
+      },
+    }),
+
   })
 })
 
 export const {
+  useLazyGetResearchAgentsByPaginationQuery,
+  useLazyGetResearchAgentsQuery,
+  useLazyGetAgentsByPaginationQuery,
   useGetAgentsQuery,
   useGetSingleAgentQuery,
   useAddNewAgentMutation,

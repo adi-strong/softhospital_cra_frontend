@@ -2,9 +2,8 @@ import {useEffect, useState} from "react";
 import {useDispatch} from "react-redux";
 import {onInitSidebarMenu} from "../navigation/navigationSlice";
 import {AppBreadcrumb, AppHeadTitle, AppMainError} from "../../components";
-import {Button, Card, Col, Form, InputGroup, Row} from "react-bootstrap";
+import {Card, Col, Row} from "react-bootstrap";
 import {useParams} from "react-router-dom";
-import {handleChange} from "../../services/handleFormsFieldsServices";
 import {useGetSingleCovenantQuery} from "./covenantApiSlice";
 import {CovenantOverview} from "./CovenantOverview";
 import {SingleContract} from "./SingleContract";
@@ -13,7 +12,6 @@ import {useGetCovenantPatientsQuery} from "../patients/patientApiSlice";
 
 const SingleCovenant = () => {
   const dispatch = useDispatch(), {id} = useParams()
-  const [invoice, setInvoice] = useState({date: ''})
   const {data: covenant, isLoading, isError, isSuccess, refetch} = useGetSingleCovenantQuery(id)
   const {
     data: patients = [],
@@ -22,7 +20,7 @@ const SingleCovenant = () => {
     isError: isPError,
     refetch: pRefetch,
     isSuccess: isPSuccess,
-  } = useGetCovenantPatientsQuery(parseInt(id))
+  } = useGetCovenantPatientsQuery(id)
 
   useEffect(() => {
     dispatch(onInitSidebarMenu('/member/patients'))
@@ -31,21 +29,24 @@ const SingleCovenant = () => {
   let errors
   if (isError) errors = <AppMainError/>
 
-  const onCancelInvoiceSearch = () => setInvoice({date: ''})
+  const [search, setSearch] = useState('')
+  const [tempSearch, setTempSearch] = useState('')
+  const [page, setPage] = useState(1)
+  const [checkPatients, setCheckPatients] = useState({isSearching: false, isPaginated: false,})
 
   async function onRefresh() {
+    setCheckPatients({isSearching: false, isPaginated: false})
+    setSearch('')
+    setTempSearch('')
+    setPage(1)
     await pRefetch()
     await refetch()
   } // refresh patients data
 
-  function handleSearchInvoice(e) {
-    e.preventDefault()
-  } // search invoice's amount
-
   return (
     <div className='section dashboard'>
       <AppHeadTitle title='Organisme' />
-      <AppBreadcrumb title='Back Office Pro' links={[
+      <AppBreadcrumb title={covenant ? covenant?.denomination.toUpperCase() : '--'} links={[
         {label: 'Patients', path: '/patients'},
         {label: 'Conventions', path: '/patients/covenants'},
       ]} />
@@ -55,6 +56,15 @@ const SingleCovenant = () => {
             <Card className='border-0'>
               <Card.Body>
                 <CovenantPatientsList
+                  id={id}
+                  checkPatients={checkPatients}
+                  setCheckPatients={setCheckPatients}
+                  search={search}
+                  setSearch={setSearch}
+                  tempSearch={tempSearch}
+                  page={page}
+                  setPage={setPage}
+                  setTempSearch={setTempSearch}
                   patients={patients}
                   isLoading={isPLoading}
                   isFetching={isFetching}
@@ -73,25 +83,6 @@ const SingleCovenant = () => {
               errors={errors}/> {/* Logo */}
 
             <SingleContract covenant={covenant} isSuccess={isSuccess} isLoading={isLoading}/> {/* contract */}
-
-            <Card className='border-0'>
-              <Card.Body>
-                <h2><i className='me-3 bi bi-search'/> Facture</h2> <hr className='mt-0'/>
-                <form onSubmit={handleSearchInvoice}>
-                  <InputGroup>
-                    <Button type='button' variant='secondary' onClick={onCancelInvoiceSearch}>
-                      <i className='bi bi-x'/>
-                    </Button>
-                    <Form.Control
-                      type='date'
-                      name='date'
-                      value={invoice.date}
-                      onChange={(e) => handleChange(e, invoice, setInvoice)} />
-                    <Button type='submit' disabled={!invoice.date}><i className='bi bi-search'/></Button>
-                  </InputGroup>
-                </form>
-              </Card.Body>
-            </Card> {/* contract */}
           </Col>
         </Row>
       </div>

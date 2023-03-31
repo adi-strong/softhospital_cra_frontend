@@ -1,22 +1,33 @@
-import {useState} from "react";
-import {AppBreadcrumb, AppDataTableStripped, AppDelModal, AppHeadTitle, AppTHead} from "../../components";
-import {Alert, Badge, Button, ButtonGroup, Card, Col, Form, InputGroup} from "react-bootstrap";
-import {totalAgents, useDeleteAgentMutation, useGetAgentsQuery} from "./agentApiSlice";
-import {handleChange} from "../../services/handleFormsFieldsServices";
+import {useEffect, useState} from "react";
+import {
+  AppBreadcrumb,
+  AppDataTableStripped,
+  AppDelModal,
+  AppHeadTitle,
+  AppMainError,
+  AppPaginationComponent,
+  AppTHead
+} from "../../components";
+import {Badge, Button, ButtonGroup, Card, Col, Form} from "react-bootstrap";
+import {
+  agentsPages, researchAgentsPages,
+  totalAgents, totalResearchAgents,
+  useDeleteAgentMutation,
+  useGetAgentsQuery,
+  useLazyGetAgentsByPaginationQuery, useLazyGetResearchAgentsByPaginationQuery, useLazyGetResearchAgentsQuery
+} from "./agentApiSlice";
 import {Link} from "react-router-dom";
 import toast from "react-hot-toast";
 import {AddUser} from "../users/AddUser";
 import img from '../../assets/app/img/default_profile.jpg';
 import {entrypoint} from "../../app/store";
 import {limitStrTo} from "../../services";
+import BarLoaderSpinner from "../../loaders/BarLoaderSpinner";
 
-function AgentItem({id}) {
+function AgentItem({ agent }) {
   const [show, setShow] = useState(false)
   const [showNewUser, setShowNewUser] = useState(false)
   const [deleteAgent, {isLoading}] = useDeleteAgentMutation()
-  const {agent} = useGetAgentsQuery('Agents', {
-    selectFromResult: ({ data }) => ({ agent: data.entities[id]})
-  })
 
   const toggleModal = () => setShow(!show)
 
@@ -72,7 +83,7 @@ function AgentItem({id}) {
         <td className='text-end'>
           <ButtonGroup size='sm'>
             <Link
-              to={`/member/staff/agents/edit/${id}/${agent.slug}`}
+              to={`/member/staff/agents/edit/${agent?.id}/${agent.slug}`}
               className={`btn btn-light ${isLoading ? 'disabled' : ''}`}>
               <i className='bi bi-pencil-square text-primary'/>
             </Link>
@@ -119,26 +130,88 @@ function AgentItem({id}) {
 
 function Staff() {
   const {data: agents = [], isSuccess, isLoading, isFetching, isError, refetch} = useGetAgentsQuery('Agents')
-  const [keywords, setKeywords] = useState({search: ''})
+  const [search, setSearch] = useState('')
   const [showNew, setShowNew] = useState(false)
-
-  let content, error
-  if (isSuccess) content = agents && agents?.ids.map(id => <AgentItem key={id} id={id}/>)
-  else if (isError) error =
-    <Alert variant='danger'>
-      <p>
-        Une erreur est survenue. <br/>
-        Veuillez soit recharger la page soit vous reconnecter <i className='bi bi-exclamation-triangle-fill'/>
-      </p>
-    </Alert>
-
-  const onRefresh = async () => await refetch()
+  const [contents, setContents] = useState([])
+  const [tempSearch, setTempSearch] = useState('')
+  const [page, setPage] = useState(1)
+  const [checkItems, setCheckItems] = useState({isSearching: false, isPaginated: false,})
 
   const toggleModal = () => setShowNew(!showNew)
 
-  function handleSubmit(e) {
+  const [paginatedItems, setPaginatedItems] = useState([])
+  const [researchPaginatedItems, setResearchPaginatedItems] = useState([])
+
+  const [getAgentsByPagination, {isFetching: isFetching2, isError: isError2,}] = useLazyGetAgentsByPaginationQuery()
+  const [getResearchAgents, {isFetching: isFetching3, isError: isError3,}] = useLazyGetResearchAgentsQuery()
+  const [getResearchAgentsByPagination, {
+    isFetching: isFetching4,
+    isError: isError4,
+  }] = useLazyGetResearchAgentsByPaginationQuery()
+
+  async function handlePagination(pagination) {
+    const param = pagination + 1
+    setPage(param)
+    setCheckItems({isSearching: false, isPaginated: true})
+    const { data: searchData, isSuccess } = await getAgentsByPagination(param)
+    if (isSuccess && searchData) {
+      setPaginatedItems(searchData)
+    }
+  } // handle main pagination
+
+  async function handlePagination2(pagination) {
+    const param = pagination + 1
+    const keywords = {page: param, keyword: tempSearch}
+    setPage(param)
+    setCheckItems({isSearching: true, isPaginated: false})
+    const { data: searchData, isSuccess } = await getResearchAgentsByPagination(keywords)
+    if (isSuccess && searchData) {
+      setResearchPaginatedItems(searchData)
+    }
+  } // 2nd handle main pagination
+
+  async function handleSubmit(e) {
     e.preventDefault()
+    setPage(1)
+    setTempSearch(search)
+    setSearch('')
+    setCheckItems({isSearching: true, isPaginated: false})
+    const { data: searchData, isSuccess } = await getResearchAgents(search)
+    if (isSuccess && searchData) {
+      setResearchPaginatedItems(searchData)
+    }
   } // submit search keywords
+
+  const onRefresh = async () => {
+    setCheckItems({isSearching: false, isPaginated: false})
+    setSearch('')
+    setTempSearch('')
+    setPage(1)
+    await refetch()
+  }
+
+  useEffect(() => {
+    if (!checkItems.isSearching && !checkItems.isPaginated && isSuccess && agents) {
+      const items = agents.ids?.map(id => agents?.entities[id])
+      setContents(items?.filter(a => (
+        (a.name.toLowerCase().includes(search.toLowerCase())) ||
+        a?.lastName.toLowerCase().includes(search.toLowerCase()) ||
+        a?.firstName.toLowerCase().includes(search.toLowerCase())
+      )))
+    }
+    else if (!checkItems.isSearching && checkItems.isPaginated && isSuccess && agents)
+      setContents(paginatedItems?.filter(a => (
+        (a.name.toLowerCase().includes(search.toLowerCase())) ||
+        a?.lastName.toLowerCase().includes(search.toLowerCase()) ||
+        a?.firstName.toLowerCase().includes(search.toLowerCase())
+      )))
+    else if (checkItems.isSearching && !checkItems.isPaginated && isSuccess && agents)
+      setContents(researchPaginatedItems?.filter(a => (
+        (a.name.toLowerCase().includes(search.toLowerCase())) ||
+        a?.lastName.toLowerCase().includes(search.toLowerCase()) ||
+        a?.firstName.toLowerCase().includes(search.toLowerCase())
+      )))
+  }, [isSuccess, agents, search, checkItems, paginatedItems, researchPaginatedItems])
 
   return (
     <>
@@ -149,27 +222,35 @@ function Staff() {
           <AppDataTableStripped
             overview={
               <>
-                <p>{totalAgents < 1
-                  ? 'Aucun département enregistré pour le moment 🎈'
-                  : <>Il y a au total <code>{totalAgents.toLocaleString()}</code> agent(s) :</>}
-                </p>
+                <div className='mb-3'>
+                  {checkItems.isSearching ?
+                    totalResearchAgents > 0 ?
+                      <p>
+                        Au total
+                        <code className="mx-1 me-1">{totalResearchAgents.toLocaleString()}</code>
+                        agent(s) trouvé(s) suite à votre recherche ⏩ <b>{tempSearch}</b> :
+                      </p> : 'Aucune occurence trouvée 🎈'
+                    :
+                    <p>
+                      {totalAgents < 1
+                        ? 'Aucun organisme(s) enregistré(s).'
+                        : <>Il y a au total <code>{totalAgents.toLocaleString()}</code> agent(s) enregistré(s) :</>}
+                    </p>}
+                </div>
+
                 <Col md={8} className='mb-2'>
                   <form onSubmit={handleSubmit}>
-                    <InputGroup>
-                      <Button type='submit' variant='light' disabled={agents.length < 1}>
-                        <i className='bi bi-search'/>
-                      </Button>
-                      <Form.Control
-                        placeholder='Votre recherche ici...'
-                        aria-label='Votre recherche ici...'
-                        autoComplete='off'
-                        disabled={agents.length < 1 || isFetching}
-                        name='search'
-                        value={keywords.search}
-                        onChange={(e) => handleChange(e, keywords, setKeywords)} />
-                    </InputGroup>
+                    <Form.Control
+                      placeholder='Votre recherche ici...'
+                      aria-label='Votre recherche ici...'
+                      autoComplete='off'
+                      disabled={isFetching3}
+                      name='search'
+                      value={search}
+                      onChange={({ target}) => setSearch(target.value)} />
                   </form>
                 </Col>
+
                 <Col md={4} className='text-md-end mb-2'>
                   <Link
                     to='/member/staff/agents/add'
@@ -181,21 +262,54 @@ function Staff() {
                 </Col>
               </>
             }
-            loader={isLoading}
-            thead={<AppTHead isImg loader={isLoading} isFetching={isFetching} onRefresh={onRefresh} items={[
-              {label: '#'},
-              {label: 'Nom'},
-              {label: 'Sexe'},
-              {label: 'n° Tél.'},
-              {label: 'Email'},
-              {label: 'Fonction'},
-              {label: 'Département'},
-              {label: 'Service'},
-              {label: 'Date'},
+            loader={isLoading || isFetching2 || isFetching4}
+            thead={
+              <AppTHead
+                isImg
+                loader={isLoading}
+                isFetching={isFetching || isFetching2 || isFetching4 || isFetching3}
+                onRefresh={onRefresh}
+                items={[
+                  {label: '#'},
+                  {label: 'Nom'},
+                  {label: 'Sexe'},
+                  {label: 'n° Tél.'},
+                  {label: 'Email'},
+                  {label: 'Fonction'},
+                  {label: 'Département'},
+                  {label: 'Service'},
+                  {label: 'Date'},
             ]} />}
-            tbody={<tbody>{content}</tbody>}
+            tbody={
+              <tbody>
+                {!isError && isSuccess && contents.length > 0 &&
+                  contents.map(a => <AgentItem key={a?.id} agent={a}/>)}
+              </tbody>}
             title='Liste des agents' />
-          {error && error}
+
+          {isLoading || isFetching || isFetching2 || isFetching3 || isFetching4
+            ? <BarLoaderSpinner loading={isLoading || isFetching || isFetching2 || isFetching3 || isFetching4}/>
+            : (
+              <>
+                {agentsPages > 1 && isSuccess && agents
+                  && !checkItems.isSearching &&
+                  <AppPaginationComponent
+                    onPaginate={handlePagination}
+                    currentPage={page - 1}
+                    pageCount={agentsPages} />}
+
+                {researchAgentsPages > 1 && isSuccess && agents && checkItems.isSearching &&
+                  <AppPaginationComponent
+                    onPaginate={handlePagination2}
+                    currentPage={page - 1}
+                    pageCount={researchAgentsPages} />}
+              </>
+            )}
+
+          {isError && <div className='mb-3'><AppMainError/></div>}
+          {isError2 && <div className='mb-3'><AppMainError/></div>}
+          {isError3 && <div className='mb-3'><AppMainError/></div>}
+          {isError4 && <div className='mb-3'><AppMainError/></div>}
         </Card.Body>
       </Card>
     </>

@@ -1,7 +1,7 @@
 import {memo} from "react";
 import {BarLoader} from "react-spinners";
 
-const override: CSSProperties = {
+ const override: CSSProperties = {
   display: "block",
   margin: "0 auto",
   borderColor: "#566ef5",

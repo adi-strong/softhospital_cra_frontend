@@ -7,6 +7,11 @@ export let researchPatientsPages = 1
 export let patientsPages = 1
 export let totalCovenantPatients = 0
 
+export let totalCovenantsPatients = 0
+export let totalResearchCovenantPatients = 0
+export let researchCovenantPatientsPages = 1
+export let covenantPatientsPages = 1
+
 export const patientApiSlice = api.injectEndpoints({
   endpoints: build => ({
     getPatients: build.query({
@@ -90,18 +95,6 @@ export const patientApiSlice = api.injectEndpoints({
       providesTags: (result, error, arg) => [{type: 'SinglePatient', id: parseInt(arg)}]
     }), // get single patient
 
-    getCovenantPatients: build.query({
-      query: id => pathToApi+`/covenant/${id}/patients`,
-      transformResponse: res => {
-        totalCovenantPatients = res['hydra:totalItems']
-        return res['hydra:member']?.map(patient => {
-          if (patient?.createdAt) patient.createdAt = moment(patient.createdAt).calendar()
-          return patient
-        })
-      },
-      providesTags: (result, error, arg) => [{type: 'CovenantPatients', id: arg}]
-    }), // covenant's patients
-
     handleLoadPatients: build.query({
       query: keyword => pathToApi+`/patients?fullName=${keyword}`,
       transformResponse: res => {
@@ -149,10 +142,67 @@ export const patientApiSlice = api.injectEndpoints({
       },
     }),
 
+    // **********************************************************************************
+
+    getCovenantPatients: build.query({
+      query: id => pathToApi+`/covenant/${id}/patients`,
+      transformResponse: res => {
+        totalCovenantPatients = res['hydra:totalItems']
+        covenantPatientsPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[1]) : 1
+        return res['hydra:member']?.map(patient => {
+          if (patient?.createdAt) patient.createdAt = moment(patient.createdAt).calendar()
+          return patient
+        })
+      },
+      providesTags: (result, error, arg) => [{type: 'CovenantPatients', id: arg}]
+    }), // covenant's patients
+
+    getCovenantPatientsByPagination: build.query({
+      query: ({ id, page }) => pathToApi+`/covenant/${id}/patients?page=${page}`,
+      transformResponse: res => {
+        const data = res['hydra:member']
+        totalCovenantsPatients = res['hydra:totalItems']
+        covenantPatientsPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[1]) : 1
+        return data?.map(act => {
+          if (act?.createdAt) act.createdAt = moment(act.createdAt).calendar()
+          return act
+        })
+      },
+    }), // pagination list,
+
+    getResearchCovenantPatients: build.query({
+      query: ({ id, keyword }) => pathToApi+`/covenant/${id}/patients?fullName=${keyword}`,
+      transformResponse: res => {
+        const data = res['hydra:member']
+        totalResearchCovenantPatients = res['hydra:totalItems']
+        researchCovenantPatientsPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[2]) : 1
+        return data?.map(act => {
+          if (act?.createdAt) act.createdAt = moment(act.createdAt).calendar()
+          return act
+        })
+      },
+    }),
+
+    getResearchCovenantPatientsByPagination: build.query({
+      query: ({ id, search }) => pathToApi+`/covenant/${id}/patients?fullName=${search?.keyword}&page=${search?.page}`,
+      transformResponse: res => {
+        const data = res['hydra:member']
+        totalResearchCovenantPatients = res['hydra:totalItems']
+        researchCovenantPatientsPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[2]) : 1
+        return data?.map(act => {
+          if (act?.createdAt) act.createdAt = moment(act.createdAt).calendar()
+          return act
+        })
+      },
+    }),
+
   })
 })
 
 export const {
+  useLazyGetCovenantPatientsByPaginationQuery,
+  useLazyGetResearchCovenantPatientsQuery,
+  useLazyGetResearchCovenantPatientsByPaginationQuery,
   useGetPatientsQuery,
   useAddNewPatientMutation,
   useUpdatePatientMutation,

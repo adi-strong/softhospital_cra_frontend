@@ -5,6 +5,9 @@ import moment from "moment";
 export let totalCovenants = 0
 const covenantsAdapter = createEntityAdapter()
 const initialState = covenantsAdapter.getInitialState()
+export let totalResearchCovenants = 0
+export let researchCovenantsPages = 1
+export let covenantsPages = 1
 
 export const covenantApiSlice = api.injectEndpoints({
   endpoints: build => ({
@@ -13,6 +16,7 @@ export const covenantApiSlice = api.injectEndpoints({
       transformResponse: res => {
         totalCovenants = res['hydra:totalItems']
         const data = res['hydra:member']
+        covenantsPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[1]) : 1
         const loadCovenants = data.map(covenant => {
           if (covenant?.createdAt) covenant.createdAt = moment(covenant.createdAt).calendar()
           return covenant
@@ -87,6 +91,45 @@ export const covenantApiSlice = api.injectEndpoints({
         })
       }
     }), // load covenants
+
+    getCovenantsByPagination: build.query({
+      query: page => pathToApi+`/covenants?page=${page}`,
+      transformResponse: res => {
+        const data = res['hydra:member']
+        totalCovenants = res['hydra:totalItems']
+        covenantsPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[1]) : 1
+        return data?.map(act => {
+          if (act?.createdAt) act.createdAt = moment(act.createdAt).calendar()
+          return act
+        })
+      },
+    }), // pagination list,
+
+    getResearchCovenants: build.query({
+      query: keyword => pathToApi+`/covenants?denomination=${keyword}`,
+      transformResponse: res => {
+        const data = res['hydra:member']
+        totalResearchCovenants = res['hydra:totalItems']
+        researchCovenantsPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[2]) : 1
+        return data?.map(act => {
+          if (act?.createdAt) act.createdAt = moment(act.createdAt).calendar()
+          return act
+        })
+      },
+    }),
+
+    getResearchCovenantsByPagination: build.query({
+      query: search => pathToApi+`/covenants?denomination=${search?.keyword}&page=${search?.page}`,
+      transformResponse: res => {
+        const data = res['hydra:member']
+        totalResearchCovenants = res['hydra:totalItems']
+        researchCovenantsPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[2]) : 1
+        return data?.map(act => {
+          if (act?.createdAt) act.createdAt = moment(act.createdAt).calendar()
+          return act
+        })
+      },
+    }),
   })
 })
 
@@ -97,4 +140,7 @@ export const {
   useDeleteCovenantMutation,
   useGetSingleCovenantQuery,
   useLazyLoadCovenantsQuery,
+  useLazyGetCovenantsByPaginationQuery,
+  useLazyGetResearchCovenantsQuery,
+  useLazyGetResearchCovenantsByPaginationQuery,
 } = covenantApiSlice

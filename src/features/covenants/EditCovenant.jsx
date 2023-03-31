@@ -8,7 +8,7 @@ import {Button} from "react-bootstrap";
 import {entrypoint} from "../../app/store";
 import {AddImageModal} from "../images/AddImageModal";
 
-export const EditCovenant = ({show, onHide, data}) => {
+export const EditCovenant = ({show, onHide, data, onRefresh}) => {
   const [showImage, setShowImage] = useState(false)
   const [covenant, setCovenant] = useState(data)
   const [updateCovenant, {isLoading, isError, error}] = useUpdateCovenantMutation()
@@ -23,6 +23,7 @@ export const EditCovenant = ({show, onHide, data}) => {
       if (!formData.error) {
         toast.success('Modification bien efféctuée.')
         onHide()
+        onRefresh()
       }
     }
     catch (e) { toast.error(e.message) }

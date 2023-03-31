@@ -1,23 +1,27 @@
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {useSelector} from "react-redux";
-import {totalUsers, useDeleteUserMutation, useGetUsersQuery} from "./userApiSlice";
-import {AppDataTableStripped, AppDelModal, AppMainError, AppTHead} from "../../components";
+import {
+  researchUsersPages,
+  totalResearchUsers,
+  totalUsers,
+  useDeleteUserMutation,
+  useGetUsersQuery, useLazyGetResearchUsersByPaginationQuery, useLazyGetResearchUsersQuery,
+  useLazyGetUsersByPaginationQuery, usersPages
+} from "./userApiSlice";
+import {AppDataTableStripped, AppDelModal, AppMainError, AppPaginationComponent, AppTHead} from "../../components";
 import {role, ROLE_OWNER_ADMIN} from "../../app/config";
 import {selectCurrentUser} from "../auth/authSlice";
 import {Button, ButtonGroup, Card, Col, Form, InputGroup} from "react-bootstrap";
-import {handleChange} from "../../services/handleFormsFieldsServices";
 import {EditUser} from "./EditUser";
 import toast from "react-hot-toast";
 import img from '../../assets/app/img/default_profile.jpg';
 import {entrypoint} from "../../app/store";
+import BarLoaderSpinner from "../../loaders/BarLoaderSpinner";
 
-const UserItem = ({id, currentUser}) => {
+const UserItem = ({user, currentUser}) => {
   const [deleteUser, {isLoading}] = useDeleteUserMutation()
   const [showEdit, setShowEdit] = useState(false)
   const [showDelete, setShowDelete] = useState(false)
-  const {user} = useGetUsersQuery('Users', {
-    selectFromResult: ({ data }) => ({ user: data.entities[id] })
-  })
 
   const toggleEditModal = () => setShowEdit(!showEdit)
   const toggleDeleteModal = () => setShowDelete(!showDelete)
@@ -86,17 +90,73 @@ const UserItem = ({id, currentUser}) => {
 function Users() {
   const currentUser = useSelector(selectCurrentUser)
   const {data: users = [], isLoading, isFetching, isError, isSuccess, refetch} = useGetUsersQuery('Users')
-  const [keywords, setKeywords] = useState({search: ''})
+  const [search, setSearch] = useState('')
+  const [contents, setContents] = useState([])
+  const [tempSearch, setTempSearch] = useState('')
+  const [page, setPage] = useState(1)
+  const [checkItems, setCheckItems] = useState({isSearching: false, isPaginated: false,})
 
-  let content, error
-  if (isSuccess) content = users && users.ids.map(id => <UserItem key={id} id={id} currentUser={currentUser}/>)
-  if (isError) error = <AppMainError/>
+  const [paginatedItems, setPaginatedItems] = useState([])
+  const [researchPaginatedItems, setResearchPaginatedItems] = useState([])
 
-  const onRefresh = async () => await refetch()
+  const [getUsersByPagination, {isFetching: isFetching2, isError: isError2,}] = useLazyGetUsersByPaginationQuery()
+  const [getResearchUsers, {isFetching: isFetching3, isError: isError3,}] = useLazyGetResearchUsersQuery()
+  const [getResearchUsersByPagination, {
+    isFetching: isFetching4,
+    isError: isError4,
+  }] = useLazyGetResearchUsersByPaginationQuery()
 
-  function handleSubmit(e) {
+  async function handlePagination(pagination) {
+    const param = pagination + 1
+    setPage(param)
+    setCheckItems({isSearching: false, isPaginated: true})
+    const { data: searchData, isSuccess } = await getUsersByPagination(param)
+    if (isSuccess && searchData) {
+      setPaginatedItems(searchData)
+    }
+  } // handle main pagination
+
+  async function handlePagination2(pagination) {
+    const param = pagination + 1
+    const keywords = {page: param, keyword: tempSearch}
+    setPage(param)
+    setCheckItems({isSearching: true, isPaginated: false})
+    const { data: searchData, isSuccess } = await getResearchUsersByPagination(keywords)
+    if (isSuccess && searchData) {
+      setResearchPaginatedItems(searchData)
+    }
+  } // 2nd handle main pagination
+
+  async function handleSubmit(e) {
     e.preventDefault()
+    setPage(1)
+    setTempSearch(search)
+    setSearch('')
+    setCheckItems({isSearching: true, isPaginated: false})
+    const { data: searchData, isSuccess } = await getResearchUsers(search)
+    if (isSuccess && searchData) {
+      setResearchPaginatedItems(searchData)
+    }
   } // submit search keywords
+
+  const onRefresh = async () => {
+    setCheckItems({isSearching: false, isPaginated: false})
+    setSearch('')
+    setTempSearch('')
+    setPage(1)
+    await refetch()
+  }
+
+  useEffect(() => {
+    if (!checkItems.isSearching && !checkItems.isPaginated && isSuccess && users) {
+      const items = users.ids?.map(id => users?.entities[id])
+      setContents(items?.filter(u => u?.username.toLowerCase().includes(search.toLowerCase())))
+    }
+    else if (!checkItems.isSearching && checkItems.isPaginated && isSuccess && users)
+      setContents(paginatedItems?.filter(f => f?.username.toLowerCase().includes(search.toLowerCase())))
+    else if (checkItems.isSearching && !checkItems.isPaginated && isSuccess && users)
+      setContents(researchPaginatedItems?.filter(f => f?.username.toLowerCase().includes(search.toLowerCase())))
+  }, [isSuccess, users, search, checkItems, paginatedItems, researchPaginatedItems])
 
   return (
     <>
@@ -105,10 +165,22 @@ function Users() {
           <AppDataTableStripped
             overview={
               <>
-                <p>{totalUsers < 1
-                  ? 'Aucun utilisateurs enregistré pour le moment 🎈'
-                  : <>Il y a au total <code>{totalUsers.toLocaleString()}</code> utilisateur(s) :</>}
-                </p>
+                <div className='mb-3'>
+                  {checkItems.isSearching ?
+                    totalResearchUsers > 0 ?
+                      <p>
+                        Au total
+                        <code className="mx-1 me-1">{totalResearchUsers.toLocaleString()}</code>
+                        utilisateur(s) trouvé(s) suite à votre recherche ⏩ <b>{tempSearch}</b> :
+                      </p> : 'Aucune occurence trouvée 🎈'
+                    :
+                    <p>
+                      {totalUsers < 1
+                        ? 'Aucun organisme(s) enregistré(s).'
+                        : <>Il y a au total <code>{totalUsers.toLocaleString()}</code> utilisateur(s) enregistré(s) :</>}
+                    </p>}
+                </div>
+
                 <Col className='mb-2'>
                   <form onSubmit={handleSubmit}>
                     <InputGroup>
@@ -119,28 +191,60 @@ function Users() {
                         placeholder='Votre recherche ici...'
                         aria-label='Votre recherche ici...'
                         autoComplete='off'
-                        disabled={users.length < 1 || isFetching}
                         name='search'
-                        value={keywords.search}
-                        onChange={(e) => handleChange(e, keywords, setKeywords)} />
+                        value={search}
+                        onChange={({ target }) => setSearch(target.value)} />
                     </InputGroup>
                   </form>
                 </Col>
               </>
             }
-            loader={isLoading}
-            thead={<AppTHead isImg loader={isLoading} isFetching={isFetching} onRefresh={onRefresh} items={[
-              {label: '#'},
-              {label: 'Username'},
-              {label: 'Nom complet'},
-              {label: 'n° Téléphone'},
-              {label: 'Email'},
-              {label: 'Rôle / Droits'},
-              {label: 'Date'},
-            ]}/>}
-            tbody={<tbody>{content}</tbody>}
+            loader={isLoading || isFetching2 || isFetching4}
+            thead={
+              <AppTHead
+                isImg
+                loader={isLoading}
+                isFetching={isFetching || isFetching2 || isFetching4 || isFetching3}
+                onRefresh={onRefresh}
+                items={[
+                  {label: '#'},
+                  {label: 'Username'},
+                  {label: 'Nom complet'},
+                  {label: 'n° Téléphone'},
+                  {label: 'Email'},
+                  {label: 'Rôle / Droits'},
+                  {label: 'Date'},
+                ]}/>}
+            tbody={
+              <tbody>
+                {!isError && isSuccess && contents.length > 0 &&
+                  contents.map(u => <UserItem key={u?.id} user={u} currentUser={currentUser}/>)}
+              </tbody>}
             title='Liste des utilisateurs' />
-          {error && error}
+
+          {isLoading || isFetching || isFetching2 || isFetching3 || isFetching4
+            ? <BarLoaderSpinner loading={isLoading || isFetching || isFetching2 || isFetching3 || isFetching4}/>
+            : (
+              <>
+                {usersPages > 1 && isSuccess && users
+                  && !checkItems.isSearching &&
+                  <AppPaginationComponent
+                    onPaginate={handlePagination}
+                    currentPage={page - 1}
+                    pageCount={usersPages} />}
+
+                {researchUsersPages > 1 && isSuccess && users && checkItems.isSearching &&
+                  <AppPaginationComponent
+                    onPaginate={handlePagination2}
+                    currentPage={page - 1}
+                    pageCount={researchUsersPages} />}
+              </>
+            )}
+
+          {isError && <div className='mb-3'><AppMainError/></div>}
+          {isError2 && <div className='mb-3'><AppMainError/></div>}
+          {isError3 && <div className='mb-3'><AppMainError/></div>}
+          {isError4 && <div className='mb-3'><AppMainError/></div>}
         </Card.Body>
       </Card>
     </>
