@@ -49,13 +49,13 @@ export const DashSection1Item2 = (
             isFetching={isFetching}
             loadColor='#2ECA6A'
             color={
-              stats && stats?.sum < stats?.lastSum
+              stats && stats?.sum <= stats?.lastSum
                 ? 'danger'
                 : 'success'
             }
             title='Revenu'
             label={
-              stats && stats?.sum < stats?.lastSum
+              stats && stats?.sum <= stats?.lastSum
                 ? 'baisse'
                 : 'augmentation'
             }

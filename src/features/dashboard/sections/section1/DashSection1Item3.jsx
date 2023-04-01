@@ -48,13 +48,13 @@ export const DashSection1Item3 = (
             isFetching={isFetching}
             loadColor='#ff771d'
             color={
-              stats && stats?.patients < stats?.lastPatients
+              stats && stats?.patients <= stats?.lastPatients
                 ? 'danger'
                 : 'success'
             }
             title='Patients'
             label={
-              stats && stats?.patients < stats?.lastPatients
+              stats && stats?.patients <= stats?.lastPatients
                 ? 'baisse'
                 : 'augmentation'
             }
