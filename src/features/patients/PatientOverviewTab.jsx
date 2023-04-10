@@ -4,6 +4,7 @@ import {useMemo} from "react";
 import {entrypoint} from "../../app/store";
 import img from '../../assets/app/img/default_profile.jpg';
 import {AppMainError} from "../../components";
+import BarLoaderSpinner from "../../loaders/BarLoaderSpinner";
 
 export const style = {
   fontWeight: 600,
@@ -29,7 +30,7 @@ export const RowContent = ({label, body, error = null, className = 'text-upperca
   )
 }
 
-export const PatientOverviewTab = ({patient, isError, isFetching, isLoading}) => {
+export const PatientOverviewTab = ({patient, isError, loader, isFetching, isLoading}) => {
   let profile, isCovenant
   profile = useMemo(() => {
     return !isLoading && patient
@@ -57,6 +58,7 @@ export const PatientOverviewTab = ({patient, isError, isFetching, isLoading}) =>
           <h3 style={{ fontSize: 18 }}>
             {isCovenant ? 'Conventionné(e)' : 'Privé(e)'}
           </h3>
+          {loader && <BarLoaderSpinner loading={loader}/>}
         </>}
       {isError && <AppMainError/>}
     </>

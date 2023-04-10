@@ -1,13 +1,26 @@
 import {AppBreadcrumb, AppHeadTitle} from "../../components";
 import {Card, Tab, Tabs} from "react-bootstrap";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {MainGalleryList} from "./MainGalleryList";
 import {PersonalGalleryList} from "./PersonalGalleryList";
+import {useSelector} from "react-redux";
+import {selectCurrentUser} from "../auth/authSlice";
+import {useNavigate} from "react-router-dom";
+import {allowShowGalleryPage} from "../../app/config";
+import toast from "react-hot-toast";
 
 const tabs = [{title: 'Principales', eventKey: 'main'}, {title: 'Personnelles', eventKey: 'personals'}]
 
 function Galleries() {
   const [key, setKey] = useState('main')
+
+  const user = useSelector(selectCurrentUser), navigate = useNavigate()
+  useEffect(() => {
+    if (user && !allowShowGalleryPage(user?.roles[0])) {
+      toast.error('Vous ne disposez pas de droits pour voir cette page.')
+      navigate('/member/reception', {replace: true})
+    }
+  }, [user, navigate])
 
   return (
     <>

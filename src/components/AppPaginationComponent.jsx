@@ -31,9 +31,9 @@ function AppPaginationComponent(
         activeClassName='active'
         breakClassName='page-item fw-bold'
         breakLinkClassName='page-link'
-        nextClassName='page-item fw-bold'
+        nextClassName='page-item'
         nextLinkClassName='page-link'
-        previousClassName='page-item fw-bold'
+        previousClassName='page-item'
         previousLinkClassName='page-link'
         forcePage={currentPage}
         pageCount={pageCount} />

@@ -1,6 +1,7 @@
 import {Table} from "react-bootstrap";
 import {useMemo} from "react";
 import moment from "moment";
+import parser from "html-react-parser";
 
 export const SingleConsultSection2 = ({ consult }) => {
   const patient = consult?.patient ? consult.patient : null
@@ -85,7 +86,7 @@ export const SingleConsultSection2 = ({ consult }) => {
               <tr>
                 <td>Poids</td>
                 <td style={{ borderBottom: '2px dotted #000' }}>
-                  {consult?.weight && consult.weight} Kg
+                  {consult?.weight && consult.weight > 0 && consult.weight} Kg
                 </td>
 
                 <td>; FC</td>
@@ -129,26 +130,26 @@ export const SingleConsultSection2 = ({ consult }) => {
 
               {followed && followed?.map((element, idx) =>
                 <tr key={idx}>
-                  <td>{moment(element?.item).format('D/MM/Y')}</td>
+                  <td>{element?.item && moment(element.item).format('D/MM/Y')}</td>
 
                   <td>
                     {element?.values && element?.values?.map((item, i) =>
                       <div key={i} className='mb-3'>
-                        {item?.temperature && item.temperature}
+                        {item?.temperature && item.temperature > 0 && item.temperature}
                       </div>)}
                   </td>
 
                   <td>
                     {element?.values && element?.values?.map((item, i) =>
                       <div key={i} className='mb-3'>
-                        {item?.arterialTension && item.arterialTension}
+                        {item?.arterialTension && item.arterialTension > 0 && item.arterialTension}
                       </div>)}
                   </td>
 
                   <td>
                     {element?.values && element?.values?.map((item, i) =>
                       <div key={i} className='mb-4'>
-                        {item?.diagnostic}
+                        {item?.diagnostic && parser(`${item.diagnostic}`)}
                       </div>)}
                   </td>
 

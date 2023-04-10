@@ -15,7 +15,6 @@ export const PrintingMedicineInvoiceHeader = ({ hospital, isLoading, isSuccess, 
         <Container>
           <Row>
             <Col className='mb-3'>
-              <h5>Logo</h5>
               <div className='mb-3'>
                 {hospital && hospital?.logo &&
                   <img src={entrypoint+hospital.logo.contentUrl} width={120} height={120} alt=''/>}

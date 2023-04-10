@@ -1,6 +1,6 @@
 import {useEffect, useState} from "react";
 import {onInitSidebarMenu} from "../navigation/navigationSlice";
-import {useDispatch} from "react-redux";
+import {useDispatch, useSelector} from "react-redux";
 import {AppBreadcrumb, AppFloatingInputField, AppHeadTitle} from "../../components";
 import {Button, Card, Col, Form, Spinner} from "react-bootstrap";
 import {handleChange} from "../../services/handleFormsFieldsServices";
@@ -10,6 +10,8 @@ import {entrypoint} from "../../app/store";
 import {useAddNewCovenantMutation} from "./covenantApiSlice";
 import toast from "react-hot-toast";
 import {useNavigate} from "react-router-dom";
+import {selectCurrentUser} from "../auth/authSlice";
+import {allowShowSingleCovenantPage} from "../../app/config";
 
 export const requiredField = <i className='text-danger'>*</i>
 
@@ -55,14 +57,26 @@ const AddCovenant = () => {
     e.preventDefault()
     apiErrors = {denomination: '', unitName: '', focal: '', tel: '', email: '', address: '', logo: null, file: null,}
     const formData = new FormData()
-    formData.append('logo', covenant.logo?.id ? covenant.logo.id : null)
-    formData.append('unitName', covenant.unitName)
-    formData.append('tel', covenant.tel)
-    formData.append('file', covenant.file)
-    formData.append('focal', covenant.focal)
-    formData.append('email', covenant.email)
-    formData.append('denomination', covenant.denomination)
-    formData.append('address', covenant.address)
+
+    if (covenant.logo) {
+      formData.append('logo', covenant.logo?.id ? covenant.logo.id : null)
+      formData.append('unitName', covenant.unitName)
+      formData.append('tel', covenant.tel)
+      formData.append('file', covenant.file)
+      formData.append('focal', covenant.focal)
+      formData.append('email', covenant.email)
+      formData.append('denomination', covenant.denomination)
+      formData.append('address', covenant.address)
+    }
+    else {
+      formData.append('unitName', covenant.unitName)
+      formData.append('tel', covenant.tel)
+      formData.append('file', covenant.file)
+      formData.append('focal', covenant.focal)
+      formData.append('email', covenant.email)
+      formData.append('denomination', covenant.denomination)
+      formData.append('address', covenant.address)
+    }
     try {
       const data = await addNewCovenant(formData)
       if (!data.error) {
@@ -82,6 +96,14 @@ const AddCovenant = () => {
       });
     }
   }
+
+  const user = useSelector(selectCurrentUser)
+  useEffect(() => {
+    if (user && !allowShowSingleCovenantPage(user?.roles[0])) {
+      toast.error('Vous ne disposez pas de droits pour voir cette page.')
+      navigate('/member/reception', {replace: true})
+    }
+  }, [user, navigate])
 
   return (
     <>

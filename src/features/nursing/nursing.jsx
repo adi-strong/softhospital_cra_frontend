@@ -1,9 +1,13 @@
 import {memo, useEffect} from "react";
 import {AppBreadcrumb, AppHeadTitle} from "../../components";
 import {onInitSidebarMenu} from "../navigation/navigationSlice";
-import {useDispatch} from "react-redux";
+import {useDispatch, useSelector} from "react-redux";
 import {Card} from "react-bootstrap";
 import NursingList from "./NursingList";
+import {selectCurrentUser} from "../auth/authSlice";
+import {useNavigate} from "react-router-dom";
+import {allowShowNursingPage} from "../../app/config";
+import toast from "react-hot-toast";
 
 function Nursing() {
   const dispatch = useDispatch()
@@ -11,6 +15,14 @@ function Nursing() {
   useEffect(() => {
     dispatch(onInitSidebarMenu('/member/treatments/nursing'))
   }, [dispatch]) // toggle submenu dropdown
+
+  const user = useSelector(selectCurrentUser), navigate = useNavigate()
+  useEffect(() => {
+    if (user && !allowShowNursingPage(user?.roles[0])) {
+      toast.error('Vous ne disposez pas de droits pour voir cette page.')
+      navigate('/member/reception', {replace: true})
+    }
+  }, [user, navigate])
 
   return (
     <>

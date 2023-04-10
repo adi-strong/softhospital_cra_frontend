@@ -35,6 +35,7 @@ export const consultationApiSlice = api.injectEndpoints({
           file: consultation?.file ? consultation.file?.value : null,
           doctor: consultation?.agent ? consultation.agent?.value : null,
           bed: consultation?.bed ? consultation.bed?.value : null,
+          hospReleasedAt: consultation?.bed ? consultation?.hospReleasedAt : null,
           patient: consultation?.patient ? consultation.patient?.value : null,
           exams: consultation?.exams ? consultation.exams?.map(exam => exam?.value) : [],
           acts: consultation?.acts ? consultation.acts?.map(act => act?.value) : [],

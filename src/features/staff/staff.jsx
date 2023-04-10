@@ -16,13 +16,16 @@ import {
   useGetAgentsQuery,
   useLazyGetAgentsByPaginationQuery, useLazyGetResearchAgentsByPaginationQuery, useLazyGetResearchAgentsQuery
 } from "./agentApiSlice";
-import {Link} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
 import toast from "react-hot-toast";
 import {AddUser} from "../users/AddUser";
 import img from '../../assets/app/img/default_profile.jpg';
 import {entrypoint} from "../../app/store";
 import {limitStrTo} from "../../services";
 import BarLoaderSpinner from "../../loaders/BarLoaderSpinner";
+import {useSelector} from "react-redux";
+import {selectCurrentUser} from "../auth/authSlice";
+import {allowShowPersonalsPage} from "../../app/config";
 
 function AgentItem({ agent }) {
   const [show, setShow] = useState(false)
@@ -212,6 +215,14 @@ function Staff() {
         a?.firstName.toLowerCase().includes(search.toLowerCase())
       )))
   }, [isSuccess, agents, search, checkItems, paginatedItems, researchPaginatedItems])
+
+  const user = useSelector(selectCurrentUser), navigate = useNavigate()
+  useEffect(() => {
+    if (user && !allowShowPersonalsPage(user?.roles[0])) {
+      toast.error('Vous ne disposez pas de droits pour voir cette page.')
+      navigate('/member/reception', {replace: true})
+    }
+  }, [user, navigate])
 
   return (
     <>

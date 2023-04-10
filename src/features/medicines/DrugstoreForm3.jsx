@@ -124,11 +124,8 @@ export const DrugstoreForm3 = (
           const sum = item?.otherQty > 0
             ? item?.cost * item.otherQty
             : item.cost * item?.quantity
-          if (!sums[vTA]) {
-            sums[vTA] = sum
-          } else {
-            sums[vTA] += sum
-          }
+          if (!sums[vTA]) sums[vTA] = sum
+          else sums[vTA] += sum
         }
       }
 

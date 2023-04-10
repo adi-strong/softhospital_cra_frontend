@@ -1,17 +1,33 @@
-import {useState} from "react";
-import {AppBreadcrumb, AppDataTableStripped, AppDelModal, AppHeadTitle, AppTHead} from "../../components";
-import {Alert, Button, ButtonGroup, Card, Col, Form, InputGroup, Row} from "react-bootstrap";
+import {useEffect, useState} from "react";
+import {
+  AppBreadcrumb,
+  AppDataTableStripped,
+  AppDelModal,
+  AppHeadTitle, AppMainError,
+  AppPaginationComponent,
+  AppTHead
+} from "../../components";
+import {Button, ButtonGroup, Card, Col, Form, Row} from "react-bootstrap";
 import {ParametersOverView} from "../parameters/ParametersOverView";
-import {totalServices, useDeleteServiceMutation, useGetServicesQuery} from "./serviceApiSlice";
-import {handleChange} from "../../services/handleFormsFieldsServices";
+import {
+  researchServicesPages,
+  servicesPages,
+  totalResearchServices,
+  totalServices,
+  useDeleteServiceMutation,
+  useGetServicesQuery, useLazyGetResearchServicesByPaginationQuery, useLazyGetResearchServicesQuery,
+  useLazyGetServicesByPaginationQuery
+} from "./serviceApiSlice";
 import {AddService} from "./AddService";
 import {EditService} from "./EditService";
 import toast from "react-hot-toast";
+import BarLoaderSpinner from "../../loaders/BarLoaderSpinner";
+import {useNavigate} from "react-router-dom";
+import {allowShowPersonalsPage} from "../../app/config";
+import {useSelector} from "react-redux";
+import {selectCurrentUser} from "../auth/authSlice";
 
-const ServiceItem = ({id}) => {
-  const { service } = useGetServicesQuery('Services', {
-    selectFromResult: ({ data }) => ({ service: data.entities[id] })
-  })
+const ServiceItem = ({ service }) => {
   const [show, setShow] = useState(false)
   const [show2, setShow2] = useState(false)
   const [deleteService, {isLoading}] = useDeleteServiceMutation()
@@ -65,25 +81,91 @@ const ServiceItem = ({id}) => {
 
 const Services = () => {
   const {data: services = [], isLoading, isFetching, isSuccess, isError, refetch} = useGetServicesQuery('Services')
-  const [keywords, setKeywords] = useState({search: ''})
+  const [search, setSearch] = useState('')
   const [showNew, setShowNew] = useState(false)
-
-  let content, error
-  if (isSuccess) content = services && services?.ids.map(id => <ServiceItem key={id} id={id}/>)
-
-  if (isError) error =
-    <Alert variant='danger'>
-      <p>Une erreur s'est produite.</p>
-      <p>Veuillez soit recharger la page soit vous reconnecter <i className='bi bi-exclamation-triangle-fill'/></p>
-    </Alert>
-
-  const onRefresh = async () => await refetch()
+  const [contents, setContents] = useState([])
+  const [tempSearch, setTempSearch] = useState('')
+  const [page, setPage] = useState(1)
+  const [checkItems, setCheckItems] = useState({isSearching: false, isPaginated: false,})
 
   const toggleNewServiceModal = () => setShowNew(!showNew)
 
-  function handleSubmit(e) {
+  const [paginatedItems, setPaginatedItems] = useState([])
+  const [researchPaginatedItems, setResearchPaginatedItems] = useState([])
+
+  const [getServicesByPagination, {isFetching: isFetching2, isError: isError2,}] = useLazyGetServicesByPaginationQuery()
+  const [getResearchServices, {isFetching: isFetching3, isError: isError3,}] = useLazyGetResearchServicesQuery()
+  const [getResearchServicesByPagination, {
+    isFetching: isFetching4,
+    isError: isError4,
+  }] = useLazyGetResearchServicesByPaginationQuery()
+
+  async function handlePagination(pagination) {
+    const param = pagination + 1
+    setPage(param)
+    setCheckItems({isSearching: false, isPaginated: true})
+    const { data: searchData, isSuccess } = await getServicesByPagination(param)
+    if (isSuccess && searchData) {
+      setPaginatedItems(searchData)
+    }
+  } // handle main pagination
+
+  async function handlePagination2(pagination) {
+    const param = pagination + 1
+    const keywords = {page: param, keyword: tempSearch}
+    setPage(param)
+    setCheckItems({isSearching: true, isPaginated: false})
+    const { data: searchData, isSuccess } = await getResearchServicesByPagination(keywords)
+    if (isSuccess && searchData) {
+      setResearchPaginatedItems(searchData)
+    }
+  } // 2nd handle main pagination
+
+  async function handleSubmit(e) {
     e.preventDefault()
+    setPage(1)
+    setTempSearch(search)
+    setSearch('')
+    setCheckItems({isSearching: true, isPaginated: false})
+    const { data: searchData, isSuccess } = await getResearchServices(search)
+    if (isSuccess && searchData) {
+      setResearchPaginatedItems(searchData)
+    }
   } // submit search keywords
+
+  const onRefresh = async () => {
+    setCheckItems({isSearching: false, isPaginated: false})
+    setSearch('')
+    setTempSearch('')
+    setPage(1)
+    await refetch()
+  }
+
+  useEffect(() => {
+    if (!checkItems.isSearching && !checkItems.isPaginated && isSuccess && services) {
+      const items = services.ids?.map(id => services?.entities[id])
+      setContents(items?.filter(f => f?.name.toLowerCase().includes(search.toLowerCase())))
+    }
+    else if (!checkItems.isSearching && checkItems.isPaginated && isSuccess && services)
+      setContents(paginatedItems?.filter(f => f?.name.toLowerCase().includes(search.toLowerCase())))
+    else if (checkItems.isSearching && !checkItems.isPaginated && isSuccess && services)
+      setContents(researchPaginatedItems?.filter(f => f?.name.toLowerCase().includes(search.toLowerCase())))
+  }, [
+    checkItems,
+    isSuccess,
+    services,
+    search,
+    researchPaginatedItems,
+    paginatedItems,
+  ])
+
+  const user = useSelector(selectCurrentUser), navigate = useNavigate()
+  useEffect(() => {
+    if (user && !allowShowPersonalsPage(user?.roles[0])) {
+      toast.error('Vous ne disposez pas de droits pour voir cette page.')
+      navigate('/member/reception', {replace: true})
+    }
+  }, [user, navigate])
 
   return (
     <>
@@ -98,33 +180,42 @@ const Services = () => {
               </Card.Body>
             </Card>
           </Col>
+
           <Col md={8}>
             <Card className='border-0'>
               <Card.Body>
                 <AppDataTableStripped
                   overview={
                     <>
-                      <p>{totalServices < 1
-                        ? 'Aucun service enregistré pour le moment 🎈'
-                        : <>Il y a au total <code>{totalServices.toLocaleString()}</code> services(s) :</>}
-                      </p>
+                      <div className="mb-3">
+                        {checkItems.isSearching ?
+                          totalResearchServices > 0 ?
+                            <p>
+                              Au total
+                              <code className="mx-1 me-1">{totalResearchServices.toLocaleString()}</code>
+                              service(s) trouvé(s) suite à votre recherche ⏩ <b>{tempSearch}</b> :
+                            </p> : 'Aucune occurence trouvée 🎈'
+                          :
+                          <p>
+                            {totalServices < 1
+                              ? 'Aucun organisme(s) enregistré(s).'
+                              : <>Il y a au total <code>{totalServices.toLocaleString()}</code> service(s) enregistré(s) :</>}
+                          </p>}
+                      </div>
+
                       <Col md={8} className='mb-2'>
                         <form onSubmit={handleSubmit}>
-                          <InputGroup>
-                            <Button type='submit' variant='light' disabled={services.length < 1}>
-                              <i className='bi bi-search'/>
-                            </Button>
-                            <Form.Control
-                              placeholder='Votre recherche ici...'
-                              aria-label='Votre recherche ici...'
-                              autoComplete='off'
-                              disabled={services.length < 1 || isFetching}
-                              name='search'
-                              value={keywords.search}
-                              onChange={(e) => handleChange(e, keywords, setKeywords)} />
-                          </InputGroup>
+                          <Form.Control
+                            placeholder='Votre recherche ici...'
+                            aria-label='Votre recherche ici...'
+                            autoComplete='off'
+                            disabled={isFetching3}
+                            name='search'
+                            value={search}
+                            onChange={({ target }) => setSearch(target.value)} />
                         </form>
                       </Col>
+
                       <Col md={4} className='text-md-end mb-2'>
                         <Button
                           type='button'
@@ -136,21 +227,53 @@ const Services = () => {
                       </Col>
                     </>
                   }
-                  thead={<AppTHead
-                    isImg loader={isLoading || isFetching}
-                    isFetching={isFetching}
-                    onRefresh={onRefresh} items={[
-                    {label: '#'},
-                    {label: 'Service'},
-                    {label: 'Département'},
-                    {label: 'Date'},
-                  ]} />}
+                  thead={
+                    <AppTHead
+                      isImg loader={isLoading || isFetching}
+                      isFetching={isFetching || isFetching2 || isFetching4 || isFetching3}
+                      onRefresh={onRefresh} items={[
+                        {label: '#'},
+                        {label: 'Service'},
+                        {label: 'Département'},
+                        {label: 'Date'},
+                      ]}
+                    />}
                   tbody={
-                    <tbody>{content}</tbody>
+                    <tbody>
+                      {!isError && isSuccess && contents.length > 0 &&
+                        contents.map(s => <ServiceItem key={s?.id} service={s}/>)}
+                    </tbody>
                   }
-                  loader={isLoading}
+                  loader={isLoading || isFetching2 || isFetching4}
                   title='Liste de services' />
-                {error && error}
+
+                {isLoading || isFetching || isFetching2 || isFetching3 || isFetching4
+                  ? <BarLoaderSpinner loading={isLoading || isFetching || isFetching2 || isFetching3 || isFetching4}/>
+                  : (
+                    <>
+                      {servicesPages > 1 && isSuccess && services
+                        && !checkItems.isSearching &&
+                        <AppPaginationComponent
+                          nextLabel=''
+                          previousLabel=''
+                          onPaginate={handlePagination}
+                          currentPage={page - 1}
+                          pageCount={servicesPages} />}
+
+                      {researchServicesPages > 1 && isSuccess && services && checkItems.isSearching &&
+                        <AppPaginationComponent
+                          nextLabel=''
+                          previousLabel=''
+                          onPaginate={handlePagination2}
+                          currentPage={page - 1}
+                          pageCount={researchServicesPages} />}
+                    </>
+                  )}
+
+                {isError && <div className='mb-3'><AppMainError/></div>}
+                {isError2 && <div className='mb-3'><AppMainError/></div>}
+                {isError3 && <div className='mb-3'><AppMainError/></div>}
+                {isError4 && <div className='mb-3'><AppMainError/></div>}
               </Card.Body>
             </Card>
           </Col>

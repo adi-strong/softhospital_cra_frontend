@@ -1,6 +1,6 @@
 import {useEffect, useState} from "react";
 import {Badge, Button, Card, Col, Form, Row, Spinner} from "react-bootstrap";
-import {AppFloatingTextAreaField} from "../../components";
+import {AppFloatingTextAreaField, AppRichText} from "../../components";
 import {handleChange} from "../../services/handleFormsFieldsServices";
 import {useUpdateLabMutation} from "./labApiSlice";
 import toast from "react-hot-toast";
@@ -11,7 +11,7 @@ import {limitStrTo} from "../../services";
 import BarLoaderSpinner from "../../loaders/BarLoaderSpinner";
 import PatientInfos from "../patients/PatientInfos";
 
-export const LabForm = ({ loader, isSuccess, data, isFetching, onRefetch }) => {
+export const LabForm = ({ loader, user, isSuccess, data, isFetching, onRefetch }) => {
   const navigate = useNavigate()
   const [lab, setLab] = useState({
     id: null,
@@ -21,6 +21,7 @@ export const LabForm = ({ loader, isSuccess, data, isFetching, onRefetch }) => {
     values: [],
   })
   const [updateLab, {isLoading}] = useUpdateLabMutation()
+  const [descriptions, setDescriptions] = useState('')
 
   // Handle get data
   useEffect(() => {
@@ -71,6 +72,13 @@ export const LabForm = ({ loader, isSuccess, data, isFetching, onRefetch }) => {
     }
   }
 
+  const handleResultChange = (value) => {
+    setDescriptions(value)
+    setLab({...lab, descriptions: value})
+  }
+
+  const handleBlur = () => setLab({...lab, descriptions})
+
   return (
     <>
       <Row>
@@ -82,15 +90,14 @@ export const LabForm = ({ loader, isSuccess, data, isFetching, onRefetch }) => {
                 {!loader && data && data?.patient && <PatientInfos patient={data.patient}/>}
               </div>
 
-              <h5 className='card-title' style={cardTitleStyle}><i className='bi bi-pencil'/> Résultats</h5>
               <Form onSubmit={onSubmit}>
-                <AppFloatingTextAreaField
+                {/*<AppFloatingTextAreaField
                   label='Résultats'
                   onChange={(e) => handleChange(e, lab, setLab)}
                   disabled={loader || isFetching || isLoading}
                   value={lab.descriptions}
                   name='descriptions'
-                  placeholder='Résultats' />
+                  placeholder='Résultats'/>*/}
 
                 <AppFloatingTextAreaField
                   label={<>Commentaire(s)</>}
@@ -100,12 +107,21 @@ export const LabForm = ({ loader, isSuccess, data, isFetching, onRefetch }) => {
                   name='comment'
                   placeholder='Commentaire(s)' />
 
+                <div className='mb-3'>
+                  <h5 className='card-title' style={cardTitleStyle}><i className='bi bi-pencil'/> Résultats</h5>
+                  <AppRichText
+                    value={lab.descriptions}
+                    disabled={loader || isFetching || isLoading}
+                    onChange={handleResultChange}
+                    onBlur={handleBlur} />
+                </div>
+
                 <div className='text-end'>
                   <Button type='button' variant='light' disabled={isFetching || isLoading} onClick={onRefetch}>
                     {isFetching && <>Chargement en cours <Spinner animation='grow' size='sm'/></>}
                     {!isFetching && <><i className='bi bi-arrow-clockwise'/> Actualiser</>}
                   </Button>
-                  <Button type='submit' disabled={loader || isFetching || isLoading}>
+                  <Button type='submit' disabled={loader || isFetching || isLoading} className='mx-1'>
                     {isLoading ? <>Veuillez patienter <Spinner animation='border' size='sm'/></> : 'Valider'}
                   </Button>
                 </div>

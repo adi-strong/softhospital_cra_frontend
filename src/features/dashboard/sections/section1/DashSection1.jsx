@@ -229,7 +229,7 @@ export function DashSection1({ menus, currentDate, id }) {
   return (
     <>
       <Row>
-        <Col xxl={4} md={6}>
+        <Col md={4}>
           <DashSection1Item1
             menus={menus}
             stats={stats1}
@@ -240,7 +240,7 @@ export function DashSection1({ menus, currentDate, id }) {
             refetch={onFilesRefresh} />
         </Col>
 
-        <Col xxl={4} md={6}>
+        <Col md={4}>
           <DashSection1Item2
             currency={fCurrency}
             menus={menus}
@@ -252,7 +252,7 @@ export function DashSection1({ menus, currentDate, id }) {
             refetch={onRevenueRefresh} />
         </Col>
 
-        <Col xxl={4} md={6}>
+        <Col md={4}>
           <DashSection1Item3
             menus={menus}
             stats={stats3}
@@ -264,7 +264,7 @@ export function DashSection1({ menus, currentDate, id }) {
         </Col>
 
         {/* section 2: fiches traitées, entrées $, nbre patients (EchartsJS) */}
-        <Col xl={12}>
+        <Col xxl={12}>
           <DashSection2 menus={menus}/>
         </Col>
         {/* Fin section 2: fiches traitées, entrées $, nbre patients (EchartsJS) */}

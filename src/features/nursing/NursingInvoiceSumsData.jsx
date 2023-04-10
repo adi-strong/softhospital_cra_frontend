@@ -14,7 +14,7 @@ export const NursingInvoiceSumsData = ({ data, nursing, setNursing, onRefresh })
       setDiscount(parseFloat((nursing.subTotal * data.discount) / 100))
     }
     else if (nursing.check) {
-      const discount = parseFloat((nursing.subTotal * data.discount) / 100)
+      const discount = parseFloat((nursing.subTotal * nursing.discount) / 100)
       setDiscount(parseFloat(nursing.subTotal - discount))
     }
     else setDiscount(0)
@@ -34,34 +34,36 @@ export const NursingInvoiceSumsData = ({ data, nursing, setNursing, onRefresh })
 
   async function onSubmit(e) {
     e.preventDefault()
-    const totalAmount = data.discount
-      ? parseFloat(nursing.subTotal - ((nursing.subTotal * data.discount) / 100))
-      : parseFloat(nursing.subTotal)
-    if (nursing.sum > 0.00) {
-      if (data && data?.isCompleted) toast.error('Facture déjà clôturée 👌')
-      else {
-        const submit = await updateNursing(!data?.isPayed ? {
-          id: data?.id,
-          sum: nursing.sum.toString(),
-          subTotal: nursing.subTotal.toString(),
-          totalAmount: nursing.totalAmount.toString(),
-          isCompleted: nursing.isCompleted,
-          discount: nursing.check ? parseFloat(nursing.discount) : null,
-          isPayed: nursing.isPayed
-        } : {
-          id: data?.id,
-          sum: nursing.sum.toString(),
-          subTotal: nursing.subTotal.toString(),
-          totalAmount: totalAmount.toString(),
-          isCompleted: nursing.isCompleted,
-        })
-        if (!submit?.error) {
-          toast.success('Paiement bien efféctué.')
-          onRefresh()
+    if (data?.patient && !data.patient?.covenant) {
+      const totalAmount = data.discount
+        ? parseFloat(nursing.subTotal - ((nursing.subTotal * data.discount) / 100))
+        : parseFloat(nursing.subTotal)
+      if (nursing.sum > 0.00) {
+        if (data && data?.isCompleted) toast.error('Facture déjà clôturée 👌')
+        else {
+          const submit = await updateNursing(!data?.isPayed ? {
+            id: data?.id,
+            sum: nursing.sum.toString(),
+            subTotal: nursing.subTotal.toString(),
+            totalAmount: nursing.totalAmount.toString(),
+            isCompleted: nursing.isCompleted,
+            discount: nursing.check ? parseFloat(nursing.discount) : null,
+            isPayed: nursing.isPayed
+          } : {
+            id: data?.id,
+            sum: nursing.sum.toString(),
+            subTotal: nursing.subTotal.toString(),
+            totalAmount: totalAmount.toString(),
+            isCompleted: nursing.isCompleted,
+          })
+          if (!submit?.error) {
+            toast.success('Paiement bien efféctué.')
+            onRefresh()
+          }
         }
-      }
-    } // Fin si...
-    else toast.error('Montant invalide ❗')
+      } // Fin si...
+      else toast.error('Montant invalide ❗')
+    }
   }
 
   return (
@@ -150,39 +152,40 @@ export const NursingInvoiceSumsData = ({ data, nursing, setNursing, onRefresh })
         {!data?.isCompleted &&
           <>
             <Col md={6} />
-            <Col md={6} className='mt-3'>
-              <h5 className='card-title text-end' style={cardTitleStyle}>
-                <i className='bi bi-currency-exchange'/> Procéder au paiement
-              </h5>
-              <Form onSubmit={onSubmit}>
-                <Form.Control
-                  disabled={isLoading}
-                  type='number'
-                  className='text-end mb-3'
-                  placeholder='Montant à payer'
-                  name='sum'
-                  value={nursing.sum}
-                  onChange={(e) => handleChange(e, nursing, setNursing)} />
+            {data?.patient && !data.patient?.covenant &&
+              <Col md={6} className='mt-3'>
+                <h5 className='card-title text-end' style={cardTitleStyle}>
+                  <i className='bi bi-currency-exchange'/> Procéder au paiement
+                </h5>
+                <Form onSubmit={onSubmit}>
+                  <Form.Control
+                    disabled={isLoading}
+                    type='number'
+                    className='text-end mb-3'
+                    placeholder='Montant à payer'
+                    name='sum'
+                    value={nursing.sum}
+                    onChange={(e) => handleChange(e, nursing, setNursing)} />
 
-                <Form.Check
-                  id='isComplete'
-                  label={<><i className='bi bi-question-circle'/> Clôturer le dossier</>}
-                  disabled={isLoading}
-                  className='mb-3'
-                  name='isComplete'
-                  value={nursing.isCompleted}
-                  checked={nursing.isCompleted}
-                  onChange={() => setNursing({...nursing, isCompleted: !nursing.isCompleted})} />
+                  <Form.Check
+                    id='isComplete'
+                    label={<><i className='bi bi-question-circle'/> Clôturer le dossier</>}
+                    disabled={isLoading}
+                    className='mb-3'
+                    name='isComplete'
+                    value={nursing.isCompleted}
+                    checked={nursing.isCompleted}
+                    onChange={() => setNursing({...nursing, isCompleted: !nursing.isCompleted})} />
 
-                <div className='text-end'>
-                  {<Button type='submit' variant='success' disabled={isLoading}>
-                    {isLoading
-                      ? <>Veuillez patienter <Spinner animation='border' size='sm'/></>
-                      : <>Valider <i className='bi bi-check'/></>}
-                  </Button>}
-                </div>
-              </Form>
-            </Col>
+                  <div className='text-end'>
+                    {<Button type='submit' variant='success' disabled={isLoading}>
+                      {isLoading
+                        ? <>Veuillez patienter <Spinner animation='border' size='sm'/></>
+                        : <>Valider <i className='bi bi-check'/></>}
+                    </Button>}
+                  </div>
+                </Form>
+              </Col>}
           </>}
         {/* PAYMENT'S FORM */}
       </Row>

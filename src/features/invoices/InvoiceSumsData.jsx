@@ -66,7 +66,28 @@ export const InvoiceSumsData = ({ data, hosp, bedPrice = 0, daysCounter = 0 }) =
 
   async function onSubmit(e) {
     e.preventDefault()
-    if (invoice.sum > 0.00) {
+    if (data?.patient && !data.patient?.covenant) {
+      if (invoice.sum > 0.00) {
+        if (data && data?.isComplete) toast.error('Facture déjà clôturée 👌')
+        else {
+          const submit = await updateInvoice({
+            id: data?.id,
+            daysCounter,
+            isPublished: data?.isPublished,
+            ...invoice,
+          })
+          if (!submit?.error) {
+            toast.success('Paiement bien efféctué.')
+            await refetch()
+          }
+        }
+      } // Fin si...
+      else {
+        toast.error('Montant invalide ❗')
+      }
+    }
+
+    if (data?.patient && data.patient?.covenant) {
       if (data && data?.isComplete) toast.error('Facture déjà clôturée 👌')
       else {
         const submit = await updateInvoice({
@@ -80,9 +101,6 @@ export const InvoiceSumsData = ({ data, hosp, bedPrice = 0, daysCounter = 0 }) =
           await refetch()
         }
       }
-    } // Fin si...
-    else {
-      toast.error('Montant invalide ❗')
     }
   }
 
@@ -92,51 +110,54 @@ export const InvoiceSumsData = ({ data, hosp, bedPrice = 0, daysCounter = 0 }) =
         <Col md={6}>
           {!data?.isPublished &&
             <>
-              <Form.Group className='row mb-3'>
-                <Col md={7}>
-                  <Form.Check
-                    id='check1'
-                    label="% Remise"
-                    name='check1'
-                    disabled={isLoading}
-                    value={invoice.check1}
-                    checked={invoice.check1}
-                    onChange={() => setInvoice({...invoice, check1: !invoice.check1})} />
-                </Col>
-                <Col md={5}>
-                  <Form.Control
-                    disabled={!invoice.check1 || isLoading}
-                    type='number'
-                    placeholder="% Remise"
-                    className='text-end'
-                    name='discount'
-                    value={invoice.discount}
-                    onChange={(e) => handleChange(e, invoice, setInvoice)} />
-                </Col>
-              </Form.Group>
+              {data?.patient && !data.patient?.covenant &&
+                <>
+                  <Form.Group className='row mb-3'>
+                    <Col md={7}>
+                      <Form.Check
+                        id='check1'
+                        label="% Remise"
+                        name='check1'
+                        disabled={isLoading}
+                        value={invoice.check1}
+                        checked={invoice.check1}
+                        onChange={() => setInvoice({...invoice, check1: !invoice.check1})} />
+                    </Col>
+                    <Col md={5}>
+                      <Form.Control
+                        disabled={!invoice.check1 || isLoading}
+                        type='number'
+                        placeholder="% Remise"
+                        className='text-end'
+                        name='discount'
+                        value={invoice.discount}
+                        onChange={(e) => handleChange(e, invoice, setInvoice)} />
+                    </Col>
+                  </Form.Group>
 
-              <Form.Group className='row mb-3'>
-                <Col md={7}>
-                  <Form.Check
-                    id='check2'
-                    label="% Taux d'imposition"
-                    name='check2'
-                    disabled={isLoading}
-                    value={invoice.check2}
-                    checked={invoice.check2}
-                    onChange={() => setInvoice({...invoice, check2: !invoice.check2})} />
-                </Col>
-                <Col md={5}>
-                  <Form.Control
-                    disabled={!invoice.check2 || isLoading}
-                    type='number'
-                    placeholder="% Taux d'imposition"
-                    className='text-end'
-                    name='vTA'
-                    value={invoice.vTA}
-                    onChange={(e) => handleChange(e, invoice, setInvoice)} />
-                </Col>
-              </Form.Group>
+                  <Form.Group className='row mb-3'>
+                    <Col md={7}>
+                      <Form.Check
+                        id='check2'
+                        label="% Taux d'imposition"
+                        name='check2'
+                        disabled={isLoading}
+                        value={invoice.check2}
+                        checked={invoice.check2}
+                        onChange={() => setInvoice({...invoice, check2: !invoice.check2})} />
+                    </Col>
+                    <Col md={5}>
+                      <Form.Control
+                        disabled={!invoice.check2 || isLoading}
+                        type='number'
+                        placeholder="% Taux d'imposition"
+                        className='text-end'
+                        name='vTA'
+                        value={invoice.vTA}
+                        onChange={(e) => handleChange(e, invoice, setInvoice)} />
+                    </Col>
+                  </Form.Group>
+                </>}
             </>}
         </Col>
         {/* TAX AND DISCOUNT FIELDS */}
@@ -237,18 +258,20 @@ export const InvoiceSumsData = ({ data, hosp, bedPrice = 0, daysCounter = 0 }) =
           <>
             <Col md={6} />
             <Col md={6} className='mt-3'>
-              <h5 className='card-title text-end' style={cardTitleStyle}>
-                <i className='bi bi-currency-exchange'/> Procéder au paiement
-              </h5>
+              {data?.patient && !data.patient?.covenant &&
+                <h5 className='card-title text-end' style={cardTitleStyle}>
+                  <i className='bi bi-currency-exchange'/> Procéder au paiement
+                </h5>}
               <Form onSubmit={onSubmit}>
-                <Form.Control
-                  disabled={isLoading}
-                  type='number'
-                  className='text-end mb-3'
-                  placeholder='Montant à payer'
-                  name='sum'
-                  value={invoice.sum}
-                  onChange={(e) => handleChange(e, invoice, setInvoice)} />
+                {data?.patient && !data.patient?.covenant &&
+                  <Form.Control
+                    disabled={isLoading}
+                    type='number'
+                    className='text-end mb-3'
+                    placeholder='Montant à payer'
+                    name='sum'
+                    value={invoice.sum}
+                    onChange={(e) => handleChange(e, invoice, setInvoice)} />}
 
                 {hosp && !hosp?.isCompleted &&
                   <Form.Check

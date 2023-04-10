@@ -137,7 +137,7 @@ export const DrugstoreForm1 = ({ invoice, setInvoice, items, setItems, total, se
 
           <Col md={6} />
 
-          <Col className='mb-2 text-end'>
+          <Col className='mb-2 fw-bold text-end'>
             <Form.Label>Devise {requiredField}</Form.Label>
             <AppChooseField
               required

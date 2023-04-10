@@ -1,5 +1,5 @@
 import {cardTitleStyle} from "../../layouts/AuthLayout";
-import {Button, Col, Row, Spinner} from "react-bootstrap";
+import {Col, Row} from "react-bootstrap";
 import {AppMainError} from "../../components";
 import {RowContent} from "./PatientOverviewTab";
 import {useMemo} from "react";
@@ -7,7 +7,6 @@ import moment from "moment";
 import {Link} from "react-router-dom";
 
 export function PatientOverviewTab2({patient, refetch, isLoading, isFetching, isError}) {
-  const onRefresh = async () => await refetch()
 
   let sex, maritalStatus, birthDate
   sex = useMemo(() => {
@@ -15,11 +14,15 @@ export function PatientOverviewTab2({patient, refetch, isLoading, isFetching, is
       && patient.sex
   }, [isLoading, patient])
   maritalStatus = useMemo(() => {
-    return !isLoading && patient && patient?.maritalStatus && patient.maritalStatus === 'none'
-      ? patient.maritalStatus === 'single'
+    if (!isLoading && patient && patient?.maritalStatus) {
+      const mStatus = patient.maritalStatus
+      return mStatus === 'single'
         ? 'Célibataire'
-        : patient.maritalStatus === 'married' && 'Marié(e)'
-      : null
+        : mStatus === 'married'
+          ? 'Marié(e)'
+          : null
+    }
+    return null
   }, [isLoading, patient])
   birthDate = useMemo(() => {
     return !isLoading && patient && patient?.birthDate
@@ -32,13 +35,6 @@ export function PatientOverviewTab2({patient, refetch, isLoading, isFetching, is
         <Col>
           <h2 className='text-capitalize card-title' style={cardTitleStyle}>Identifiant</h2>
           {!isLoading && patient && `#${patient.id}`}
-        </Col>
-        <Col className='text-md-end'>
-          <Button type='button' variant='warning' disabled={isFetching} onClick={onRefresh}>
-            {isFetching
-              ? <>Chargement en cours <Spinner animation='grow' size='sm'/></>
-              : <>Actualiser  <i className='bi bi-arrow-clockwise'/></>}
-          </Button>
         </Col>
       </Row>
 

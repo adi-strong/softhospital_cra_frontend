@@ -3,8 +3,13 @@ import PatientInfos from "../patients/PatientInfos";
 import moment from "moment";
 import {usernameFiltered} from "../../components/AppNavbar";
 import {cardTitleStyle} from "../../layouts/AuthLayout";
+import {useSelector} from "react-redux";
+import {selectCurrentUser} from "../auth/authSlice";
+import {allowActionsToPatients} from "../../app/config";
 
 export const AppointmentDetails = ({ appointment }) => {
+  const user = useSelector(selectCurrentUser)
+
   return (
     <>
       <Row className='mt-3'>
@@ -20,11 +25,12 @@ export const AppointmentDetails = ({ appointment }) => {
         </Col>
 
         <Col md={5}>
-          <div className='mb-3'>
-            <Button type='button' variant='danger'>
-              <i className='bi bi-trash'/> Supprimer
-            </Button>
-          </div>
+          {user && allowActionsToPatients(user?.roles[0]) &&
+            <div className='mb-3'>
+              <Button type='button' variant='danger'>
+                <i className='bi bi-trash'/> Supprimer
+              </Button>
+            </div>}
 
           <span className='fw-bold'><i className='bi bi-calendar-event'/> Heure & date :</span> <br/>
           <span className='mx-1'>

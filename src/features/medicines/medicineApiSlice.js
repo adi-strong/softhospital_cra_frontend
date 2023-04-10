@@ -2,28 +2,12 @@ import {api, patchHeaders, pathToApi} from "../../app/store";
 import moment from "moment";
 
 export let totalMedicines = 0
+export let totalResearchMedicines = 0
+export let researchMedicinesPages = 1
+export let medicinesPages = 1
 
 export const medicineApiSlice = api.injectEndpoints({
   endpoints: build => ({
-    getMedicines: build.query({
-      query: () => pathToApi+'/medicines',
-      transformResponse: res => {
-        totalMedicines = res['hydra:totalItems']
-        const data = res['hydra:member']
-        return data.map(medicine => {
-          if (medicine?.createdAt)
-            medicine.createdAt = moment(medicine.createdAt).calendar()
-          if (medicine?.expiryDate) medicine.expiryDate = moment(medicine.expiryDate).calendar()
-          if (medicine?.released) medicine.released = moment(medicine.released).calendar()
-
-          return medicine
-        })
-      },
-      providesTags: result =>
-        result
-          ? [...result?.map(({ id }) => ({ type: 'Drugstore', id })), 'Drugstore']
-          : ['Drugstore']
-    }), // list of medicines
 
     addNewMedicine: build.mutation({
       query: medicine => ({
@@ -121,11 +105,103 @@ export const medicineApiSlice = api.injectEndpoints({
           })},
       }),
       invalidatesTags: ['Drugstore', 'DrugstoreList', 'Box'],
-    })
+    }),
+
+    getMedicines: build.query({
+      query: () => pathToApi+'/medicines',
+      transformResponse: res => {
+        totalMedicines = res['hydra:totalItems']
+        medicinesPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[1]) : 1
+        const data = res['hydra:member']
+        return data.map(medicine => {
+          if (medicine?.createdAt) medicine.createdAt = moment(medicine.createdAt).calendar()
+          if (medicine?.expiryDate) medicine.expiryDate = moment(medicine.expiryDate).calendar()
+          if (medicine?.released) medicine.released = moment(medicine.released).calendar()
+
+          return medicine
+        })
+      },
+      providesTags: result =>
+        result
+          ? [...result?.map(({ id }) => ({ type: 'Drugstore', id })), 'Drugstore']
+          : ['Drugstore']
+    }), // list of medicines
+
+    getMedicinesByPagination: build.query({
+      query: page => pathToApi+`/medicines?page=${page}`,
+      transformResponse: res => {
+        const data = res['hydra:member']
+        totalMedicines = res['hydra:totalItems']
+        medicinesPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[1]) : 1
+        return data?.map(medicine => {
+          if (medicine?.createdAt) medicine.createdAt = moment(medicine.createdAt).calendar()
+          if (medicine?.expiryDate) medicine.expiryDate = moment(medicine.expiryDate).calendar()
+          if (medicine?.released) medicine.released = moment(medicine.released).calendar()
+          return medicine
+        })
+      },
+    }), // pagination list,
+
+    getResearchMedicines: build.query({
+      query: keyword => pathToApi+`/medicines?wording=${keyword}`,
+      transformResponse: res => {
+        const data = res['hydra:member']
+        totalResearchMedicines = res['hydra:totalItems']
+        researchMedicinesPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[2]) : 1
+        return data?.map(medicine => {
+          if (medicine?.createdAt) medicine.createdAt = moment(medicine.createdAt).calendar()
+          if (medicine?.expiryDate) medicine.expiryDate = moment(medicine.expiryDate).calendar()
+          if (medicine?.released) medicine.released = moment(medicine.released).calendar()
+          return medicine
+        })
+      },
+    }),
+
+    getResearchMedicinesByPagination: build.query({
+      query: search => pathToApi+`/medicines?wording=${search?.keyword}&page=${search?.page}`,
+      transformResponse: res => {
+        const data = res['hydra:member']
+        totalResearchMedicines = res['hydra:totalItems']
+        researchMedicinesPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[2]) : 1
+        return data?.map(medicine => {
+          if (medicine?.createdAt) medicine.createdAt = moment(medicine.createdAt).calendar()
+          if (medicine?.expiryDate) medicine.expiryDate = moment(medicine.expiryDate).calendar()
+          if (medicine?.released) medicine.released = moment(medicine.released).calendar()
+          return medicine
+        })
+      },
+    }),
+
+    onPostMedicineSales2: build.mutation({
+      query: data => ({
+        url: pathToApi+`/medicine_invoices`,
+        method: 'POST',
+        body: {
+          amount: data?.amount.toString(),
+          subTotal: data?.subTotal.toString(),
+          discount: data?.check1 ? parseFloat(data?.discount) : null,
+          vTA: data?.check2 ? parseFloat(data?.vTA) : null,
+          totalAmount: data?.totalAmount.toString(),
+          currency: data?.currency ? data.currency?.value: null,
+          values: data?.values.map(item => {
+            return {
+              id: item?.id,
+              quantity: parseFloat(item?.qty),
+              price: item?.price.toString(),
+              cost: item?.cost.toString(),
+            }
+          })},
+      }),
+      invalidatesTags: ['Drugstore', 'DrugstoreList', 'Box'],
+    }),
+
   })
 })
 
 export const {
+  useLazyGetMedicinesByPaginationQuery,
+  useLazyGetResearchMedicinesQuery,
+  useLazyGetResearchMedicinesByPaginationQuery,
   useGetMedicinesQuery,
   useAddNewMedicineMutation,
   useUpdateMedicineMutation,

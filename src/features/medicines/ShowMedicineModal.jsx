@@ -46,15 +46,23 @@ export const ShowMedicineModal = ({show, onHide, data, currency}) => {
                   ? <span className='text-primary' style={style}>{currency && currency.value} {medicine.cost}</span>
                   : '❓'} />
             <RowContent
+              label={<><i className='bi bi-percent'/> TVA</>}
+              body={
+                medicine?.vTA
+                  ? <span className='text-danger' style={style}>{medicine.vTA}%</span>
+                  : '❓'} />
+            <RowContent
               label={<><i className='bi bi-currency-exchange'/> Prix</>}
               body={
                 medicine?.price
                   ? <span className='text-success' style={style}>{currency && currency.value} {medicine.price}</span>
                   : '❓'} />
             <RowContent
+              className=''
               label={<><i className='bi bi-calendar-event-fill'/> Appro.</>}
               body={medicine?.released ? <>{medicine.released}</> : '❓'} />
             <RowContent
+              className={`text-${medicine?.daysRemainder <= 15 ? 'danger  text-decoration-underline' : 'dark'}`}
               label={<><i className='bi bi-calendar-event-fill'/> Péremption</>}
               body={medicine?.expiryDate ? <>{medicine.expiryDate}</> : '❓'} />
             <RowContent
@@ -79,6 +87,10 @@ export const ShowMedicineModal = ({show, onHide, data, currency}) => {
             <RowContent
               label={<><i className='bi bi-database'/> Qté</>}
               body={parseInt(medicine?.quantity).toLocaleString()} />
+            <RowContent
+              className={`text-${medicine?.daysRemainder <= 15 ? 'danger' : 'dark'}`}
+              label='Expire'
+              body={<>: dans {parseInt(medicine?.daysRemainder + 1).toLocaleString()} jour(s).</>} />
           </Col>
         </Row>
       </AppModal>

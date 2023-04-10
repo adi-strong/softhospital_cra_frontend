@@ -1,14 +1,17 @@
 import {useEffect, useState} from "react";
-import {useDispatch} from "react-redux";
+import {useDispatch, useSelector} from "react-redux";
 import {onInitSidebarMenu} from "../navigation/navigationSlice";
 import {AppBreadcrumb, AppHeadTitle, AppMainError} from "../../components";
 import {Card, Col, Row} from "react-bootstrap";
-import {useParams} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 import {useGetSingleCovenantQuery} from "./covenantApiSlice";
 import {CovenantOverview} from "./CovenantOverview";
 import {SingleContract} from "./SingleContract";
 import {CovenantPatientsList} from "./CovenantPatientsList";
 import {useGetCovenantPatientsQuery} from "../patients/patientApiSlice";
+import {allowShowSingleCovenantPage} from "../../app/config";
+import {selectCurrentUser} from "../auth/authSlice";
+import toast from "react-hot-toast";
 
 const SingleCovenant = () => {
   const dispatch = useDispatch(), {id} = useParams()
@@ -42,6 +45,14 @@ const SingleCovenant = () => {
     await pRefetch()
     await refetch()
   } // refresh patients data
+
+  const user = useSelector(selectCurrentUser), navigate = useNavigate()
+  useEffect(() => {
+    if (user && !allowShowSingleCovenantPage(user?.roles[0])) {
+      toast.error('Vous ne disposez pas de droits pour voir cette page.')
+      navigate('/member/reception', {replace: true})
+    }
+  }, [user, navigate])
 
   return (
     <div className='section dashboard'>
@@ -82,7 +93,11 @@ const SingleCovenant = () => {
               isSuccess={isSuccess}
               errors={errors}/> {/* Logo */}
 
-            <SingleContract covenant={covenant} isSuccess={isSuccess} isLoading={isLoading}/> {/* contract */}
+            <SingleContract
+              covenant={covenant}
+              onRefresh={onRefresh}
+              isSuccess={isSuccess}
+              isLoading={isLoading}/> {/* contract */}
           </Col>
         </Row>
       </div>

@@ -34,12 +34,14 @@ const
   Expenses = lazy(() => import('./features/finance/expenses')),
   Entries = lazy(() => import('./features/finance/entries')),
   Outputs = lazy(() => import('./features/finance/outputs')),
+  SingleCovenantInvoice = lazy(() => import('./features/invoices/singleCovenantInvoice')),
   MedicineCategories = lazy(() => import('./features/medicines/medicineCategories')),
   DrugStore = lazy(() => import('./features/medicines/drugStore')),
   Providers = lazy(() => import('./features/medicines/providers')),
   MedicinesInvoicing = lazy(() => import('./features/medicines/medicinesInvoicing')),
   DrugstoreSupply = lazy(() => import('./features/medicines/drugstoreSupply')),
   MedicineInvoices = lazy(() => import('./features/invoices/medicineInvoices')),
+  SingleMedSupplyInvoice = lazy(() => import('./features/invoices/singleMedSupplyInvoice')),
   PrintingMedicineInvoice = lazy(() => import('./features/printing/medicineInvoice/printingMedicineInvoice')),
   EditConsultation = lazy(() => import('./features/appointments/editConsultation')),
   LabResultsPage = lazy(() => import('./features/lab/labShowResultsPage')),
@@ -140,6 +142,7 @@ const routes = [
       {path: 'expenses', element: <Expenses/>},
       {path: 'entries', element: <Entries/>},
       {path: 'outputs', element: <Outputs/>},
+      {path: 'covenant/:id/invoice', element: <SingleCovenantInvoice/>},
     ]
   },
   // End STAFF *************************************************************************
@@ -154,6 +157,7 @@ const routes = [
       {path: 'sales', element: <MedicinesInvoicing/>},
       {path: 'supply', element: <DrugstoreSupply/>},
       {path: 'invoices', element: <MedicineInvoices/>},
+      {path: 'medicine/supply/invoices/:id/show', element: <SingleMedSupplyInvoice/>},
       {path: 'medicine-invoice/:id/:invoiceNumber', element: <PrintingMedicineInvoice/>},
     ]
   },

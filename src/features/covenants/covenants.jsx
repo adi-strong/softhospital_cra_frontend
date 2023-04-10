@@ -9,7 +9,7 @@ import {
 } from "../../components";
 import {Card, Col, Form} from "react-bootstrap";
 import {CovenantItem} from "./CovenantItem";
-import {Link} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
 import {
   covenantsPages, researchCovenantsPages,
   totalCovenants, totalResearchCovenants,
@@ -18,6 +18,10 @@ import {
   useLazyGetResearchCovenantsQuery
 } from "./covenantApiSlice";
 import BarLoaderSpinner from "../../loaders/BarLoaderSpinner";
+import {useSelector} from "react-redux";
+import {selectCurrentUser} from "../auth/authSlice";
+import {allowShowCovenantsPage, allowShowSingleCovenantPage} from "../../app/config";
+import toast from "react-hot-toast";
 
 const Covenants = () => {
   const {data: covenants = [], isLoading, isFetching, isSuccess, isError, refetch} = useGetCovenantsQuery('Covenant')
@@ -89,6 +93,15 @@ const Covenants = () => {
       setContents(researchPaginatedCovenants?.filter(f => f?.denomination.toLowerCase().includes(search.toLowerCase())))
   }, [isSuccess, covenants, search, checkCovenants, paginatedItems, researchPaginatedCovenants]) // handle get data
 
+  const user = useSelector(selectCurrentUser), navigate = useNavigate()
+
+  useEffect(() => {
+    if (user && !allowShowCovenantsPage(user?.roles[0])) {
+      toast.error('Vous ne disposez pas de droits pour voir cette page.')
+      navigate('/member/reception', {replace: true})
+    }
+  }, [user, navigate])
+
   return (
     <div className='section dashboard'>
       <AppHeadTitle title='Conventions' />
@@ -116,13 +129,14 @@ const Covenants = () => {
                     </p>}
                 </div>
 
-                <Col md={2}>
-                  <Link
-                    to='/member/patients/covenants/add'
-                    className='btn btn-primary mb-1 me-1'>
-                    <i className='bi bi-plus'/> Enregistrer
-                  </Link>
-                </Col> {/* buttons */}
+                {user && allowShowSingleCovenantPage(user?.roles[0]) &&
+                  <Col md={2}>
+                    <Link
+                      to='/member/patients/covenants/add'
+                      className='btn btn-primary mb-1 me-1'>
+                      <i className='bi bi-plus'/> Enregistrer
+                    </Link>
+                  </Col>} {/* buttons */}
                 <Col md={10}> {/* search */}
                   <form onSubmit={handleSubmit}>
                     <Form.Control
@@ -154,7 +168,7 @@ const Covenants = () => {
             tbody={
               <tbody>
                 {!isError && isSuccess && contents.length > 0 &&
-                  contents.map(c => <CovenantItem key={c?.id} covenant={c}/>)}
+                  contents.map(c => <CovenantItem key={c?.id} covenant={c} onRefresh={handleRefresh} user={user}/>)}
               </tbody>} />
 
           {isLoading || isFetching || isFetching2 || isFetching3 || isFetching4
@@ -164,16 +178,12 @@ const Covenants = () => {
                 {covenantsPages > 1 && isSuccess && covenants
                   && !checkCovenants.isSearching &&
                   <AppPaginationComponent
-                    nextLabel=''
-                    previousLabel=''
                     onPaginate={handlePagination}
                     currentPage={page - 1}
                     pageCount={covenantsPages} />}
 
                 {researchCovenantsPages > 1 && isSuccess && covenants && checkCovenants.isSearching &&
                   <AppPaginationComponent
-                    nextLabel=''
-                    previousLabel=''
                     onPaginate={handlePagination2}
                     currentPage={page - 1}
                     pageCount={researchCovenantsPages} />}

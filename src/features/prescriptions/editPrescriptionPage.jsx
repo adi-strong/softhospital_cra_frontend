@@ -1,10 +1,13 @@
 import {memo, useEffect} from "react";
-import {useDispatch} from "react-redux";
+import {useDispatch, useSelector} from "react-redux";
 import {onInitSidebarMenu} from "../navigation/navigationSlice";
 import {AppBreadcrumb, AppHeadTitle} from "../../components";
 import {PrescriptionsForm} from "./PrescriptionsForm";
 import {useNavigate, useParams} from "react-router-dom";
 import {useGetSinglePrescriptionQuery} from "./prescriptionApiSlice";
+import {selectCurrentUser} from "../auth/authSlice";
+import {allowShowPrescriptionsPage} from "../../app/config";
+import toast from "react-hot-toast";
 
 function EditPrescriptionPage() {
   const dispatch = useDispatch(), navigate = useNavigate()
@@ -21,6 +24,14 @@ function EditPrescriptionPage() {
   }, [isSuccess, prescription, navigate])
 
   const onRefresh = async () => await refetch()
+
+  const user = useSelector(selectCurrentUser)
+  useEffect(() => {
+    if (user && !allowShowPrescriptionsPage(user?.roles[0])) {
+      toast.error('Vous ne disposez pas de droits pour voir cette page.')
+      navigate('/member/reception', {replace: true})
+    }
+  }, [user, navigate])
 
   return (
     <>

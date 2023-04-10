@@ -130,10 +130,20 @@ export const covenantApiSlice = api.injectEndpoints({
         })
       },
     }),
+
+    onPostNewCovenantContract: build.mutation({
+      query: ({ id, file }) => ({
+        url: pathToApi+`/covenants/${id}/new_contract`,
+        method: 'POST',
+        body: file,
+      }),
+      invalidatesTags: [{type: 'Covenant', id: 'LIST'}]
+    }),
   })
 })
 
 export const {
+  useOnPostNewCovenantContractMutation,
   useGetCovenantsQuery,
   useAddNewCovenantMutation,
   useUpdateCovenantMutation,

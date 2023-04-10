@@ -1,19 +1,20 @@
-import {useState} from "react";
-import {totalPersonalImages, useDeletePersonalImageMutation, useGetPersonalImagesQuery} from "./personalApiImagesSlice";
+import {useEffect, useState} from "react";
+import {
+  imagesPages,
+  totalPersonalImages,
+  useDeletePersonalImageMutation,
+  useGetPersonalImagesQuery, useLazyGetPersonalImagesByPaginationQuery,
+} from "./personalApiImagesSlice";
 import toast from "react-hot-toast";
-import {Button, Col, Form, InputGroup, Row, Spinner} from "react-bootstrap";
+import {Button, Col, Row, Spinner} from "react-bootstrap";
 import {entrypoint} from "../../app/store";
 import {limitStrTo} from "../../services";
 import {ImageGridLoader} from "../../loaders/ImageGridLoader";
 import {style} from "./MainGalleryList";
-import {handleChange} from "../../services/handleFormsFieldsServices";
-import {AppDelModal} from "../../components";
+import {AppDelModal, AppMainError, AppPaginationComponent} from "../../components";
 import {AddPersonalImage} from "./AddPersonalImage";
 
-const ImageItem = ({id}) => {
-  const { image } = useGetPersonalImagesQuery('PersonalImages', {
-    selectFromResult: ({ data }) => ({ image: data?.entities[id] })
-  })
+const ImageItem = ({ image }) => {
   const [show, setShow] = useState(false)
   const [deletePersonalImage, {isLoading}] = useDeletePersonalImageMutation()
 
@@ -95,24 +96,41 @@ export const PersonalGalleryList = () => {
     isLoading,
     isError,
     isSuccess} = useGetPersonalImagesQuery('PersonalImages')
-  const [keywords, setKeywords] = useState({search: ''})
   const [showNew, setShowNew] = useState(false)
+  const [contents, setContents] = useState([])
+  const [page, setPage] = useState(1)
+  const [checkItems, setCheckItems] = useState({isPaginated: false,})
 
-  let content
-  if (isLoading) content = <ImageGridLoader/>
-  else if (isError) content =
-    <div className='text-danger'>🤕 Veuillez vérifier votre connexion.</div>
-  else if (isSuccess) {
-    content = images && images?.ids.map(id => <ImageItem key={id} id={id}/>)
-  }
+  const [paginatedItems, setPaginatedItems] = useState([])
 
   const handleToggleNewImage = () => setShowNew(!showNew)
 
-  function onRefresh() { refetch() }
+  const [getImagesByPagination, {isFetching: isFetching2, isError: isError2,}] = useLazyGetPersonalImagesByPaginationQuery()
 
-  function handleSubmit(e) {
-    e.preventDefault()
-  } // submit search keywords
+  async function handlePagination(pagination) {
+    const param = pagination + 1
+    setPage(param)
+    setCheckItems({isSearching: false, isPaginated: true})
+    const { data: searchData, isSuccess } = await getImagesByPagination(param)
+    if (isSuccess && searchData) {
+      setPaginatedItems(searchData)
+    }
+  } // handle main pagination
+
+  const onRefresh = async () => {
+    setCheckItems({isPaginated: false})
+    setPage(1)
+    await refetch()
+  }
+
+  useEffect(() => {
+    if (!checkItems.isPaginated && isSuccess && images) {
+      const items = images.ids?.map(id => images?.entities[id])
+      setContents(items)
+    }
+    else if (checkItems.isPaginated && isSuccess && images)
+      setContents(paginatedItems)
+  }, [ checkItems, isSuccess, images, paginatedItems ])
 
   return (
     <>
@@ -122,24 +140,7 @@ export const PersonalGalleryList = () => {
           : `🎈 Aucune image enregistrée pour le moment.`}
       </p>
       <Row className='mb-4'>
-        <Col md={8} className=' mb-1'>
-          <form onSubmit={handleSubmit}>
-            <InputGroup>
-              <Button type='submit' variant='light' disabled={images.length < 1 || isFetching || isLoading}>
-                <i className='bi bi-search'/>
-              </Button>
-              <Form.Control
-                placeholder='Votre recherche ici...'
-                aria-label='Votre recherche ici...'
-                autoComplete='off'
-                disabled={images.length < 1 || isFetching || isLoading}
-                name='search'
-                value={keywords.search}
-                onChange={(e) => handleChange(e, keywords, setKeywords)} />
-            </InputGroup>
-          </form>
-        </Col> {/* search bar */}
-        <Col md={4} className='text-md-end mb-1'>
+        <div className='text-center mb-1'>
           <Button
             type='button'
             variant='secondary'
@@ -153,11 +154,27 @@ export const PersonalGalleryList = () => {
               ? <Spinner animation='border' size='sm'/>
               : <i className='bi bi-arrow-clockwise'/>}
           </Button>
-        </Col>
+        </div>
       </Row>
       <Row data-aos='fade-up' data-aos-duration={100} className='pt-2'>
-        {content}
+        {!(isError || isFetching2) && isSuccess && contents.length > 0 &&
+          contents.map(i => <ImageItem key={i?.id} image={i}/>)}
+        {(isError || isError2) && <AppMainError/>}
       </Row> {/* list of data */}
+
+
+      {isLoading || isFetching2
+        ? <div className='text-center'><ImageGridLoader/></div>
+        : (
+          <>
+            {imagesPages > 1 && isSuccess && images &&
+              <AppPaginationComponent
+                nextLabel=''
+                previousLabel=''
+                onPaginate={handlePagination}
+                currentPage={page - 1}
+                pageCount={imagesPages} />}
+          </>)}
 
       <AddPersonalImage onHide={handleToggleNewImage} show={showNew} />
     </>

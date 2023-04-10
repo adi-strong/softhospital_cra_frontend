@@ -4,7 +4,7 @@ import {useGetPatientsQuery, useLazyHandleLoadPatientsQuery} from "../patients/p
 import {useGetBedsQuery, useLazyLoadBedsQuery} from "../beds/bedApiSlice";
 import {cardTitleStyle} from "../../layouts/AuthLayout";
 import {requiredField} from "../covenants/addCovenant";
-import {AppAsyncSelectOptions, AppFloatingTextAreaField} from "../../components";
+import {AppAsyncSelectOptions, AppDatePicker, AppFloatingTextAreaField} from "../../components";
 import PatientInfos from "../patients/PatientInfos";
 import {useGetConsultationTypesQuery, useLazyHandleLoadConsultTypesQuery} from "../files/consultationTypeApiSlice";
 import {BedDetails} from "../consultations/BedDetails";
@@ -163,6 +163,14 @@ export const AddConsultForm = ({ loader = false, consult, setConsult, apiErrors,
               className='text-capitalize' />
             <BedDetails bed={consult.bed}/>
           </div>
+
+          <Col>
+            <AppDatePicker
+              onChange={(d) => setConsult({...consult, hospReleasedAt: new Date(d)})}
+              value={consult?.hospReleasedAt}
+              disabled={isBedsFetching || loader || !consult?.bed}
+              label="Heure & date d'arrivé" />
+          </Col>
         </Col>
 
         <Col>

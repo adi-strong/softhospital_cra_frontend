@@ -3,11 +3,14 @@ import {Card, Col, Row, Tab, Tabs} from "react-bootstrap";
 import {useGetSingleUserQuery} from "../users/userApiSlice";
 import {useSelector} from "react-redux";
 import {selectCurrentUser} from "../auth/authSlice";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {DetailsParameters} from "./DetailsParameters";
 import {Hospital} from "./Hospital";
 import {ParametersForm} from "./ParametersForm";
 import {ParametersOverView} from "./ParametersOverView";
+import {useNavigate} from "react-router-dom";
+import {allowShowParametersPage} from "../../app/config";
+import toast from "react-hot-toast";
 
 const tabs = [
   {title: 'Détails', eventKey: 'details'},
@@ -20,7 +23,7 @@ const Parameters = () => {
   const {hospital, fCurrency, sCurrency, rate} = useSelector(state => state.parameters)
   const {data: singleUser} = useGetSingleUserQuery(user ? user : null)
 
-  const [key, setKey] = useState('details')
+  const [key, setKey] = useState('details'), navigate = useNavigate()
 
   const handleShowTab = (key) => {
     let element
@@ -46,6 +49,13 @@ const Parameters = () => {
     }
     return element
   }
+
+  useEffect(() => {
+    if (user && !allowShowParametersPage(user?.roles[0])) {
+      toast.error('Vous ne disposez pas de droits pour voir cette page.')
+      navigate('/member/reception', {replace: true})
+    }
+  }, [user, navigate])
 
   return (
     <>

@@ -52,7 +52,7 @@ const initialState = {
         {id: 4, label: 'Produits', path: '/member/drugstore/medicines'},
         {id: 4, label: 'Fournisseurs', path: '/member/drugstore/providers'},
         {id: 4, label: 'Approvisionnement', path: '/member/drugstore/supply'},
-        {id: 4, label: 'Ventes', path: '/member/drugstore/sales'},
+        {id: 4, label: 'Vente', path: '/member/drugstore/sales'},
         {id: 4, label: 'Factures', path: '/member/drugstore/invoices'},
       ]
     },

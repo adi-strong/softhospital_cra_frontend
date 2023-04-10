@@ -3,45 +3,31 @@ import {useEffect, useState} from "react";
 import {onInitSidebarMenu} from "../navigation/navigationSlice";
 import {AppBreadcrumb, AppHeadTitle} from "../../components";
 import {Card, Tab, Tabs} from "react-bootstrap";
-import {selectCurrentUser} from "../auth/authSlice";
+import {AppointmentsList2} from "./AppointmentsList2";
+import {allowShowAppointmentsPage} from "../../app/config";
 import toast from "react-hot-toast";
-import {useLazyLoadAgentConsultationsQuery} from "../consultations/consultationApiSlice";
-import {AgentConsultationsList} from "./AgentConsultationsList";
+import {useNavigate} from "react-router-dom";
 
-const tabs = [{title: 'Consultations', eventKey: 'consultations'}, {title: 'Rendez-vous', eventKey: 'appointments'},]
+const tabs = [{title: 'Rendez-vous', eventKey: 'consultations'}, /*{title: 'Calendrier', eventKey: 'appointments'}*/]
 
 const Appointments = () => {
   const dispatch = useDispatch()
   const [key, setKey] = useState('consultations')
-  const [consultations, setConsultations] = useState([])
-  const [loadAgentConsultations, {isLoading, isFetching, isError, isSuccess}] = useLazyLoadAgentConsultationsQuery()
-  const { agent: agentId } = useSelector(selectCurrentUser)
+  const [id, setId] = useState(null)
+  const { user } = useSelector(state => state.auth)
 
   useEffect(() => {
     dispatch(onInitSidebarMenu('/member/treatments/appointments'))
-  }, [dispatch])
+    if (user && user?.agent) setId(user.agent)
+  }, [dispatch, user])
 
+  const navigate = useNavigate()
   useEffect(() => {
-    async function getConsultations(agentId) {
-      try {
-        const data = await loadAgentConsultations(agentId)
-        if (!data.error) setConsultations(data?.data)
-      }
-      catch (e) { toast.error(e.message) }
+    if (user && !allowShowAppointmentsPage(user?.roles[0])) {
+      toast.error('Vous ne disposez pas de droits pour voir cette page.')
+      navigate('/member/reception', {replace: true})
     }
-
-    if (agentId) getConsultations(agentId)
-  }, [agentId, loadAgentConsultations])
-
-  const onRefresh = async (agentId) => {
-    if (agentId) {
-      try {
-        const data = await loadAgentConsultations(agentId)
-        if (!data.error) setConsultations(data?.data)
-      }
-      catch (e) { toast.error(e.message) }
-    }
-  }
+  }, [user, navigate])
 
   return (
     <>
@@ -57,13 +43,7 @@ const Appointments = () => {
             {tabs.map((tab, idx) =>
               <Tab key={idx} eventKey={tab.eventKey} title={tab.title} className='pt-3'>
                 {tab.eventKey === 'consultations'
-                  ? <AgentConsultationsList
-                    consultations={consultations}
-                    isFetching={isFetching}
-                    isLoading={isLoading}
-                    isSuccess={isSuccess}
-                    isError={isError}
-                    onRefresh={() => onRefresh(agentId)}/>
+                  ? <AppointmentsList2 id={id}/>
                   : <div/>}
               </Tab>)}
           </Tabs>

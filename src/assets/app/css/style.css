@@ -1371,3 +1371,12 @@ ul[class='~dropdown-menu-end dropdown-menu-arrow border-0 dropdown-menu show'] {
   margin: 0;
   transform: translate3d(0px, 28px, 0px);
 }
+
+#dot-activity-0 { color: green }
+#dot-activity-1 { color: red }
+#dot-activity-2 { color: blue }
+#dot-activity-3 { color: dodgerblue }
+#dot-activity-4 { color: orange }
+#dot-activity-5 { color: darkgray }
+#dot-activity-6 { color: slateblue }
+#dot-activity-7 { color: palevioletred }

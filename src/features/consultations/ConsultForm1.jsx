@@ -1,4 +1,4 @@
-import {useMemo} from "react";
+import {useMemo, useState} from "react";
 import {requiredField} from "../covenants/addCovenant";
 import {Button, Col, Row, Spinner} from "react-bootstrap";
 import {useLazyHandleLoadAgentsQuery} from "../staff/agentApiSlice";
@@ -6,7 +6,13 @@ import {handleChange} from "../../services/handleFormsFieldsServices";
 import {useGetActsQuery, useLazyHandleLoadActsQuery} from "../acts/actApiSlice";
 import {useGetExamsQuery, useLazyHandleLoadExamsQuery} from "../exams/examApiSlice";
 import {useGetTreatmentsQuery, useLazyHandleLoadTreatmentsQuery} from "../treatments/treatmentApiSlice";
-import {AppAsyncSelectOptions, AppDatePicker, AppFloatingTextAreaField, AppInputGroupField} from "../../components";
+import {
+  AppAsyncSelectOptions,
+  AppDatePicker,
+  AppFloatingTextAreaField,
+  AppInputGroupField,
+  AppRichText
+} from "../../components";
 
 const styles = {
   color: 'hsl(0, 0%, 40%)',
@@ -21,6 +27,7 @@ export function ConsultForm1({data, isDataExists = false, consultation, setConsu
   const [handleLoadExams] = useLazyHandleLoadExamsQuery()
   const [handleLoadTreatments] = useLazyHandleLoadTreatmentsQuery()
   const [handleLoadActs] = useLazyHandleLoadActsQuery()
+  const [diagnostic, setDiagnostic] = useState('')
 
   const {
     data: exams = [],
@@ -89,6 +96,16 @@ export function ConsultForm1({data, isDataExists = false, consultation, setConsu
   async function onLoadActs(keyword) {
     const actsData = await handleLoadActs(keyword).unwrap()
     if (!actsData?.error) return actsData
+  }
+
+  const handleChangeDiagnostic = (newValue) => {
+    setDiagnostic(newValue)
+    setConsultation({...consultation, diagnostic: newValue})
+  }
+
+  const handleBlur = () => {
+    console.log(diagnostic)
+    setConsultation({...consultation, diagnostic})
   }
 
   return (
@@ -241,14 +258,14 @@ export function ConsultForm1({data, isDataExists = false, consultation, setConsu
         </>
       )}
 
-      <AppFloatingTextAreaField
+      {/*<AppFloatingTextAreaField
         disabled={loader || (data ? data?.isComplete : false)}
         placeholder='Votre diagnostic ici...'
         value={consultation?.diagnostic}
         onChange={(e) => handleChange(e, consultation, setConsultation)}
         label='Plaintes & Diagnostic'
         error={apiErrors?.diagnostic}
-        name='diagnostic' />
+        name='diagnostic'/>*/}
 
       <AppFloatingTextAreaField
         disabled={loader || (data ? data?.isComplete : false)}
@@ -258,6 +275,15 @@ export function ConsultForm1({data, isDataExists = false, consultation, setConsu
         label='Commentaire(s)'
         error={apiErrors?.diagnostic}
         name='comment' />
+
+      <div className='mb-3'>
+        <b>Plaintes & dignostics</b>
+        <AppRichText
+          onChange={handleChangeDiagnostic}
+          onBlur={handleBlur}
+          value={consultation?.diagnostic}
+          disabled={loader || (data ? data?.isComplete : false)} />
+      </div>
 
       <hr/>
 

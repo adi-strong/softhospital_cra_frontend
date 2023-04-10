@@ -35,8 +35,11 @@ export const parametersApiSlice = api.injectEndpoints({
         })
         return parametersAdapter.setAll(initialState, loadParameters)
       },
-      providesTags: result => [{type: 'Parameters', id: 'LIST'},
-        ...result.ids.map(id => ({type: 'Parameters', id}))]
+      // Parameters
+      providesTags: result => [
+        { type: 'Parameters', id: 'LIST' },
+        ...result.ids.map(id => ({ type: 'Parameters', id }))
+      ]
     }), // Get Parameters
 
     updateHospital: build.mutation({

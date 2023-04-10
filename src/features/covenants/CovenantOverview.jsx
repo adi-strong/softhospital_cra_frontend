@@ -15,7 +15,11 @@ export function CovenantOverview(
     <>
       <Card className='border-0'>
         <Card.Body>
-          {isLoading && <BarLoaderSpinner loading={isLoading}/>}
+          {isLoading &&
+            <>
+              <h2 className='text-center'>Chargement en cours...</h2>
+              <BarLoaderSpinner loading={isLoading}/>
+            </>}
           {isSuccess && covenant &&
             <>
               <Card.Img variant='top' src={covenant?.logo ? entrypoint+covenant.logo.contentUrl : img} />

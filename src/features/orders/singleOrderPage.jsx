@@ -1,4 +1,4 @@
-import {memo} from "react";
+import {memo, useEffect} from "react";
 import {Card} from "react-bootstrap";
 import {AppDropdownFilerMenu, AppMainError} from "../../components";
 import {cardTitleStyle} from "../../layouts/AuthLayout";
@@ -6,11 +6,14 @@ import {useRef} from "react";
 import {useReactToPrint} from "react-to-print";
 import {useSelector} from "react-redux";
 import {useGetSinglePrescriptionQuery} from "../prescriptions/prescriptionApiSlice";
-import {useParams} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 import BarLoaderSpinner from "../../loaders/BarLoaderSpinner";
 import {OrderPatientInfos} from "./OrderPatientInfos";
 import {SingleOrderSection1} from "./SingleOrderSection1";
 import parser from "html-react-parser";
+import {selectCurrentUser} from "../auth/authSlice";
+import {allowShowOrdersPage} from "../../app/config";
+import toast from "react-hot-toast";
 
 const dropdownItems = [
   {label: <><i className='bi bi-arrow-clockwise'/> Actualiser</>, name: 'refresh', action: '#'},
@@ -28,6 +31,14 @@ function SingleOrderPage() {
     if (name === 'print') handlePrint()
     else await refetch()
   }
+
+  const user = useSelector(selectCurrentUser), navigate = useNavigate()
+  useEffect(() => {
+    if (user && !allowShowOrdersPage(user?.roles[0])) {
+      toast.error('Vous ne disposez pas de droits pour voir cette page.')
+      navigate('/member/reception', {replace: true})
+    }
+  }, [user, navigate])
 
   return (
     <div className='section dashboard'>

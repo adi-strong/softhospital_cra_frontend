@@ -53,7 +53,7 @@ export const DashSection1Item2 = (
                 ? 'danger'
                 : 'success'
             }
-            title='Revenu'
+            title="Chiffre d'affaires"
             label={
               stats && stats?.sum <= stats?.lastSum
                 ? 'baisse'
@@ -62,7 +62,7 @@ export const DashSection1Item2 = (
             menu={key}
             icon={<span>{currency && currency?.value}</span>}
             num={stats
-              ? <>{currency && currency?.value}{stats?.sum}</>
+              ? <>{currency && currency?.value} {stats?.sum}</>
               : '--'}
             percent={stats ? stats?.revenueStat : ''} />
         </Card.Body>

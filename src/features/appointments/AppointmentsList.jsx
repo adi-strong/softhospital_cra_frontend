@@ -12,6 +12,9 @@ import {AppointmentItem} from "./AppointmentItem";
 import BarLoaderSpinner from "../../loaders/BarLoaderSpinner";
 import {AddAppointment} from "./AddAppointment";
 import {Button, Col, Form} from "react-bootstrap";
+import {useSelector} from "react-redux";
+import {selectCurrentUser} from "../auth/authSlice";
+import {allowActionsToPatients} from "../../app/config";
 
 const thead = [
   {label: '#'},
@@ -117,6 +120,8 @@ export function AppointmentsList() {
     researchAndPagination,
   ])
 
+  const user = useSelector(selectCurrentUser)
+
   return (
     <>
       <AppDataTableBorderless
@@ -153,11 +158,12 @@ export function AppointmentsList() {
                   onChange={handleSearch} />
               </Form>
             </Col>
-            <Col>
-              <Button type='button' className='w-100' onClick={toggleModal}>
-                <i className='bi bi-plus'/> Fixer un rendez-vous
-              </Button>
-            </Col>
+            {user && allowActionsToPatients(user?.roles[0]) &&
+              <Col>
+                <Button type='button' className='w-100' onClick={toggleModal}>
+                  <i className='bi bi-plus'/> Fixer un rendez-vous
+                </Button>
+              </Col>}
           </>
       } />
       {(isLoading || isFetching2 || isFetching4) && <BarLoaderSpinner loading={isLoading || isFetching2 || isFetching4}/>}

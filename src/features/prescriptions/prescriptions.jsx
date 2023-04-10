@@ -1,9 +1,13 @@
 import {memo, useEffect} from "react";
 import {onInitSidebarMenu} from "../navigation/navigationSlice";
 import {AppBreadcrumb, AppHeadTitle} from "../../components";
-import {useDispatch} from "react-redux";
+import {useDispatch, useSelector} from "react-redux";
 import {Card} from "react-bootstrap";
 import {PrescriptionsList} from "./PrescriptionsList";
+import {selectCurrentUser} from "../auth/authSlice";
+import {useNavigate} from "react-router-dom";
+import {allowShowPrescriptionsPage} from "../../app/config";
+import toast from "react-hot-toast";
 
 function Prescriptions() {
   const dispatch = useDispatch()
@@ -11,6 +15,14 @@ function Prescriptions() {
   useEffect(() => {
     dispatch(onInitSidebarMenu('/member/treatments/prescriptions'))
   }, [dispatch]) // toggle submenu dropdown
+
+  const user = useSelector(selectCurrentUser), navigate = useNavigate()
+  useEffect(() => {
+    if (user && !allowShowPrescriptionsPage(user?.roles[0])) {
+      toast.error('Vous ne disposez pas de droits pour voir cette page.')
+      navigate('/member/reception', {replace: true})
+    }
+  }, [user, navigate])
 
   return (
     <>

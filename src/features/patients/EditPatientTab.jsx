@@ -74,7 +74,11 @@ export const EditPatientTab = ({data, isLoading, isError, refetch}) => {
   useEffect(() => {
     if (!isLoading && data) {
       const sex = data?.sex ? data.sex : 'none';
-
+      const maritalStatus = data?.maritalStatus && data.maritalStatus === 'single'
+        ? 'single'
+        : data?.maritalStatus && data.maritalStatus === 'married'
+          ? 'married'
+          : 'none'
       setPatient(prevState => {
         return {
           ...prevState,
@@ -87,7 +91,7 @@ export const EditPatientTab = ({data, isLoading, isError, refetch}) => {
           father: data?.father ? data.father : '',
           profile: data?.profile ? data.profile : null,
           email: data?.email ? data.email : '',
-          maritalStatus: data?.maritalStatus ? data.maritalStatus : 'none',
+          maritalStatus,
           birthDate: data?.birthDate ? data.birthDate.substring(0, 10) : '',
           address: data?.address ? data.address : '',
           tel: data?.tel ? data.tel : '',

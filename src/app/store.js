@@ -3,6 +3,7 @@ import {createApi, fetchBaseQuery, setupListeners} from "@reduxjs/toolkit/dist/q
 import navigationSlice from "../features/navigation/navigationSlice";
 import authReducer from '../features/auth/authSlice';
 import parametersReducer from '../features/parameters/parametersSlice';
+import agentAppointmentsReducer from '../features/appointments/agentAppointmentsSlice';
 
 export const entrypoint = 'https://localhost:8000'
 export const pathToApi = '/api'
@@ -44,6 +45,8 @@ export const api = createApi({
     'Expense',
     'ExpenseCategories',
     'Input',
+    'SupplyInvoices',
+    'SingleSupplyInvoice',
     'Output',
     'ConsultationType',
     'Act',
@@ -83,6 +86,8 @@ export const api = createApi({
     'AppointmentsPaginated',
     'Orders',
     'SingleOrder',
+    'AgentAppointments',
+    'SingleCovenantInvoicesList',
   ],
   endpoints: build => ({}),
 })
@@ -92,6 +97,7 @@ export const store = configureStore({
     [navigationSlice.name]: navigationSlice.reducer,
     auth: authReducer,
     parameters: parametersReducer,
+    agentAppointments: agentAppointmentsReducer,
     [api.reducerPath]: api.reducer,
   },
   middleware: gDM => gDM().concat(api.middleware),

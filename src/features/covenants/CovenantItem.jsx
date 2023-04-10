@@ -4,8 +4,9 @@ import img from '../../assets/app/img/default_covenant_img.png';
 import {entrypoint} from "../../app/store";
 import {useState} from "react";
 import {EditCovenant} from "./EditCovenant";
+import {allowShowSingleCovenantPage} from "../../app/config";
 
-export const CovenantItem = ({ covenant, onRefresh }) => {
+export const CovenantItem = ({ covenant, onRefresh, user }) => {
   const [show, setShow] = useState(false)
 
   const toggleModal = () => setShow(!show)
@@ -33,9 +34,15 @@ export const CovenantItem = ({ covenant, onRefresh }) => {
         <td>{covenant?.createdAt ? covenant.createdAt : '❓'}</td>
         <td className='text-md-end'>
           <ButtonGroup size='sm'>
-            <Button type='button' title='Modifier' variant='light' onClick={toggleModal}>
-              <i className='bi bi-pencil-square text-primary'/>
-            </Button>
+            {user && allowShowSingleCovenantPage(user?.roles[0]) &&
+              <>
+                <Link to={`/member/finance/covenant/${covenant?.id}/invoice`} title='Factures' className='btn btn-light'>
+                  <i className='bi bi-eye-fill'/>
+                </Link>
+                <Button type='button' title='Modifier' variant='light' onClick={toggleModal}>
+                  <i className='bi bi-pencil-square text-primary'/>
+                </Button>
+              </>}
           </ButtonGroup>
         </td>
       </tr>

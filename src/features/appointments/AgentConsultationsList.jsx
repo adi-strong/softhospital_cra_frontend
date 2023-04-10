@@ -27,7 +27,6 @@ export function AgentConsultationsList({ consultations, isSuccess, isLoading, is
     <>
       <AppDataTableStripped
         loader={isLoading || isFetching}
-        title='Liste des consultations'
         thead={<AppTHead isImg loader={isLoading} isFetching={isFetching} onRefresh={onRefresh} items={thead} />}
         tbody={content}
         overview={

@@ -9,9 +9,19 @@ import {useAddNewParametersMutation, useGetParametersQuery} from "./parametersAp
 import toast from "react-hot-toast";
 import {useSelector} from "react-redux";
 
+const operations = [
+  {label: 'Multiplication: *', value: '*'},
+  {label: 'Division: /', value: '/'},
+]
+
 export const ParametersForm = () => {
   const [validated, setValidated] = useState(false)
-  const [item, setItem] = useState({currency: null, secondCurrency: null, rate: 0})
+  const [item, setItem] = useState({
+    currency: null,
+    secondCurrency: null,
+    fOperation: '',
+    lOperation: '',
+    rate: 0})
   const [addNewParameters, {isLoading, isError, error}] = useAddNewParametersMutation()
   const {fCurrency, sCurrency} = useSelector(state => state.parameters)
   const {
@@ -30,10 +40,35 @@ export const ParametersForm = () => {
         let currency = fCurrency, secondCurrency = sCurrency, rate
         rate = parameters.entities[target].rate ? parseFloat(parameters.entities[target].rate) : 0
 
-        setItem({
-          rate,
-          currency,
-          secondCurrency: parameters.entities[target].secondCurrency ? secondCurrency : ''})
+        let ope1, ope2
+
+        if (parameters.entities[target]?.fOperation && parameters.entities[target].fOperation === '*') ope1 = '*'
+        else if (parameters.entities[target]?.fOperation && parameters.entities[target].fOperation === '/') ope1 = '/'
+        else ope1 = null
+
+        if (parameters.entities[target]?.lOperation && parameters.entities[target].lOperation === '*') ope2 = '*'
+        else if (parameters.entities[target]?.lOperation && parameters.entities[target].lOperation === '/') ope2 = '/'
+        else ope2 = null
+
+        const fOperation = {
+          label: ope1 === '*' ? 'Multiplication: *' : ope1 === '/' ? 'Division: /' : '',
+          value: ope1 === '*' ? '*' : ope1 === '/' ? '/' : ''
+        }
+
+        const lOperation = {
+          label: ope2 === '*' ? 'Multiplication: *' : ope2 === '/' ? 'Division: /' : '',
+          value: ope2 === '*' ? '*' : ope2 === '/' ? '/' : ''
+        }
+
+        setItem(prev => {
+          return {
+            ...prev,
+            rate,
+            currency,
+            fOperation,
+            lOperation,
+            secondCurrency: parameters.entities[target].secondCurrency ? secondCurrency : ''}
+        })
       }
     }
   }, [isSuccess, parameters, fCurrency, sCurrency]) // handle exists parameters
@@ -60,11 +95,18 @@ export const ParametersForm = () => {
     const form = e.currentTarget
     if (canSave || form.checkValidity() === false) {
       if (parameters) {
-        const data = await addNewParameters({...item, isUpdated: true})
+        const data = await addNewParameters({
+          ...item,
+          isUpdated: true,
+          fOperation: item.fOperation && item.fOperation?.value ? item.fOperation?.value : null,
+          lOperation: item.fOperation && item.lOperation?.value ? item.lOperation?.value : null})
         if (!data.error) toast.success('Paramètres bien ajouté.')
       }
       else {
-        const data = await addNewParameters(item)
+        const data = await addNewParameters({
+          ...item,
+          fOperation: item.fOperation && item.fOperation?.value ? item.fOperation?.value : null,
+          lOperation: item.fOperation && item.lOperation?.value ? item.lOperation?.value : null})
         if (!data.error) toast.success('Paramètres bien ajouté.')
       }
     }
@@ -97,6 +139,18 @@ export const ParametersForm = () => {
               placeholder='-- 1ère devise --' />
           } />
         <FormRowContent
+          label={<>Opération</>}
+          body={
+            <AppChooseField
+              required
+              isDisabled={isLoading || loader || isFetching}
+              value={item.fOperation}
+              onChange={(e) => onSelectChange(e, 'fOperation', item, setItem)}
+              options={operations}
+              name='fOperation'
+              placeholder='-- Opération --' />
+          } />
+        <FormRowContent
           label={<>2ème devise</>}
           body={
             <AppChooseField
@@ -107,6 +161,18 @@ export const ParametersForm = () => {
               error={apiErrors.secondCurrency}
               name='secondCurrency'
               placeholder='-- 2ème devise --' />
+          } />
+        <FormRowContent
+          label={<>Opération</>}
+          body={
+            <AppChooseField
+              required
+              isDisabled={isLoading || loader || isFetching}
+              value={item.lOperation}
+              onChange={(e) => onSelectChange(e, 'lOperation', item, setItem)}
+              options={operations}
+              name='lOperation'
+              placeholder='-- Opération --' />
           } />
         <FormRowContent
           label='Taux'
@@ -138,7 +204,6 @@ export const ParametersForm = () => {
                 <span>=</span>
                 <span>
                   {parseFloat(item.rate).toFixed(2).toLocaleString()+' '}
-                  {item.secondCurrency && item.secondCurrency.value}
                 </span>
               </>}
           </Col>

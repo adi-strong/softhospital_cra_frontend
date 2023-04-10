@@ -1,10 +1,13 @@
 import {memo, useEffect} from "react";
-import {useDispatch} from "react-redux";
+import {useDispatch, useSelector} from "react-redux";
 import {onInitSidebarMenu} from "../navigation/navigationSlice";
 import {AppBreadcrumb, AppHeadTitle} from "../../components";
 import {NursingForm} from "./NursingForm";
 import {useGetSingleNursingQuery} from "./nursingApiSlice";
-import {useParams} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
+import {selectCurrentUser} from "../auth/authSlice";
+import {allowShowNursingPage} from "../../app/config";
+import toast from "react-hot-toast";
 
 const EditNursingPage = () => {
   const dispatch = useDispatch(), { id } = useParams()
@@ -15,6 +18,14 @@ const EditNursingPage = () => {
   }, [dispatch]) // toggle submenu dropdown
 
   const onRefresh = async () => await refetch()
+
+  const user = useSelector(selectCurrentUser), navigate = useNavigate()
+  useEffect(() => {
+    if (user && !allowShowNursingPage(user?.roles[0])) {
+      toast.error('Vous ne disposez pas de droits pour voir cette page.')
+      navigate('/member/reception', {replace: true})
+    }
+  }, [user, navigate])
 
   return (
     <>

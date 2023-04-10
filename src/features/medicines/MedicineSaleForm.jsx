@@ -148,7 +148,7 @@ export function MedicineSaleForm({ currency }) {
 
                 <Row>
                   <Col md={6} className='mb-2'>
-                    <Form.Group className='text-danger row mb-3'>
+                    <Form.Group className='row mb-3'>
                       <Col md={7}>
                         <Form.Check
                           id='check1'
@@ -170,7 +170,7 @@ export function MedicineSaleForm({ currency }) {
                       </Col>
                     </Form.Group>
 
-                    <Form.Group className='row mb-3'>
+                    {/*<Form.Group className='row mb-3'>
                       <Col md={7}>
                         <Form.Check
                           id='check2'
@@ -179,7 +179,7 @@ export function MedicineSaleForm({ currency }) {
                           value={invoice.check2}
                           checked={invoice.check2}
                           onChange={() => setInvoice({...invoice, check2: !invoice.check2})}
-                          disabled={isLoading} />
+                          disabled={isLoading}/>
                       </Col>
                       <Col md={5}>
                         <Form.Control
@@ -188,9 +188,9 @@ export function MedicineSaleForm({ currency }) {
                           name='vTA'
                           value={invoice.vTA}
                           onChange={(e) => handleChange(e, invoice, setInvoice)}
-                          disabled={isLoading || !invoice.check2} />
+                          disabled={isLoading || !invoice.check2}/>
                       </Col>
-                    </Form.Group>
+                    </Form.Group>*/}
                   </Col>
 
                   <Col md={6} className='mb-2'>
@@ -218,16 +218,16 @@ export function MedicineSaleForm({ currency }) {
                             {invoice.amount.toFixed(2).toLocaleString()} {currency && currency?.value}
                           </td>
                         </tr>
-                        <tr className='fw-bold text-primary'>
+                        {/*<tr className='fw-bold text-primary'>
                           <td>TVA</td>
                           <td className='text-end'>
                             {invoice.check2 && `+ (${invoice.vTA}%) `}
                             {invoice.check2
-                              ? roundANumber(vTAAmount, 2).toFixed(2).toLocaleString()+' '
+                              ? roundANumber(vTAAmount, 2).toFixed(2).toLocaleString() + ' '
                               : '-'}
                             {invoice.check2 && currency && currency?.value}
                           </td>
-                        </tr>
+                        </tr>*/}
                         <tr className='bg-primary text-light'>
                           <td style={{ fontWeight: 800 }}>TOTAL TTC</td>
                           <td style={{ fontWeight: 800 }} className='text-end'>

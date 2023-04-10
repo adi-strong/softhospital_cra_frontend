@@ -1,8 +1,13 @@
 import {Button, Form, InputGroup, Spinner} from "react-bootstrap";
 import {handleChange} from "../../services/handleFormsFieldsServices";
 import AppInputField from "../../components/forms/AppInputField";
+import {useSelector} from "react-redux";
+import {selectCurrentUser} from "../auth/authSlice";
+import {allowActionsToPatients} from "../../app/config";
 
 export const AddPatientForm = ({ loader = false, onSubmit, patient, setPatient, apiErrors, onReset }) => {
+  const user = useSelector(selectCurrentUser)
+
   return (
     <>
       <Form onSubmit={onSubmit}>
@@ -62,10 +67,11 @@ export const AddPatientForm = ({ loader = false, onSubmit, patient, setPatient, 
           <Button type='button' disabled={loader} onClick={onReset} className='bg-transparent border-0 text-dark'>
             <i className='bi bi-arrow-clockwise'/>
           </Button>
-          <Button type='submit' className='mx-1' disabled={loader}>
-            <i className='bi bi-person-plus me-1'/>
-            {loader ? <>Veuillez patienter <Spinner animation='border' size='sm'/></> : 'Enregistrer'}
-          </Button>
+          {user && allowActionsToPatients(user?.roles[0]) &&
+            <Button type='submit' className='mx-1' disabled={loader}>
+              <i className='bi bi-person-plus me-1'/>
+              {loader ? <>Veuillez patienter <Spinner animation='border' size='sm'/></> : 'Enregistrer'}
+            </Button>}
         </div>
       </Form>
     </>

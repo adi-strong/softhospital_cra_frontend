@@ -2,7 +2,7 @@ import {AppDataTableBordered, AppTHead} from "../../../components";
 import {useMemo} from "react";
 
 const thead = [
-  {label: 'Description'},
+  {label: 'Désignation'},
   {label: 'Unité'},
   {label: 'Quantité'},
   {label: 'Prix Unitaire'},
@@ -31,7 +31,7 @@ const Item = ({ item, currency, amount }) => {
           {parseFloat(item?.price).toFixed(2).toLocaleString()+' '}
           {currency && currency.value}
         </td>
-        <td style={{ fontWeight: 800 }} className='text-secondary'>
+        <td style={{ fontWeight: 800 }}>
           {parseFloat(item?.sum).toFixed(2).toLocaleString()+' '}
           {currency && currency.value}
         </td>
@@ -44,28 +44,27 @@ const SumItem = ({ invoice, currency }) => {
   return (
     <>
       <tr>
-        <td>Net à payer</td>
+        <td>Sous total</td>
         <td className='text-end fw-bolder' width={200}>
-          {parseFloat(invoice?.amount).toFixed(2).toLocaleString()+' '}
+          {parseFloat(invoice?.subTotal).toFixed(2).toLocaleString()+' '}
           {invoice?.currency
             ? invoice.currency
             : currency && currency.value}
         </td>
+      </tr>
+
+      <tr>
+        <td>Remise</td>
+        <td className='text-end'>{invoice?.discount ? <>-{invoice.discount}%</> : '-'}</td>
       </tr>
 
       <tr>
         <td>Montant Total HT</td>
         <td className='text-end fw-bolder' width={200}>
-          {parseFloat(invoice?.amount).toFixed(2).toLocaleString()+' '}
-          {invoice?.currency
-            ? invoice.currency
-            : currency && currency.value}
+          {invoice?.discount && parseFloat(invoice?.amount).toFixed(2).toLocaleString()+' '}
+          {invoice?.discount && currency && currency?.value}
+          {!invoice?.discount && '-'}
         </td>
-      </tr>
-
-      <tr>
-        <td className='text-danger'>Remise</td>
-        <td className='text-end text-danger'>{invoice?.discount && invoice.discount+' %'}</td>
       </tr>
 
       <tr>

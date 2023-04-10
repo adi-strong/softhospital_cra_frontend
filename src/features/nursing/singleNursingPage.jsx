@@ -4,11 +4,14 @@ import {onInitSidebarMenu} from "../navigation/navigationSlice";
 import {AppBreadcrumb, AppDropdownFilerMenu, AppHeadTitle, AppMainError} from "../../components";
 import {useGetSingleNursingQuery} from "./nursingApiSlice";
 import {Card} from "react-bootstrap";
-import {useParams} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 import BarLoaderSpinner from "../../loaders/BarLoaderSpinner";
 import {cardTitleStyle} from "../../layouts/AuthLayout";
 import {useReactToPrint} from "react-to-print";
 import {SingleNursingInvoiceDetails} from "./SingleNursingInvoiceDetails";
+import {selectCurrentUser} from "../auth/authSlice";
+import {allowShowNursingPage} from "../../app/config";
+import toast from "react-hot-toast";
 
 const dropDownItems = [
   {action: '#', label: <><i className='bi bi-arrow-clockwise'/> Actualiser</>, name: 'refresh'},
@@ -43,6 +46,14 @@ const SingleNursingPage = () => {
         break
     }
   }
+
+  const user = useSelector(selectCurrentUser), navigate = useNavigate()
+  useEffect(() => {
+    if (user && !allowShowNursingPage(user?.roles[0])) {
+      toast.error('Vous ne disposez pas de droits pour voir cette page.')
+      navigate('/member/reception', {replace: true})
+    }
+  }, [user, navigate])
 
   return (
     <div className='section dashboard'>

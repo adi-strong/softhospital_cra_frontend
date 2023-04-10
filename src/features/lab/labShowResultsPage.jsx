@@ -1,16 +1,19 @@
 import {memo, useEffect} from "react";
-import {useDispatch} from "react-redux";
+import {useDispatch, useSelector} from "react-redux";
 import {onInitSidebarMenu} from "../navigation/navigationSlice";
 import {AppBreadcrumb, AppDropdownFilerMenu, AppHeadTitle} from "../../components";
 import {Card, Col, Row} from "react-bootstrap";
 import {cardTitleStyle} from "../../layouts/AuthLayout";
 import {useGetSingleLabQuery} from "./labApiSlice";
-import {useParams} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 import {SingleLabSection1} from "./SingleLabSection1";
 import BarLoaderSpinner from "../../loaders/BarLoaderSpinner";
 import {SingleLabSection2} from "./SingleLabSection2";
 import {SingleLabSection3} from "./SingleLabSection3";
 import {SingleLabSection4} from "./SingleLabSection4";
+import {selectCurrentUser} from "../auth/authSlice";
+import {allowShowSingleLabPage} from "../../app/config";
+import toast from "react-hot-toast";
 
 function LabShowResultsPage() {
   const dispatch = useDispatch(), { id } = useParams()
@@ -24,6 +27,14 @@ function LabShowResultsPage() {
   if (isError) alert('ERREUR: Erreur lors du chargement de données ❗')
 
   const onToggleMenus = async name => await refetch()
+
+  const user = useSelector(selectCurrentUser), navigate = useNavigate()
+  useEffect(() => {
+    if (user && !allowShowSingleLabPage(user?.roles[0])) {
+      toast.error('Vous ne disposez pas de droits pour voir cette page.')
+      navigate('/member/reception', {replace: true})
+    }
+  }, [user, navigate])
 
   return (
     <div className='section dashboard'>

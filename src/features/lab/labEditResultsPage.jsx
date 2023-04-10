@@ -1,10 +1,11 @@
 import {memo, useEffect} from "react";
-import {useDispatch} from "react-redux";
+import {useDispatch, useSelector} from "react-redux";
 import {onInitSidebarMenu} from "../navigation/navigationSlice";
 import {AppBreadcrumb, AppHeadTitle, AppMainError} from "../../components";
 import {LabForm} from "./LabForm";
 import {useParams} from "react-router-dom";
 import {useGetSingleLabQuery} from "./labApiSlice";
+import {selectCurrentUser} from "../auth/authSlice";
 
 function LabEditResultsPage() {
   const dispatch = useDispatch(), { id } = useParams()
@@ -19,6 +20,8 @@ function LabEditResultsPage() {
 
   const onRefetch = async () => await refetch()
 
+  const user = useSelector(selectCurrentUser)
+
   return (
     <>
       <AppHeadTitle title='Laboratoire | Publication de résultats' />
@@ -27,6 +30,7 @@ function LabEditResultsPage() {
       ]} />
 
       <LabForm
+        user={user}
         loader={isLoading}
         isSuccess={isSuccess}
         isFetching={isFetching}

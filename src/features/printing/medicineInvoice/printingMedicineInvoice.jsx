@@ -25,7 +25,7 @@ function PrintingMedicineInvoice() {
 
   return (
     <>
-      <AppHeadTitle title='Phramacie | Factures' />
+      <AppHeadTitle title={`Phramacie | Factures n° ${invoiceNumber}`} />
       <AppBreadcrumb
         title={`Facture n° ${invoiceNumber || id}`}
         links={[

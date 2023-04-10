@@ -9,7 +9,7 @@ import {
   useLazyGetUsersByPaginationQuery, usersPages
 } from "./userApiSlice";
 import {AppDataTableStripped, AppDelModal, AppMainError, AppPaginationComponent, AppTHead} from "../../components";
-import {role, ROLE_OWNER_ADMIN} from "../../app/config";
+import {allowShowPersonalsPage, role, ROLE_OWNER_ADMIN} from "../../app/config";
 import {selectCurrentUser} from "../auth/authSlice";
 import {Button, ButtonGroup, Card, Col, Form, InputGroup} from "react-bootstrap";
 import {EditUser} from "./EditUser";
@@ -17,6 +17,8 @@ import toast from "react-hot-toast";
 import img from '../../assets/app/img/default_profile.jpg';
 import {entrypoint} from "../../app/store";
 import BarLoaderSpinner from "../../loaders/BarLoaderSpinner";
+import {limitStrTo} from "../../services";
+import {useNavigate} from "react-router-dom";
 
 const UserItem = ({user, currentUser}) => {
   const [deleteUser, {isLoading}] = useDeleteUserMutation()
@@ -54,8 +56,8 @@ const UserItem = ({user, currentUser}) => {
           <th className='text-uppercase'>{user?.name ? user.name : '❓'}</th>
           <td>{user.tel}</td>
           <td className='text-lowercase fst-italic'>{user?.email ? user.email : '❓'}</td>
-          <td>{role(user.roles[0])}</td>
-          <td>{user?.createdAt ? user.createdAt : '❓'}</td>
+          <td title={role(user.roles[0])}>{limitStrTo(5, role(user.roles[0]))}</td>
+          <td>{user?.createdAt ? limitStrTo(10, user.createdAt) : '❓'}</td>
           <td className='text-end'>
             <ButtonGroup size='sm'>
               <Button type='button' variant='light' disabled={isLoading} onClick={toggleEditModal}>
@@ -158,6 +160,14 @@ function Users() {
       setContents(researchPaginatedItems?.filter(f => f?.username.toLowerCase().includes(search.toLowerCase())))
   }, [isSuccess, users, search, checkItems, paginatedItems, researchPaginatedItems])
 
+  const user = useSelector(selectCurrentUser), navigate = useNavigate()
+  useEffect(() => {
+    if (user && !allowShowPersonalsPage(user?.roles[0])) {
+      toast.error('Vous ne disposez pas de droits pour voir cette page.')
+      navigate('/member/reception', {replace: true})
+    }
+  }, [user, navigate])
+
   return (
     <>
       <Card className='border-0'>
@@ -212,7 +222,7 @@ function Users() {
                   {label: 'Nom complet'},
                   {label: 'n° Téléphone'},
                   {label: 'Email'},
-                  {label: 'Rôle / Droits'},
+                  {label: 'Droits'},
                   {label: 'Date'},
                 ]}/>}
             tbody={

@@ -2,7 +2,7 @@ import {useMemo, useState} from "react";
 import {AppInputGroupField, AppLgModal, AppSelectOptions} from "../../components";
 import {useAddNewMedicineMutation} from "./medicineApiSlice";
 import {Button, Col, Row} from "react-bootstrap";
-import {handleChange} from "../../services/handleFormsFieldsServices";
+import {handleChange, onStrictNumChange} from "../../services/handleFormsFieldsServices";
 import AppInputField from "../../components/forms/AppInputField";
 import {requiredField} from "../covenants/addCovenant";
 import {useGetMedicineCategoriesQuery} from "./medicineCategoriesApiSlice";
@@ -12,7 +12,7 @@ import toast from "react-hot-toast";
 
 export const AddMedicineModal = ({show, onHide, currency}) => {
   let apiErrors = {code: null, wording: null, cost: null, price: null,}
-  const [medicine, setMedicine] = useState({code: '', wording: '', cost: 0, price: 0,})
+  const [medicine, setMedicine] = useState({code: '', wording: '', cost: 1, price: 1,})
   const [category, setCategory] = useState(null)
   const [subCategory, setSubCategory] = useState(null)
   const [options2, setOptions2] = useState([])
@@ -77,7 +77,7 @@ export const AddMedicineModal = ({show, onHide, currency}) => {
   }
 
   function onReset() {
-    setMedicine({code: '', wording: '', cost: 0, price: 0,})
+    setMedicine({code: '', wording: '', cost: 1, price: 1,})
     setCategory(null)
     setSubCategory(null)
     setCUnit(null)
@@ -146,7 +146,7 @@ export const AddMedicineModal = ({show, onHide, currency}) => {
               label='Prix'
               name='price'
               value={medicine.price}
-              onChange={(e) => handleChange(e, medicine, setMedicine)}
+              onChange={(e) => onStrictNumChange(e, medicine, setMedicine)}
               disabled={isLoading}
               error={apiErrors.price} />
           </Col>

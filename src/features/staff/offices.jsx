@@ -1,17 +1,31 @@
-import {useState} from "react";
-import {AppBreadcrumb, AppDataTableStripped, AppDelModal, AppHeadTitle, AppTHead} from "../../components";
-import {Alert, Button, ButtonGroup, Card, Col, Form, InputGroup, Row} from "react-bootstrap";
+import {useEffect, useState} from "react";
+import {
+  AppBreadcrumb,
+  AppDataTableStripped,
+  AppDelModal,
+  AppHeadTitle, AppMainError,
+  AppPaginationComponent,
+  AppTHead
+} from "../../components";
+import {Button, ButtonGroup, Card, Col, Form, Row} from "react-bootstrap";
 import {ParametersOverView} from "../parameters/ParametersOverView";
-import {useDeleteOfficeMutation, useGetOfficesQuery} from "./officeApiSlice";
-import {handleChange} from "../../services/handleFormsFieldsServices";
+import {
+  officesPages, researchOfficesPages,
+  useDeleteOfficeMutation,
+  useGetOfficesQuery,
+  useLazyGetOfficesByPaginationQuery, useLazyGetResearchOfficesByPaginationQuery,
+  useLazyGetResearchOfficesQuery
+} from "./officeApiSlice";
 import {AddOffice} from "./AddOffice";
 import {EditOffice} from "./EditOffice";
 import toast from "react-hot-toast";
+import BarLoaderSpinner from "../../loaders/BarLoaderSpinner";
+import {useSelector} from "react-redux";
+import {selectCurrentUser} from "../auth/authSlice";
+import {useNavigate} from "react-router-dom";
+import {allowShowPersonalsPage} from "../../app/config";
 
-function OfficeItem({id}) {
-  const {office} = useGetOfficesQuery('Offices', {
-    selectFromResult: ({ data }) => ({ office: data.entities[id] })
-  })
+function OfficeItem({ office }) {
   const [show, setShow] = useState(false)
   const [show2, setShow2] = useState(false)
   const [deleteOffice, {isLoading}] = useDeleteOfficeMutation()
@@ -65,26 +79,91 @@ function OfficeItem({id}) {
 
 function Offices() {
   const {data: offices = [], isLoading, isSuccess, isFetching, isError, refetch} = useGetOfficesQuery('Offices')
-  const [keywords, setKeywords] = useState({search: ''})
+  const [search, setSearch] = useState('')
   const [showNew, setShowNew] = useState(false)
-
-  let content, error
-  if (isSuccess) content = offices ? offices.ids.map(id => <OfficeItem key={id} id={id}/>) : []
-  else if (isError) error =
-    <Alert variant='danger'>
-      <p>
-        Une erreur est survenue. <br/>
-        Veuillez soit recharger la page soit vous reconnecter <i className='bi bi-exclamation-triangle-fill'/>
-      </p>
-    </Alert>
-
-  const onRefresh = async () => await refetch()
+  const [contents, setContents] = useState([])
+  const [tempSearch, setTempSearch] = useState('')
+  const [page, setPage] = useState(1)
+  const [checkItems, setCheckItems] = useState({isSearching: false, isPaginated: false,})
 
   const toggleModal = () => setShowNew(!showNew)
 
-  function handleSubmit(e) {
+  const [paginatedItems, setPaginatedItems] = useState([])
+  const [researchPaginatedItems, setResearchPaginatedItems] = useState([])
+
+  const [getOfficesByPagination, {isFetching: isFetching2, isError: isError2,}] = useLazyGetOfficesByPaginationQuery()
+  const [getResearchOffices, {isFetching: isFetching3, isError: isError3,}] = useLazyGetResearchOfficesQuery()
+  const [getResearchOfficesByPagination, {
+    isFetching: isFetching4,
+    isError: isError4,
+  }] = useLazyGetResearchOfficesByPaginationQuery()
+
+  async function handlePagination(pagination) {
+    const param = pagination + 1
+    setPage(param)
+    setCheckItems({isSearching: false, isPaginated: true})
+    const { data: searchData, isSuccess } = await getOfficesByPagination(param)
+    if (isSuccess && searchData) {
+      setPaginatedItems(searchData)
+    }
+  } // handle main pagination
+
+  async function handlePagination2(pagination) {
+    const param = pagination + 1
+    const keywords = {page: param, keyword: tempSearch}
+    setPage(param)
+    setCheckItems({isSearching: true, isPaginated: false})
+    const { data: searchData, isSuccess } = await getResearchOfficesByPagination(keywords)
+    if (isSuccess && searchData) {
+      setResearchPaginatedItems(searchData)
+    }
+  } // 2nd handle main pagination
+
+  async function handleSubmit(e) {
     e.preventDefault()
+    setPage(1)
+    setTempSearch(search)
+    setSearch('')
+    setCheckItems({isSearching: true, isPaginated: false})
+    const { data: searchData, isSuccess } = await getResearchOffices(search)
+    if (isSuccess && searchData) {
+      setResearchPaginatedItems(searchData)
+    }
   } // submit search keywords
+
+  const onRefresh = async () => {
+    setCheckItems({isSearching: false, isPaginated: false})
+    setSearch('')
+    setTempSearch('')
+    setPage(1)
+    await refetch()
+  }
+
+  useEffect(() => {
+    if (!checkItems.isSearching && !checkItems.isPaginated && isSuccess && offices) {
+      const items = offices.ids?.map(id => offices?.entities[id])
+      setContents(items?.filter(f => f?.title.toLowerCase().includes(search.toLowerCase())))
+    }
+    else if (!checkItems.isSearching && checkItems.isPaginated && isSuccess && offices)
+      setContents(paginatedItems?.filter(f => f?.title.toLowerCase().includes(search.toLowerCase())))
+    else if (checkItems.isSearching && !checkItems.isPaginated && isSuccess && offices)
+      setContents(researchPaginatedItems?.filter(f => f?.title.toLowerCase().includes(search.toLowerCase())))
+  }, [
+    checkItems,
+    isSuccess,
+    offices,
+    search,
+    researchPaginatedItems,
+    paginatedItems,
+  ])
+
+  const user = useSelector(selectCurrentUser), navigate = useNavigate()
+  useEffect(() => {
+    if (user && !allowShowPersonalsPage(user?.roles[0])) {
+      toast.error('Vous ne disposez pas de droits pour voir cette page.')
+      navigate('/member/reception', {replace: true})
+    }
+  }, [user, navigate])
 
   return (
     <>
@@ -99,6 +178,7 @@ function Offices() {
               </Card.Body>
             </Card>
           </Col>
+
           <Col md={8}>
             <Card className='border-0'>
               <Card.Body>
@@ -107,21 +187,17 @@ function Offices() {
                     <>
                       <Col md={8} className='mb-2'>
                         <form onSubmit={handleSubmit}>
-                          <InputGroup>
-                            <Button type='submit' variant='light' disabled={offices.length < 1}>
-                              <i className='bi bi-search'/>
-                            </Button>
-                            <Form.Control
-                              placeholder='Votre recherche ici...'
-                              aria-label='Votre recherche ici...'
-                              autoComplete='off'
-                              disabled={offices.length < 1 || isFetching}
-                              name='search'
-                              value={keywords.search}
-                              onChange={(e) => handleChange(e, keywords, setKeywords)} />
-                          </InputGroup>
+                          <Form.Control
+                            placeholder='Votre recherche ici...'
+                            aria-label='Votre recherche ici...'
+                            autoComplete='off'
+                            disabled={isFetching3}
+                            name='search'
+                            value={search}
+                            onChange={({ target }) => setSearch(target.value)} />
                         </form>
                       </Col>
+
                       <Col md={4} className='text-md-end mb-2'>
                         <Button
                           type='button'
@@ -133,15 +209,53 @@ function Offices() {
                       </Col>
                     </>
                   }
-                  loader={isLoading}
+                  loader={isLoading || isFetching2 || isFetching4}
                   title='Liste de fonctions (Titres)'
-                  thead={<AppTHead isImg loader={isLoading} isFetching={isFetching} onRefresh={onRefresh} items={[
-                    {label: '#'},
-                    {label: 'Fonction (Titre)'},
-                    {label: 'Date d\'enregistrement'},
-                  ]} />}
-                  tbody={<tbody>{content}</tbody>} />
-                {error && error}
+                  thead={
+                  <AppTHead
+                    isImg
+                    loader={isLoading}
+                    isFetching={isFetching || isFetching2 || isFetching4 || isFetching2}
+                    onRefresh={onRefresh}
+                    items={[
+                      {label: '#'},
+                      {label: 'Fonction (Titre)'},
+                      {label: 'Date d\'enregistrement'},
+                    ]}
+                  />}
+                  tbody={
+                    <tbody>
+                      {!isError && isSuccess && contents.length > 0 &&
+                        contents.map(o => <OfficeItem key={o?.id} office={o}/>)}
+                    </tbody>} />
+
+                {isLoading || isFetching || isFetching2 || isFetching3 || isFetching4
+                  ? <BarLoaderSpinner loading={isLoading || isFetching || isFetching2 || isFetching3 || isFetching4}/>
+                  : (
+                    <>
+                      {officesPages > 1 && isSuccess && offices
+                        && !checkItems.isSearching &&
+                        <AppPaginationComponent
+                          nextLabel=''
+                          previousLabel=''
+                          onPaginate={handlePagination}
+                          currentPage={page - 1}
+                          pageCount={officesPages} />}
+
+                      {researchOfficesPages > 1 && isSuccess && offices && checkItems.isSearching &&
+                        <AppPaginationComponent
+                          nextLabel=''
+                          previousLabel=''
+                          onPaginate={handlePagination2}
+                          currentPage={page - 1}
+                          pageCount={researchOfficesPages} />}
+                    </>
+                  )}
+
+                {isError && <div className='mb-3'><AppMainError/></div>}
+                {isError2 && <div className='mb-3'><AppMainError/></div>}
+                {isError3 && <div className='mb-3'><AppMainError/></div>}
+                {isError4 && <div className='mb-3'><AppMainError/></div>}
               </Card.Body>
             </Card>
           </Col>

@@ -7,7 +7,7 @@ import {useGetConsumptionUnitsQuery} from "./consumptionUnitApiSlice";
 import toast from "react-hot-toast";
 import {Col, Row} from "react-bootstrap";
 import AppInputField from "../../components/forms/AppInputField";
-import {handleChange} from "../../services/handleFormsFieldsServices";
+import {handleChange, onStrictNumChange} from "../../services/handleFormsFieldsServices";
 import {requiredField} from "../covenants/addCovenant";
 
 export function EditMedicineModal({show, onHide, data, currency}) {
@@ -154,7 +154,7 @@ export function EditMedicineModal({show, onHide, data, currency}) {
               label='Coût'
               name='cost'
               value={medicine.cost}
-              onChange={(e) => handleChange(e, medicine, setMedicine)}
+              onChange={(e) => onStrictNumChange(e, medicine, setMedicine)}
               disabled={isLoading}
               error={apiErrors.cost} />
 
@@ -167,7 +167,7 @@ export function EditMedicineModal({show, onHide, data, currency}) {
               label='Prix'
               name='price'
               value={medicine.price}
-              onChange={(e) => handleChange(e, medicine, setMedicine)}
+              onChange={(e) => onStrictNumChange(e, medicine, setMedicine)}
               disabled={isLoading}
               error={apiErrors.price} />
           </Col>

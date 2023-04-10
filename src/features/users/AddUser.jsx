@@ -7,13 +7,16 @@ import {useAddNewUserMutation} from "./userApiSlice";
 import toast from "react-hot-toast";
 
 export const rolesOptions = [
-  {label: 'Administrateur', value: 'ROLE_ADMIN'},
+  {label: 'Réceptioniste', value: 'ROLE_RECEIVER'},
+  {label: 'Laborantin(e)', value: 'ROLE_LAB'},
+  {label: 'Gestionnaire', value: 'ROLE_MANAGER'},
+  {label: 'Caissier(e)', value: 'ROLE_LOCKER'},
+  {label: 'Infirmier(e)', value: 'ROLE_NURSE'},
+  {label: 'Médecin', value: 'ROLE_DOCTOR'},
   {label: 'Docteur', value: 'ROLE_DOCTOR'},
-  {label: 'Médecin', value: 'ROLE_MEDIC'},
-  {label: 'Caissier(e)', value: 'ROLE_CASHIER'},
-  {label: 'Pharmacien(ne)', value: 'ROLE_DRUGGIST'},
-  {label: 'Laborantin', value: 'ROLE_LAB'},
-  {label: 'Réceptioniste', value: 'ROLE_RECEPTIONIST'},
+  {label: 'Pharmacienn(e)', value: 'ROLE_PHAR'},
+  {label: 'Administrateur', value: 'ROLE_ADMIN'},
+  {label: 'Médecin directeur', value: 'ROLE_MD'},
 ]
 
 export const AddUser = ({show = false, onHide, data}) => {
@@ -25,7 +28,7 @@ export const AddUser = ({show = false, onHide, data}) => {
     repeatPass: '',
     tel: '',
     email: '',
-    role: 'ROLE_RECEPTIONIST'})
+    role: 'ROLE_RECEIVER'})
   const [agent] = useState(data ? data : null)
   const [repeatPass, setRepeatPass] = useState(null)
   let apiErrors = {username: null, name: null, password: null, tel: '', email: null}

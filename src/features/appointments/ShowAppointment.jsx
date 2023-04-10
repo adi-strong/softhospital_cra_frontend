@@ -1,14 +1,12 @@
-import {useEffect, useState} from "react";
+import {useEffect, useMemo, useState} from "react";
 import {useUpdateAppointmentMutation} from "./appointmentApiSlice";
 import {Button, Form, Spinner, Tab, Tabs} from "react-bootstrap";
 import {AppointmentDetails} from "./AppointmentDetails";
 import {AppointmentForm} from "./AppointmentForm";
 import toast from "react-hot-toast";
-
-const tabs = [
-  {title: 'Voir', event: 'show'},
-  {title: 'Modification', event: 'edit'},
-]
+import {useSelector} from "react-redux";
+import {selectCurrentUser} from "../auth/authSlice";
+import {allowActionsToPatients} from "../../app/config";
 
 const ShowAppointmentForm = ({ onSubmit, state, setState, loader, apiErrors, data }) => {
   return (
@@ -109,6 +107,17 @@ export const ShowAppointment = ({ data, onHide, onRefresh }) => {
     }
   }
 
+  const user = useSelector(selectCurrentUser)
+
+  let tabs
+  tabs = useMemo(() => {
+    if (user && allowActionsToPatients(user?.roles[0])) return [
+      {title: 'Voir', event: 'show'},
+      {title: 'Modification', event: 'edit'},
+    ]
+    return [{title: 'Voir', event: 'show'}]
+  }, [user])
+
   return (
     <>
       <Tabs
@@ -117,15 +126,14 @@ export const ShowAppointment = ({ data, onHide, onRefresh }) => {
         variant='tabs-bordered'>
         {tabs && tabs.map((tab, idx) =>
           <Tab key={idx} title={tab.title} eventKey={tab.event} className='mb-3'>
-            {tab.event === 'edit'
-              ? <ShowAppointmentForm
-                  onSubmit={onSubmit}
-                  data={data}
-                  loader={isLoading}
-                  state={appointment}
-                  apiErrors={apiErrors}
-                  setState={setAppointment}/>
-              : <AppointmentDetails appointment={data}/>}
+            {tab.event === 'edit' && allowActionsToPatients(user?.roles[0]) && <ShowAppointmentForm
+              onSubmit={onSubmit}
+              data={data}
+              loader={isLoading}
+              state={appointment}
+              apiErrors={apiErrors}
+              setState={setAppointment}/>}
+            {tab.event === 'show' && <AppointmentDetails appointment={data}/>}
           </Tab>)}
       </Tabs>
     </>

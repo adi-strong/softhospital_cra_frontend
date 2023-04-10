@@ -10,7 +10,13 @@ import {selectCurrentToken} from "../features/auth/authSlice";
 import {useGetParametersQuery} from "../features/parameters/parametersApiSlice";
 import {currencies} from "../app/config";
 import {useEffect} from "react";
-import {onSetCurrency, onSetHospital, onSetRate, onSetSecondCurrency} from "../features/parameters/parametersSlice";
+import {
+  onSetCurrency,
+  onSetFOperation,
+  onSetHospital, onSetLOperation,
+  onSetRate,
+  onSetSecondCurrency
+} from "../features/parameters/parametersSlice";
 
 export const cardTitleStyle = {
   padding: '2px 0 1px 0',
@@ -30,6 +36,10 @@ const AuthLayout = () => {
             dispatch(onSetHospital(parameters.entities[target]?.hospital
               ? parameters.entities[target].hospital
               : null))
+            dispatch(onSetFOperation(parameters.entities[target]?.fOperation
+              ? parameters.entities[target]?.fOperation : null))
+            dispatch(onSetLOperation(parameters.entities[target]?.lOperation
+              ? parameters.entities[target]?.lOperation : null))
             dispatch(onSetRate(parameters.entities[target]?.rate
               ? parameters.entities[target].rate
               : null))

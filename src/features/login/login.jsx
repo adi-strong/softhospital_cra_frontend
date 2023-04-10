@@ -8,6 +8,14 @@ import {selectCurrentToken, setCredentials} from "../auth/authSlice";
 import {AppHeadTitle} from "../../components";
 import {Link, useLocation, useNavigate} from "react-router-dom";
 import toast from "react-hot-toast";
+// import bcrypt from 'bcryptjs';
+
+/*export const hashPassword = (username, pass) => {
+  const salt = bcrypt.genSaltSync(10);
+  const password = bcrypt.hashSync(pass, salt);
+  return { username, password };
+};*/
+
 
 const Login = () => {
   const [user, setUser] = useState({username: '', password: ''})
@@ -25,6 +33,9 @@ const Login = () => {
     e.preventDefault()
     setShow(false)
     setErr('')
+
+    //const hashedPassword = hashPassword(user.username, user.password)
+    //console.log(hashedPassword);
     try {
       const userData = await login(user)
       dispatch(setCredentials(userData.data.token))

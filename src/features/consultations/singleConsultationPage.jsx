@@ -2,7 +2,7 @@ import {memo, useEffect, useRef} from "react";
 import {useDispatch, useSelector} from "react-redux";
 import {onInitSidebarMenu} from "../navigation/navigationSlice";
 import {AppBreadcrumb, AppDropdownFilerMenu, AppHeadTitle, AppMainError} from "../../components";
-import {useParams} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 import {Card} from "react-bootstrap";
 import {useReactToPrint} from "react-to-print";
 import {useGetSingleConsultQuery} from "./consultationApiSlice";
@@ -10,6 +10,9 @@ import BarLoaderSpinner from "../../loaders/BarLoaderSpinner";
 import {SingleConsultSection1} from "./sections/SingleConsultSection1";
 import {SingleConsultSection2} from "./sections/SingleConsultSection2";
 import {SingleConsultSection3} from "./sections/SingleConsultSection3";
+import {selectCurrentUser} from "../auth/authSlice";
+import {allowShowSingleConsultationsPage} from "../../app/config";
+import toast from "react-hot-toast";
 
 const dropdownItems = [
   {label: <><i className='bi bi-arrow-clockwise'/> Actualiser</>, name: 'refresh', action: '#'},
@@ -29,6 +32,14 @@ function SingleConsultationPage() {
     if (name === 'refresh') await refetch()
     else handlePrint()
   }
+  const user = useSelector(selectCurrentUser), navigate = useNavigate()
+
+  useEffect(() => {
+    if (user && !allowShowSingleConsultationsPage(user?.roles[0])) {
+      toast.error('Vous ne disposez pas de droits pour voir cette page.')
+      navigate('/member/reception', {replace: true})
+    }
+  }, [user, navigate])
 
   return (
     <div className='section dashboard'>

@@ -23,6 +23,7 @@ const AddConsultation = () => {
     respiratoryFrequency: '',
     oxygenSaturation: '',
     diagnostic: '',
+    hospReleasedAt: new Date(),
     file: null,
     agent: null,
     appointmentDate: new Date(),
@@ -58,6 +59,7 @@ const AddConsultation = () => {
     setConsultation({
       comment: '',
       note: '',
+      hospReleasedAt: new Date(),
       oxygenSaturation: '',
       respiratoryFrequency: '',
       cardiacFrequency: '',

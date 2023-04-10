@@ -1,4 +1,4 @@
-import {useDispatch} from "react-redux";
+import {useDispatch, useSelector} from "react-redux";
 import {useNavigate, useParams} from "react-router-dom";
 import {useGetSingleConsultQuery, useUpdateConsultationMutation} from "../consultations/consultationApiSlice";
 import {useEffect, useState} from "react";
@@ -9,6 +9,8 @@ import {Card, Col, Form, Row} from "react-bootstrap";
 import {ConsultForm2} from "../consultations/ConsultForm2";
 import {ConsultForm1} from "../consultations/ConsultForm1";
 import BarLoaderSpinner from "../../loaders/BarLoaderSpinner";
+import {selectCurrentUser} from "../auth/authSlice";
+import {allowShowSingleAppointmentsPage} from "../../app/config";
 
 function EditConsultation() {
   const dispatch = useDispatch(), navigate = useNavigate()
@@ -228,6 +230,15 @@ function EditConsultation() {
   }
 
   const onClick = name => onRefresh()
+
+  const user = useSelector(selectCurrentUser)
+
+  useEffect(() => {
+    if (user && !allowShowSingleAppointmentsPage(user?.roles[0])) {
+      toast.error('Vous ne disposez pas de droits pour voir cette page.')
+      navigate('/member/reception', {replace: true})
+    }
+  }, [user, navigate])
 
   return (
     <div className='section dashboard'>

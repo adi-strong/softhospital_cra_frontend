@@ -1,7 +1,7 @@
 import {Card} from "react-bootstrap";
 import {useGetPatientsQuery, useLazyHandleLoadPatientsQuery} from "../patients/patientApiSlice";
 import {useMemo} from "react";
-import {AppAsyncSelectOptions} from "../../components";
+import {AppAsyncSelectOptions, AppDatePicker} from "../../components";
 import {cardTitleStyle} from "../../layouts/AuthLayout";
 import {requiredField} from "../covenants/addCovenant";
 import PatientInfos from "../patients/PatientInfos";
@@ -135,6 +135,14 @@ export const ConsultForm2 = ({ data, consultation, setConsultation, onReset, api
             placeholder="-- Lit d'hospitalisation --"
             className='text-capitalize' />
           <BedDetails bed={consultation.bed}/>
+
+          <div className="mt-3">
+            <AppDatePicker
+              onChange={(d) => setConsultation({...consultation, hospReleasedAt: new Date(d)})}
+              value={consultation?.hospReleasedAt}
+              disabled={isBedsFetching || loader || (data ? !data?.isPublished : false) || !consultation?.bed}
+              label="Heure & date d'arrivé" />
+          </div>
         </Card.Body>
       </Card>
     </>

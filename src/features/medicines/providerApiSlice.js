@@ -2,25 +2,12 @@ import {api, patchHeaders, pathToApi} from "../../app/store";
 import moment from "moment";
 
 export let totalProviders = 0
+export let totalResearchProviders = 0
+export let researchProvidersPages = 1
+export let providersPages = 1
 
 export const providerApiSlice = api.injectEndpoints({
   endpoints: build => ({
-    getProviders: build.query({
-      query: () => pathToApi+'/providers',
-      transformResponse: res => {
-        totalProviders = res['hydra:totalItems']
-        const data = res['hydra:member']
-        return data.map(provider => {
-          if (provider?.createdAt) provider.createdAt = moment(provider.createdAt).calendar()
-
-          return provider
-        })
-      },
-      providesTags: result =>
-        result
-          ? [...result?.map(({ id }) => ({ type: 'Providers', id })), 'Providers']
-          : ['Providers']
-    }), // list of providers
 
     addNewProvider: build.mutation({
       query: provider => ({
@@ -67,10 +54,71 @@ export const providerApiSlice = api.injectEndpoints({
         }
       })
     }), // get providers options
+
+    getProviders: build.query({
+      query: () => pathToApi+'/providers',
+      transformResponse: res => {
+        totalProviders = res['hydra:totalItems']
+        providersPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[1]) : 1
+        const data = res['hydra:member']
+        return data.map(provider => {
+          if (provider?.createdAt) provider.createdAt = moment(provider.createdAt).calendar()
+          return provider
+        })
+      },
+      providesTags: result =>
+        result
+          ? [...result?.map(({ id }) => ({ type: 'Providers', id })), 'Providers']
+          : ['Providers']
+    }), // list of providers
+
+    getProvidersByPagination: build.query({
+      query: page => pathToApi+`/providers?page=${page}`,
+      transformResponse: res => {
+        const data = res['hydra:member']
+        totalProviders = res['hydra:totalItems']
+        providersPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[1]) : 1
+        return data?.map(act => {
+          if (act?.createdAt) act.createdAt = moment(act.createdAt).calendar()
+          return act
+        })
+      },
+    }), // pagination list,
+
+    getResearchProviders: build.query({
+      query: keyword => pathToApi+`/providers?wording=${keyword}`,
+      transformResponse: res => {
+        const data = res['hydra:member']
+        totalResearchProviders = res['hydra:totalItems']
+        researchProvidersPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[2]) : 1
+        return data?.map(act => {
+          if (act?.createdAt) act.createdAt = moment(act.createdAt).calendar()
+          return act
+        })
+      },
+    }),
+
+    getResearchProvidersByPagination: build.query({
+      query: search => pathToApi+`/providers?wording=${search?.keyword}&page=${search?.page}`,
+      transformResponse: res => {
+        const data = res['hydra:member']
+        totalResearchProviders = res['hydra:totalItems']
+        researchProvidersPages = res['hydra:view'] ? parseInt(res['hydra:view']['hydra:last']?.split('=')[2]) : 1
+        return data?.map(act => {
+          if (act?.createdAt) act.createdAt = moment(act.createdAt).calendar()
+          return act
+        })
+      },
+    }),
+
   })
 })
 
 export const {
+
+  useLazyGetProvidersByPaginationQuery,
+  useLazyGetResearchProvidersQuery,
+  useLazyGetResearchProvidersByPaginationQuery,
   useGetProvidersQuery,
   useAddNewProviderMutation,
   useUpdateProviderMutation,

@@ -65,6 +65,7 @@ export const AddConsumptionUnitsModal = ({show, onHide}) => {
               <Form.Control
                 required
                 disabled={isLoading}
+                autoFocus
                 name='wording'
                 value={cUnit.wording}
                 onChange={(e) => onArrayChange(e, key, cUnits, setCUnits)}

@@ -17,7 +17,7 @@ export const DashTypes1 = ({ menu, title, icon, num, percent, label, color, load
           </h6>
 
           <span className={`text-${color} small pt-1 fw-bold`}>
-            {!isFetching && `${percent}%`}
+            {!isFetching && `${percent > 100 ? '+100' : percent}%`}
           </span>
 
           <span className="text-muted small pt-2 ps-1">

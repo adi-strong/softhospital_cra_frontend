@@ -2,9 +2,8 @@ import {Button, Form, InputGroup, Spinner} from "react-bootstrap";
 import {FormRowContent} from "../profile/ChangeUserProfilePassword";
 import img from "../../assets/app/img/default_profile.jpg";
 import {requiredField} from "../covenants/addCovenant";
-import {AppAsyncSelectOptions, AppSInputField, AppSSelectField} from "../../components";
+import {AppAsyncSelectOptions, AppSInputField} from "../../components";
 import {handleChange, onSelectAsyncOption} from "../../services/handleFormsFieldsServices";
-import AppSelectField from "../../components/forms/AppSelectField";
 import {maritalStatusOptions, sexOptions} from "./EditPatientTab";
 import {useGetCovenantsQuery, useLazyLoadCovenantsQuery} from "../covenants/covenantApiSlice";
 import {useEffect, useMemo} from "react";
@@ -122,13 +121,15 @@ export const EditPatientForm = (
         } />
 
         <FormRowContent error={apiErrors?.sex} label='Sexe' body={
-          <AppSelectField
-            error={apiErrors.sex}
-            disabled={isLoading}
-            name='sex'
-            options={sexOptions}
-            value={patient.sex}
-            onChange={({target}) => setPatient({...patient, sex: target.value})} />
+          <>
+            <Form.Select
+              aria-label='sex'
+              value={patient?.sex}
+              onChange={({ target }) => setPatient({ ...patient, sex: target.value })}>
+              {sexOptions && sexOptions.map((item, idx) =>
+                <option key={idx} value={item.value}>{item.label}</option>)}
+            </Form.Select>
+          </>
         } />
 
         <FormRowContent error={apiErrors?.birthDate} label='Lieu & date de naissance' body={
@@ -163,13 +164,15 @@ export const EditPatientForm = (
         } />
 
         <FormRowContent error={apiErrors?.maritalStatus} label='État-civil' body={
-          <AppSSelectField
-            error={apiErrors.maritalStatus}
-            disabled={isLoading}
-            name='maritalStatus'
-            options={maritalStatusOptions}
-            value={patient.maritalStatus}
-            onChange={({target}) => setPatient({...patient, maritalStatus: target.value})} />
+          <>
+            <Form.Select
+              aria-label='maritalStatus'
+              value={patient?.maritalStatus}
+              onChange={({ target }) => setPatient({ ...patient, maritalStatus: target.value })}>
+              {maritalStatusOptions && maritalStatusOptions.map((item, idx) =>
+                <option key={idx} value={item.value}>{item.label}</option>)}
+            </Form.Select>
+          </>
         } />
 
         <FormRowContent error={apiErrors?.address} label='Adresse' body={

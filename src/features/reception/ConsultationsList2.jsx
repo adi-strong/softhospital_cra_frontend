@@ -21,6 +21,9 @@ import {AddPatientForm} from "./AddPatientForm";
 import {useAddNewPatientMutation} from "../patients/patientApiSlice";
 import toast from "react-hot-toast";
 import {AddConsultForm} from "./AddConsultForm";
+import {useSelector} from "react-redux";
+import {selectCurrentUser} from "../auth/authSlice";
+import {allowActionsToPatients} from "../../app/config";
 
 const thead = [
   {label: '#'},
@@ -30,6 +33,7 @@ const thead = [
 ]
 
 export function ConsultationsList2() {
+  const user = useSelector(selectCurrentUser)
   const {
     data: consultations = [],
     isLoading,
@@ -48,6 +52,7 @@ export function ConsultationsList2() {
     file: null,
     treatments: null,
     bed: null,
+    hospReleasedAt: new Date(),
     temperature: 0.0,
     weight: 0.0,
     arterialTension: '',
@@ -103,6 +108,7 @@ export function ConsultationsList2() {
     file: null,
     treatments: null,
     bed: null,
+    hospReleasedAt: new Date(),
     temperature: 0.0,
     weight: 0.0,
     arterialTension: '',
@@ -257,15 +263,16 @@ export function ConsultationsList2() {
               </Form>
             </Col>
 
-            <Col className='text-md-end'>
-              <Button type='button' className='me-1 mb-2' onClick={toggleShow}>
-                <i className='bi bi-person-plus'/> Patient(e)
-              </Button>
+            {user && allowActionsToPatients(user?.roles[0]) &&
+              <Col className='text-md-end'>
+                <Button type='button' className='me-1 mb-2' onClick={toggleShow}>
+                  <i className='bi bi-person-plus'/> Patient(e)
+                </Button>
 
-              <Button type='button' variant='success' className='mb-2' onClick={toggleShow2}>
-                <i className='bi bi-plus'/> Anamnèse & signes vitaux
-              </Button>
-            </Col>
+                <Button type='button' variant='success' className='mb-2' onClick={toggleShow2}>
+                  <i className='bi bi-plus'/> Anamnèse & signes vitaux
+                </Button>
+              </Col>}
           </>
         } />
       {consultationsPages > 1 && isSuccess && consultations && !checkConsultations.isSearching &&

@@ -9,7 +9,8 @@ import toast from "react-hot-toast";
 import {api, entrypoint} from "../app/store";
 import {resetParameters} from "../features/parameters/parametersSlice";
 import {useGetSingleUserQuery} from "../features/users/userApiSlice";
-import {role} from "../app/config";
+import {allowShowParametersPage, role} from "../app/config";
+import {onResetAgentAppointments} from "../features/appointments/agentAppointmentsSlice";
 
 export function usernameFiltered(str: string) {
   if (str) {
@@ -79,6 +80,7 @@ const AppNavbar = ({onToggleSearch}) => {
         dispatch(api.util.resetApiState())
         dispatch(resetParameters())
         dispatch(logOut())
+        dispatch(onResetAgentAppointments())
         break
     }
   }
@@ -115,16 +117,30 @@ const AppNavbar = ({onToggleSearch}) => {
               {dropdownDivider}
               {profileItems.map((item, idx) =>
                 <div key={idx} className='p-0 m-0'>
-                  <li>
-                    <Dropdown.Item
-                      href={item.path}
-                      className="dropdown-item d-flex align-items-center"
-                      onClick={(e) => onRedirect(e, item.path)}>
-                      <i className={`bi bi-${item.icon}`}/>
-                      {item.label}
-                    </Dropdown.Item>
-                  </li>
-                  {idx < profileItems.length - 1 && dropdownDivider}
+                  {idx === 1 && user && allowShowParametersPage(user?.roles[0]) &&
+                    <li>
+                      <Dropdown.Item
+                        href={item.path}
+                        className="dropdown-item d-flex align-items-center"
+                        onClick={(e) => onRedirect(e, item.path)}>
+                        <i className={`bi bi-${item.icon}`}/>
+                        {item.label}
+                      </Dropdown.Item>
+                    </li>}
+                  {idx !== 1 &&
+                    <li>
+                      <Dropdown.Item
+                        href={item.path}
+                        className="dropdown-item d-flex align-items-center"
+                        onClick={(e) => onRedirect(e, item.path)}>
+                        <i className={`bi bi-${item.icon}`}/>
+                        {item.label}
+                      </Dropdown.Item>
+                    </li>}
+                  {idx === 1 && user && allowShowParametersPage(user?.roles[0]) &&
+                    idx < profileItems.length - 1 && dropdownDivider}
+                  {idx !== 1 &&
+                    idx < profileItems.length - 1 && dropdownDivider}
                 </div>)}
             </Dropdown.Menu>
           </>

@@ -64,6 +64,7 @@ export const AddMedicineCategoriesModal = ({show, onHide}) => {
             <InputGroup key={key} className='mb-3' data-aos='fade-in'>
               <Form.Control
                 required
+                autoFocus
                 disabled={isLoading}
                 name='wording'
                 value={category.wording}
