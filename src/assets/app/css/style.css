@@ -1380,3 +1380,8 @@ ul[class='~dropdown-menu-end dropdown-menu-arrow border-0 dropdown-menu show'] {
 #dot-activity-5 { color: darkgray }
 #dot-activity-6 { color: slateblue }
 #dot-activity-7 { color: palevioletred }
+
+.recharts-responsive-container .recharts-wrapper {
+  width: 100%;
+  height: 350px;
+}

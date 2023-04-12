@@ -6,7 +6,8 @@ import parametersReducer from '../features/parameters/parametersSlice';
 import agentAppointmentsReducer from '../features/appointments/agentAppointmentsSlice';
 
 // export const entrypoint = 'https://localhost:8000'
-export const entrypoint = 'https://www.saintandremedicalcenter.org'
+// export const entrypoint = 'https://www.saintandremedicalcenter.org'
+export const entrypoint = 'https://sh-api.dev'
 export const pathToApi = '/api'
 export const patchHeaders = {
   'Accept': 'application/ld+json',
