@@ -28,7 +28,7 @@ export const actApiSlice = api.injectEndpoints({
       query: act => ({
         url: pathToApi+'/acts',
         method: 'POST',
-        body: {...act, price: act.price ? act.price.toString() : '0'},
+        body: act,
       }),
       invalidatesTags: ['Act']
     }), // add new act
@@ -38,9 +38,13 @@ export const actApiSlice = api.injectEndpoints({
         headers: patchHeaders,
         url: pathToApi+`/acts/${act.id}`,
         method: 'PATCH',
-        body: JSON.stringify(act),
+        body: JSON.stringify({
+          ...act,
+          category: act?.category ? act.category?.value : null,
+          cost: act?.cost ? act.cost.toString() : '0',
+          price: act.price ? act.price.toString() : '0'}),
       }),
-      invalidatesTags: ['Act']
+      invalidatesTags: ['Act', 'Treatment']
 
     }), // update act
 

@@ -6,6 +6,31 @@ import moment from "moment";
 
 const theadItems = [ {label: 'SVC ID'}, {label: 'SERVICE MÉDICAL'}, {label: 'COÛT'} ]
 
+const ActProceduresItem = ({ act }) => {
+  const [show, setShow] = useState(false)
+  const toggleShow = () => setShow(!show)
+
+  const procedures = act?.procedures ? act.procedures : []
+
+  return (
+    <>
+      <p className='mb-2' onClick={toggleShow} style={{ cursor: 'pointer' }}>
+        {act?.wording} {procedures.length > 0
+        && <i className={`bi bi-caret-${!show ? 'down' : 'up'}-fill`}/>}
+      </p>
+      {procedures.length > 0 && show && procedures.map((p, idx) =>
+        <div key={idx} className='mb-2'>
+          <span className='text-success'><i className='bi bi-plus'/> {p?.item}</span> <br/>
+          {p?.children && p.children.length > 0 && p.children?.map((c, i) =>
+            <span key={i} className='text-primary'>
+              {c?.wording}
+              <br/>
+            </span>)}
+        </div>)}
+    </>
+  )
+}
+
 export const InvoiceDataTable = ({ invoice }) => {
   const [actsSums, setActsSums] = useState(0)
   const [examsSums, setExamsSums] = useState(0)
@@ -18,15 +43,22 @@ export const InvoiceDataTable = ({ invoice }) => {
   // handle get consultation's file
 
   acts = useMemo(() => {
-    let sum = 0
+    let sum = 0, procedures = []
     if (invoice?.actsInvoiceBaskets) {
       const items = invoice?.actsInvoiceBaskets
       for (const key in items) {
         sum += parseFloat(items[key]?.price)
+        if (items[key]?.act) {
+          if (items[key].act?.procedures && items[key].act.procedures.length > 0) {
+            const obj = items[key].act.procedures
+            for (let i = 0; i < obj.length; i++)
+              procedures.push(obj[i])
+          }
+        }
       }
       setActsSums(sum)
       return items?.map(act => {
-        return { wording: act?.act.wording, price: act?.price }
+        return { wording: act?.act.wording, price: act?.price, procedures }
       })
     }
 
@@ -90,10 +122,7 @@ export const InvoiceDataTable = ({ invoice }) => {
                 <th>Actes médicaux</th>
 
                 <th className='text-end'>
-                  {acts?.map((act, idx) =>
-                    <p key={idx} className='mb-2'>
-                      {act?.wording}
-                    </p>)}
+                  {acts?.map((act, idx) => <ActProceduresItem key={idx} act={act}/>)}
                 </th>
 
                 <th className='text-end'>

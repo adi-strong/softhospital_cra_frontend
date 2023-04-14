@@ -1,6 +1,6 @@
 import {useState} from "react";
 import PropTypes from "prop-types";
-import {Button, Col, Form, InputGroup, Modal, Row, Spinner} from "react-bootstrap";
+import {Button, ButtonGroup, Col, Modal, Row, Spinner} from "react-bootstrap";
 import {AppSelectOptions, AppSInputField} from "../../components";
 import {
   onAddArrayClick,
@@ -14,7 +14,7 @@ import {useGetActCategoriesQuery} from "./actCategoriesApiSlice";
 
 export const AddActs = ({onHide, show = false, currency}) => {
   const [category, setCategory] = useState(null)
-  const [acts, setActs] = useState([{wording: '', price: 0,}])
+  const [acts, setActs] = useState([{wording: ''}])
   const [addNewAct, {isLoading}] = useAddNewActMutation()
   const {data: categories = [], isLoading: isCategoriesLoad, isSuccess, isError} = useGetActCategoriesQuery('ActCategories')
 
@@ -38,7 +38,7 @@ export const AddActs = ({onHide, show = false, currency}) => {
           setActs(values)
           if (values.length < 1) {
             toast.success('Enregistrement bien efféctué.')
-            setActs([{wording: '', price: 0}])
+            setActs([{wording: ''}])
             setCategory(null)
             onHide()
           }
@@ -62,7 +62,7 @@ export const AddActs = ({onHide, show = false, currency}) => {
   }
 
   const onReset = () => {
-    setActs([{wording: '', price: 0}])
+    setActs([{wording: ''}])
     setCategory(null)
   }
 
@@ -83,35 +83,24 @@ export const AddActs = ({onHide, show = false, currency}) => {
           </div>
           {acts && acts?.map((act, idx) =>
             <Row key={idx} data-aos='fade-in'>
-              <Col md={6}>
-                <InputGroup>
-                  <AppSInputField
-                    required
-                    autofocus
-                    disabled={isLoading}
-                    name='wording'
-                    placeholder='Libellé'
-                    value={act.wording}
-                    onChange={(e) => onArrayChange(e, idx, acts, setActs)} />
-                </InputGroup>
+              <Col md={8}>
+                <AppSInputField
+                  required
+                  autofocus
+                  disabled={isLoading}
+                  name='wording'
+                  placeholder='Libellé'
+                  value={act.wording}
+                  onChange={(e) => onArrayChange(e, idx, acts, setActs)} />
               </Col>
-              <Col md={6}>
-                <InputGroup>
-                  {currency && <Button type='button' disabled>{currency.currency}</Button>}
-                  <Form.Control
-                    required
-                    disabled={isLoading}
-                    type='number'
-                    name='price'
-                    placeholder='Prix'
-                    value={act.price}
-                    onChange={(e) => onArrayChange(e, idx, acts, setActs)} />
+              <Col md={4}>
+                <ButtonGroup className='w-100'>
                   {acts.length < 5 &&
                     <Button
                       type='button'
                       disabled={isLoading}
                       variant='secondary'
-                      onClick={() => onAddArrayClick({wording: '', price: 0}, acts, setActs)}>
+                      onClick={() => onAddArrayClick({wording: ''}, acts, setActs)}>
                       <i className='bi bi-plus'/>
                     </Button>}
                   {acts.length > 1 &&
@@ -122,7 +111,7 @@ export const AddActs = ({onHide, show = false, currency}) => {
                       onClick={() => onRemoveArrayClick(idx, acts, setActs)}>
                       <i className='bi bi-dash'/>
                     </Button>}
-                </InputGroup>
+                </ButtonGroup>
               </Col>
             </Row>)}
           <Button disabled={isLoading} type='reset' variant='light' className='w-100' onClick={onReset}>

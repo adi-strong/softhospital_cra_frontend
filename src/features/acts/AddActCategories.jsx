@@ -55,6 +55,7 @@ export const AddActCategories = ({onHide, show = false}) => {
             <InputGroup key={idx} className='mb-3' data-aos='fade-in'>
               <Form.Control
                 required
+                autoFocus
                 name='name'
                 disabled={isLoading}
                 placeholder='Libéllé'

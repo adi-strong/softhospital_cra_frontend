@@ -39,8 +39,10 @@ function SingleInvoice() {
 
   return (
     <div className='section dashboard'>
-      <AppHeadTitle title={'Facture n°'} />
-      <AppBreadcrumb title={'Facture n°'} links={[{path: '/member/finance/invoices', label: 'Liste de factures'}]} />
+      <AppHeadTitle title={`Facture n°${invoice ? invoice?.invoiceNumber : ''}`} />
+      <AppBreadcrumb
+        title={`Facture n°${invoice ? invoice?.invoiceNumber : ''}`}
+        links={[{path: '/member/finance/invoices', label: 'Liste de factures'}]} />
 
       <Card className='border-0'>
         <AppDropdownFilerMenu onClick={handleDropdownMenuClick} items={menus} heading='Action' />

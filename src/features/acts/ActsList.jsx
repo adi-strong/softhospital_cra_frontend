@@ -14,14 +14,17 @@ import {limitStrTo} from "../../services";
 import toast from "react-hot-toast";
 import {EditAct} from "./EditAct";
 import BarLoaderSpinner from "../../loaders/BarLoaderSpinner";
+import {ShowSingleAct} from "./ShowSingleAct";
 
 const ActItem = ({ act, currency, onRefresh }) => {
   const [showEdit, setShowEdit] = useState(false)
   const [showDelete, setShowDelete] = useState(false)
+  const [show, setShow] = useState(false)
   const [deleteAct, {isLoading}] = useDeleteActMutation()
 
   const toggleEditModal = () => setShowEdit(!showEdit)
   const toggleDeleteModal = () => setShowDelete(!showDelete)
+  const toggleShowActModal = () => setShow(!show)
 
   async function onDelete() {
     toggleDeleteModal()
@@ -40,7 +43,13 @@ const ActItem = ({ act, currency, onRefresh }) => {
       <tr>
         <td><i className='bi bi-file-earmark-medical'/></td>
         <th>#{act.id}</th>
-        <td className='text-uppercase' title={act.wording}>{limitStrTo(21, act.wording)}</td>
+        <td
+          className='text-uppercase text-primary'
+          title={act.wording}
+          onClick={toggleShowActModal}
+          style={{ cursor: 'pointer' }}>
+          {limitStrTo(21, act.wording)}
+        </td>
         <td className='fw-bold'>
           {act.price
             ? <><span className='text-secondary me-1'>{currency && currency.value}</span>
@@ -63,6 +72,12 @@ const ActItem = ({ act, currency, onRefresh }) => {
           </ButtonGroup>
         </td>
       </tr>
+
+      <ShowSingleAct
+        currency={currency}
+        show={show}
+        onHide={toggleShowActModal}
+        act={act} />
 
       <EditAct
         onHide={toggleEditModal}

@@ -2,8 +2,9 @@ import {Table} from "react-bootstrap";
 import {useMemo} from "react";
 import moment from "moment";
 import parser from "html-react-parser";
+import {entrypoint} from "../../../app/store";
 
-export const SingleConsultSection2 = ({ consult }) => {
+export const SingleConsultSection2 = ({ consult, hospital }) => {
   const patient = consult?.patient ? consult.patient : null
 
   let followed
@@ -131,26 +132,27 @@ export const SingleConsultSection2 = ({ consult }) => {
               {followed && followed?.map((element, idx) =>
                 <tr key={idx}>
                   <td>{element?.item && moment(element.item).format('D/MM/Y')}</td>
-
                   <td>
-                    {element?.values && element?.values?.map((item, i) =>
+                    {element?.values && element?.values?.map((item, i) => item?.temperature && item.temperature > 0 ?
                       <div key={i} className='mb-3'>
-                        {item?.temperature && item.temperature > 0 && item.temperature}
-                      </div>)}
+                        {item.temperature}
+                      </div> : '')}
                   </td>
 
                   <td>
-                    {element?.values && element?.values?.map((item, i) =>
+                    {element?.values && element?.values?.map((item, i) => item?.arterialTension && item.arterialTension > 0 ?
                       <div key={i} className='mb-3'>
-                        {item?.arterialTension && item.arterialTension > 0 && item.arterialTension}
-                      </div>)}
+                        {item.arterialTension}
+                      </div> : '')}
                   </td>
 
                   <td>
-                    {element?.values && element?.values?.map((item, i) =>
+                    {element?.values && element?.values?.map((item, i) => item?.diagnostic ?
                       <div key={i} className='mb-4'>
-                        {item?.diagnostic && parser(`${item.diagnostic}`)}
-                      </div>)}
+                        {parser(`${item.diagnostic}`)}
+                      </div> : '')}
+                    {hospital && hospital?.logo &&
+                      <img src={entrypoint+hospital.logo?.contentUrl} className='hosp-logo-wrap' alt=''/>}
                   </td>
 
                   <td />

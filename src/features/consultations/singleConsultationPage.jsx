@@ -55,13 +55,13 @@ function SingleConsultationPage() {
           onClick={handleClick}
           heading='Actions' />
 
-        <Card.Body>
+        <Card.Body style={{ minHeight: 800 }}>
           {/* PRINTABLE */}
           <div className='mt-4 container-fluid' ref={printRef}>
             {!(isError || isFetching) && isSuccess && consult &&
               <SingleConsultSection1 consult={consult} hospital={hospital}/>}
 
-            {!(isError || isFetching) && isSuccess && consult && <SingleConsultSection2 consult={consult} />}
+            {!(isError || isFetching) && isSuccess && consult && <SingleConsultSection2 hospital={hospital} consult={consult} />}
 
             {!(isError || isFetching) && isSuccess && consult && <SingleConsultSection3 hospital={hospital} />}
           </div>
