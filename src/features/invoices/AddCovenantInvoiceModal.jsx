@@ -67,7 +67,7 @@ export const AddCovenantInvoiceModal = ({ id, onRefresh, setKey, data, onHide, s
                   </td>
                 </tr>
                 <tr>
-                  <th>Traitements</th>
+                  <th>Premier(s) soin(s)</th>
                   <td className='text-end' style={{ fontWeight: 800 }}>
                     {data?.totalNursingPrice && data.totalNursingPrice > 0 &&
                       <>

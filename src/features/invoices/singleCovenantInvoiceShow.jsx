@@ -73,7 +73,7 @@ export const SingleCovenantInvoiceShow = ({ onToggle, data, setShow, onRefresh }
                 </th>
               </tr>
               <tr>
-                <th>Traitements</th>
+                <th>Premier(s) soin(s)</th>
                 <th className='text-end'>
                   {data && parseFloat(data?.totalNursingPrice).toFixed(2).toLocaleString()+' '}
                   {data && data?.currency && data.currency}

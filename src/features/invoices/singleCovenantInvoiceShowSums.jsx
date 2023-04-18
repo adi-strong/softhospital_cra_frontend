@@ -1,4 +1,4 @@
-import {Button, Col, Form, InputGroup, Row, Spinner} from "react-bootstrap";
+import {Col, Form, InputGroup, Row} from "react-bootstrap";
 import {useEffect, useMemo, useState} from "react";
 import {handleChange, onStrictNumChange} from "../../services/handleFormsFieldsServices";
 import {AppDataTableBordered} from "../../components";
@@ -289,11 +289,11 @@ export const SingleCovenantInvoiceShowSums = ({ data, onRefresh, setShow }) => {
                 onChange={(e) => handleChange(e, invoice, setInvoice)}
                 checked={invoice.isComplete} />
 
-              <Button type='submit' variant='success' disabled={isLoading}>
+              {/*<Button type='submit' variant='success' disabled={isLoading}>
                 {!isLoading
                   ? <> Valider <i className='bi bi-check'/></>
                   : <>Veuillez patienter <Spinner animation='border' size='sm'/></>}
-              </Button>
+              </Button>*/}
             </Form>}
           {/* END PAYMENT'S FORM*/}
         </Col>
