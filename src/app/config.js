@@ -287,6 +287,8 @@ export const allowShowAppointmentsPage = (role) => {
   switch (role) {
     case ROLE_DOCTOR:
       return true
+    case ROLE_MD:
+      return true
     default:
       return false
   }
