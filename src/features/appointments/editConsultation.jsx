@@ -34,11 +34,11 @@ function EditConsultation() {
     respiratoryFrequency: '',
     oxygenSaturation: '',
     diagnostic: '',
+    actsItems: [],
     file: null,
     agent: null,
     appointmentDate: new Date(),
     patient: null,
-    acts: null,
     exams: null,
     treatments: null,
     bed: null,
@@ -57,7 +57,6 @@ function EditConsultation() {
     patient: null,
     exams: null,
     treatments: null,
-    acts: null,
   }
 
   useEffect(() => {
@@ -166,6 +165,7 @@ function EditConsultation() {
       arterialTension: '',
       temperature: 0.0,
       weight: 0.0,
+      actsItems: [],
       file: null,
       agent: null,
       diagnostic: '',

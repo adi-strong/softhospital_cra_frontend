@@ -195,10 +195,21 @@ export const medicineApiSlice = api.injectEndpoints({
       invalidatesTags: ['Drugstore', 'DrugstoreList', 'Box'],
     }),
 
+    onDestockingForHospital: build.mutation({
+      query: ({ id, dStockQuantity }) => ({
+        url: pathToApi+`/medicines/${id}/partial_destocking`,
+        headers: {'Content-Type': 'application/json'},
+        method: 'POST',
+        body: {dStockQuantity: dStockQuantity}
+      }),
+      invalidatesTags: ['Drugstore', 'DrugstoreList', 'Box']
+    }),
+
   })
 })
 
 export const {
+  useOnDestockingForHospitalMutation,
   useLazyGetMedicinesByPaginationQuery,
   useLazyGetResearchMedicinesQuery,
   useLazyGetResearchMedicinesByPaginationQuery,

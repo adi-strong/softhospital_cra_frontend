@@ -6,7 +6,7 @@ import {useLoginMutation} from "../auth/authApiSlice";
 import {useDispatch, useSelector} from "react-redux";
 import {selectCurrentToken, setCredentials} from "../auth/authSlice";
 import {AppHeadTitle} from "../../components";
-import {useLocation, useNavigate} from "react-router-dom";
+import {Link, useLocation, useNavigate} from "react-router-dom";
 import toast from "react-hot-toast";
 // import bcrypt from 'bcryptjs';
 
@@ -115,12 +115,12 @@ const Login = () => {
 
             <Button type='submit' className='w-100 mt-2' disabled={isLoading}>Se connecter</Button>
 
-            {/*<p className="small mb-0 mt-3">
+            <p className="small mb-0 mt-3">
               Vous n'avez encore de compte ?
               <Link to='/register' className='mx-1 text-decoration-none'>
                 Créer un compte
               </Link>
-            </p>*/}
+            </p>
           </Form>
         </Card.Body>
       </Card>

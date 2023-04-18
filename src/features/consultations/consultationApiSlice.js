@@ -62,6 +62,7 @@ export const consultationApiSlice = api.injectEndpoints({
           treatments: consultation?.treatments ? consultation.treatments?.map(treatment => treatment?.value) : [],
         } : {
           comment: consultation?.comment,
+          actsItems: consultation?.actsItems,
           diagnostic: consultation?.diagnostic,
           weight: consultation?.weight.toString(),
           temperature: consultation?.temperature.toString(),

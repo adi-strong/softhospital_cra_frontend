@@ -21,17 +21,12 @@ const ActProceduresItem = ({ act }) => {
       {procedures.length > 0 && show && procedures.map((p, idx) =>
         <div key={idx} className='mb-2'>
           <span className='text-success'><i className='bi bi-plus'/> {p?.item}</span> <br/>
-          {p?.children && p.children.length > 0 && p.children?.map((c, i) =>
-            <span key={i} className='text-primary'>
-              {c?.wording}
-              <br/>
-            </span>)}
         </div>)}
     </>
   )
 }
 
-export const InvoiceDataTable = ({ invoice }) => {
+export const InvoiceDataTable = ({ invoice, isPrint, setIsPrint }) => {
   const [actsSums, setActsSums] = useState(0)
   const [examsSums, setExamsSums] = useState(0)
   let consult, file, acts, exams, hosp, hospDaysCounter
@@ -208,6 +203,7 @@ export const InvoiceDataTable = ({ invoice }) => {
         </Row>}
 
       <InvoiceSumsData
+        isPrint={isPrint}
         data={invoice}
         daysCounter={hospDaysCounter}
         bedPrice={hosp ? hosp?.bed.price : 0}

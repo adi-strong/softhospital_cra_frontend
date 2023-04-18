@@ -1,4 +1,4 @@
-import {Button, Col, Form, Row, Spinner, Table} from "react-bootstrap";
+import {Col, Form, Row, Table} from "react-bootstrap";
 import {useEffect, useMemo, useState} from "react";
 import {handleChange} from "../../services/handleFormsFieldsServices";
 import {cardTitleStyle} from "../../layouts/AuthLayout";
@@ -6,7 +6,7 @@ import {roundANumber} from "./singleInvoice";
 import {useGetSingleInvoiceQuery, useUpdateInvoiceMutation} from "./invoiceApiSlice";
 import toast from "react-hot-toast";
 
-export const InvoiceSumsData = ({ data, hosp, bedPrice = 0, daysCounter = 0 }) => {
+export const InvoiceSumsData = ({ data, isPrint = false, hosp, bedPrice = 0, daysCounter = 0 }) => {
   const {refetch} = useGetSingleInvoiceQuery(data?.id)
   const [updateInvoice, {isLoading}] = useUpdateInvoiceMutation()
   const [invoice, setInvoice] = useState({
@@ -293,13 +293,14 @@ export const InvoiceSumsData = ({ data, hosp, bedPrice = 0, daysCounter = 0 }) =
                     checked={invoice.isComplete}
                     onChange={() => setInvoice({...invoice, isComplete: !invoice.isComplete})} />}
 
-                <div className='text-end'>
-                  <Button type='submit' variant='success' disabled={isLoading}>
-                    {isLoading
-                      ? <>Veuillez patienter <Spinner animation='border' size='sm'/></>
-                      : <>Valider <i className='bi bi-check'/></>}
-                  </Button>
-                </div>
+                {/*!isPrint &&
+                  <div className='text-end'>
+                    <Button type='submit' variant='success' disabled={isLoading}>
+                      {isLoading
+                        ? <>Veuillez patienter <Spinner animation='border' size='sm'/></>
+                        : <>Valider <i className='bi bi-check'/></>}
+                    </Button>
+                  </div>*/}
               </Form>
             </Col>
           </>}

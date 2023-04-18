@@ -19,12 +19,11 @@ export const SingleNursingInvoiceDetails = ({ hospital, data, patient, onRefresh
       <PrintHospitalInfos
         hospital={hospital} invoice={data}
         patient={patient}
-        document={data ? data?.nursingNumber : null}
-        releasedDate={data ? data?.createdAt : null}  />
+        document={data ? data?.nursingNumber : null}  />
 
       <Row className='mt-3'>
         <Col md={3} className='mb-3'>
-          <h6 className='fw-bold'>FACTURE À :</h6>
+          <h6 className='fw-bold'>PATIENT(E) :</h6>
           {patient &&
             <>
               <p className='text-uppercase'>{patient?.name+' '}</p>
@@ -33,24 +32,6 @@ export const SingleNursingInvoiceDetails = ({ hospital, data, patient, onRefresh
               <p className='text-uppercase'>{patient?.tel && patient.tel}</p>
               <p className='text-lowercase'>{patient?.email && patient.email}</p>
             </>}
-
-          <div className='fw-bold mt-5'>
-            <h5 className='text-primary'>NET À PAYER</h5>
-            <h6 className='text-primary'>
-              {parseFloat(nursing.totalAmount).toFixed(2).toLocaleString()+' '}
-              {data?.currency}
-            </h6> <hr/>
-            <h5>MONTANT PAYÉ</h5>
-            <h6>
-              {parseFloat(data?.paid).toFixed(2).toLocaleString()+' '}
-              {data?.currency}
-            </h6> <hr/>
-            <h5 className='text-danger'>RESTE</h5>
-            <h6 className='text-danger'>
-              {parseFloat(nursing?.totalAmount - data?.paid).toFixed(2).toLocaleString()+' '}
-              {data?.currency}
-            </h6>
-          </div>
         </Col>
 
         <Col>

@@ -27,6 +27,13 @@ const EditNursingPage = () => {
     }
   }, [user, navigate])
 
+  useEffect(() => {
+    if (nursing && nursing?.isCompleted) {
+      toast.error(`Le dossier n°${nursing?.id} est déjà clos.`)
+      navigate('/member/treatments/nursing', {replace: true})
+    }
+  }, [nursing, navigate])
+
   return (
     <>
       <AppHeadTitle title='Traitement' />

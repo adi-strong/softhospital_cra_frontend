@@ -23,7 +23,7 @@ const initialState = {
         {id: 2, label: 'Types de fiches médicales', path: '/member/tasks/files'},
         {id: 2, label: 'Actes médicaux', path: '/member/tasks/acts'},
         {id: 2, label: 'Examens', path: '/member/tasks/exams'},
-        {id: 2, label: 'Traitements', path: '/member/tasks/treatments'},
+        {id: 2, label: 'Premiers soins', path: '/member/tasks/treatments'},
         {id: 2, label: "Lits d'hospitalisation", path: '/member/tasks/beds'},
       ]
     },

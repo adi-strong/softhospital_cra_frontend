@@ -1,9 +1,9 @@
 import {limitStrTo} from "../../services";
-import {Button, ButtonGroup, Modal, Spinner} from "react-bootstrap";
+import {Button, ButtonGroup, Form, Modal, Spinner} from "react-bootstrap";
 import {useState} from "react";
 import {ShowMedicineModal} from "./ShowMedicineModal";
 import {
-  useDeleteMedicineMutation,
+  useDeleteMedicineMutation, useOnDestockingForHospitalMutation,
 } from "./medicineApiSlice";
 import toast from "react-hot-toast";
 import {AppDelModal} from "../../components";
@@ -44,21 +44,64 @@ function DestockModal({ medicine, onHide, onSubmit, show = false, isLoading = fa
   )
 }
 
+function DestockModal2({medicine, onChange, state, onHide, onSubmit, show = false, isLoading = false}) {
+  return (
+    <>
+      <Modal show={show} onHide={onHide} backdrop='static'>
+        <Modal.Header className='bg-warning'>
+          <Modal.Title><i className='bi bi-database-fill-dash'/> Déstockage de <b>{medicine?.wording}</b></Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p className='text-center'>
+            <small>
+              <code><i className='bi bi-exclamation-circle-fill'/> Cette action est irréversible.</code>
+            </small>
+          </p>
+          <div className='text-center'>
+            <Form.Label htmlFor='dStockQuantity'>Quantité à déstocker :</Form.Label>
+            <Form.Control
+              id='dStockQuantity'
+              className='w-50 m-auto text-end'
+              type='number'
+              name='dStockQuantity'
+              value={state}
+              onChange={onChange}
+              disabled={isLoading} />
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button type='button' variant='light' disabled={isLoading} onClick={onHide}>
+            <i className='bi bi-x'/> Fermer
+          </Button>
+          <Button type='button' variant='danger' disabled={isLoading} onClick={onSubmit}>
+            <i className='bi bi-database-dash me-1'/>
+            {!isLoading ? 'Déstocker' : <>Veuillez patienter <Spinner animation='border' size='sm'/></>}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </>
+  )
+}
+
 export const MedicineItem = ({ medicine, currency }) => {
   const price = parseFloat(medicine?.price).toFixed(2).toLocaleString()
   const expiryDate = medicine?.expiryDate ? medicine.expiryDate : '-'
   const createdAt = medicine?.createdAt ? medicine.createdAt : '❓'
   const [show, setShow] = useState(false)
   const [showDestock, setShowDestock] = useState(false)
+  const [showDestock2, setShowDestock2] = useState(false)
+  const [dStockQuantity, setDStockQuantity] = useState(0.00)
   const [showEdit, setShowEdit] = useState(false)
   const [showDelete, setShowDelete] = useState(false)
   const [deleteMedicine, {isLoading}] = useDeleteMedicineMutation()
   const [getDestocking, {isLoading: isLoad}] = useGetDestockingMutation()
+  const [onDestockingForHospital, {isLoading: isLoad2}] = useOnDestockingForHospitalMutation()
 
   const toggleShowModal = () => setShow(!show)
   const toggleShowEditModal = () => setShowEdit(!showEdit)
   const toggleShowDeleteModal = () => setShowDelete(!showDelete)
   const toggleDestockModal = () => setShowDestock(!showDestock)
+  const toggleDestock2Modal = () => setShowDestock2(!showDestock2)
 
   async function onDelete() {
     try {
@@ -77,6 +120,22 @@ export const MedicineItem = ({ medicine, currency }) => {
         setShowDestock(false)
       }
     } catch (e) { }
+  }
+
+  async function onDestocking2() {
+    try {
+      const onSubmit = await onDestockingForHospital({id: medicine?.id, dStockQuantity})
+      if (!onSubmit?.error) {
+        toast.success('Destockage bien efféctué.')
+        setDStockQuantity(0.00)
+        setShowDestock2(false)
+      }
+    } catch (e) { }
+  }
+
+  const onChange = ({ target }) => {
+    const value = target.value > 0 && !isNaN(target.value) ? parseFloat(target.value) : 0
+    setDStockQuantity(value)
   }
 
   return (
@@ -116,6 +175,13 @@ export const MedicineItem = ({ medicine, currency }) => {
             <Button type='button' variant='light' title='Déstocker' onClick={toggleDestockModal} disabled={isLoad}>
               <i className='bi bi-database-dash text-danger'/>
             </Button>
+            <Button
+              type='button'
+              variant='light' title="Déstockage pour pour l'hôpital"
+              onClick={toggleDestock2Modal}
+              disabled={isLoad2}>
+              <i className='bi bi-database-fill-dash text-dark'/>
+            </Button>
             <Button type='button' variant='light' onClick={toggleShowEditModal} disabled={isLoading}>
               <i className='bi bi-pencil-square text-primary'/>
             </Button>
@@ -147,6 +213,15 @@ export const MedicineItem = ({ medicine, currency }) => {
         onHide={toggleDestockModal}
         medicine={medicine}
         show={showDestock} />
+
+      <DestockModal2
+        onChange={onChange}
+        state={dStockQuantity}
+        medicine={medicine}
+        onSubmit={onDestocking2}
+        onHide={toggleDestock2Modal}
+        show={showDestock2}
+        isLoading={isLoad2} />
     </>
   )
 }

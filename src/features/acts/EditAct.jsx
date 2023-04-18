@@ -3,10 +3,10 @@ import {useUpdateActMutation} from "./actApiSlice";
 import {AppLgModal, AppSelectOptions} from "../../components";
 import AppInputField from "../../components/forms/AppInputField";
 import {handleChange, onSelectAsyncOption} from "../../services/handleFormsFieldsServices";
-import toast from "react-hot-toast";
 import {useGetActCategoriesQuery} from "./actCategoriesApiSlice";
-import {Button, ButtonGroup, Col, Form, InputGroup, Row} from "react-bootstrap";
-import {cardTitleStyle} from "../../layouts/AuthLayout";
+import {Button, Col, Form, InputGroup, Row} from "react-bootstrap";
+import {requiredField} from "../covenants/addCovenant";
+import toast from "react-hot-toast";
 
 export const EditAct = ({ show, onHide, data, currency, onRefresh }) => {
   const [category, setCategory] = useState(null)
@@ -18,7 +18,8 @@ export const EditAct = ({ show, onHide, data, currency, onRefresh }) => {
     wording: '',
     cost: 0.00,
     price: 0.00,
-    procedures: [{item: '', children: [{wording: ''}]}]
+    profitMarge: 0,
+    procedures: [{item: '', quantity: ''}]
   })
 
   let options
@@ -32,50 +33,76 @@ export const EditAct = ({ show, onHide, data, currency, onRefresh }) => {
 
   useEffect(() => {
     if (data) {
-      if (data?.category) setCategory({
-        label: data.category.name,
-        value: data.category['@id']
-      })
+      if (data?.category) {
+        setCategory({
+          label: data.category?.name,
+          value: data.category['@id']
+        })
+      } // get category
 
-      let procedures
-      if (data?.procedures && data.procedures.length > 0) {
-        procedures = []
-        const items = data.procedures
-        for (const key in items) {
-          const item = items[key]?.item
-          const children = items[key].children?.map(c => { return {wording: c?.wording} })
-          procedures.push({ item, children })
-        }
-      }
-      else procedures = [{item: '', children: [{wording: ''}]}]
-      setAct(prev => {
-        return {
-          ...prev,
-          wording: data?.wording ? data.wording : '',
-          cost: data?.cost ? data.cost : 0.00,
-          price: data?.price ? data.price : 0.00,
-          procedures: procedures
-        }
-      })
+      const wording = data?.wording ? data.wording : ''
+      const cost = data?.cost ? data.cost : 0.00
+      const price = data?.price ? data.price : 0.00
+      const profitMarge = data?.profitMarge ? data.profitMarge : 0
+      const procedures = data?.procedures && data.procedures.length > 0
+        ? data.procedures?.map(p => {return {item: p?.item ? p.item : '', quantity: p?.quantity ? p.quantity : ''}})
+        : [{item: '', quantity: ''}]
+
+      setAct(s => {return {...s, id: data?.id, price, cost, wording, profitMarge, procedures}})
     }
-  }, [data])
+  }, [data]) // handle get data
 
-  async function onSubmit() {
+  const onAddActItem = () => setAct({...act, procedures: [...act.procedures, {item: '', quantity: ''}]})
+
+  const onRemoveActItem = index => {
+    const values = [...act.procedures]
+    values.splice(index, 1)
+    setAct({...act, procedures: values})
+  }
+
+  const handleChangeActItem = (event, index) => {
+    const target = event.target
+    const values = [...act.procedures]
+    values[index][target.name] = target.value
+    setAct({...act, procedures: values})
+  }
+
+  async function onSubmit(e) {
+    e.preventDefault()
     apiErrors = {wording: null, price: null}
-    if (data && data?.id) {
-      try {
-        const formData = await updateAct({
-          ...act,
-          id: data.id,
-          category})
-        if (!formData.error) {
-          toast.success('Modification bien efféctuée.')
-          onRefresh()
-          onHide()
-        }
+    try {
+      const submit = await updateAct({...act, category})
+      if (!submit.error) {
+        toast.success('Opération bien efféctuéee.')
+        onHide()
+        onRefresh()
       }
-      catch (e) { toast.error(e.message) }
+    } catch (e) { }
+  }
+
+  function onChangeActCost({target}) {
+    const cost = target.value > 0 && !isNaN(target.value) ? parseFloat(target.value) : 0
+    let price
+    if (act.profitMarge > 0.00) {
+      const sum = parseFloat((cost * act.profitMarge) / 100)
+      price = parseFloat(cost + sum)
     }
+    else price = cost
+
+    setAct({...act, price, cost})
+  }
+
+  function onChangeProfitMarge({target}) {
+    const profitMarge = target.value > 0 && !isNaN(target.value) ? parseFloat(target.value) : 0
+    let price, sum = 0
+    const cost = act.cost
+    if (profitMarge > 0.00) {
+      sum = parseFloat((cost * profitMarge) / 100)
+      price = parseFloat(cost) + parseFloat(sum)
+    }
+    else price = parseFloat(cost)
+
+    setAct({...act, profitMarge, price})
   }
 
   if (isActError) {
@@ -87,44 +114,6 @@ export const EditAct = ({ show, onHide, data, currency, onRefresh }) => {
     }
   }
 
-  function handleChangePItem(event, index) {
-    const target = event.target
-    const values = [...act.procedures]
-    values[index][target.name] = target.value
-    setAct({...act, procedures: values})
-  }
-
-  function handleChangePChildItem(event, index, index2) {
-    const target = event.target
-    const parentItems = [...act.procedures]
-    const values = parentItems[index]['children']
-    values[index2][target.name] = target.value
-    parentItems[index]['children'] = values
-    setAct({...act, procedures: parentItems})
-  }
-
-  const onAddPItem = () => setAct({...act, procedures: [...act.procedures, {item: '', children: [{wording: ''}]}]})
-
-  function onRemovePItem(index) {
-    const values = [...act.procedures]
-    values.splice(index, 1)
-    setAct({...act, procedures: values})
-  }
-
-  function onAddPChildItem(index) {
-    const values = [...act.procedures]
-    values[index]['children'].push({wording: ''})
-    setAct({...act, procedures: values})
-  }
-
-  function onRemovePChildItem(index, index2) {
-    const values = [...act.procedures]
-    const children = values[index]['children']
-    children.splice(index2, 1)
-    values[index]['children'] = children
-    setAct({...act, procedures: values})
-  }
-
   return (
     <>
       <AppLgModal
@@ -134,122 +123,125 @@ export const EditAct = ({ show, onHide, data, currency, onRefresh }) => {
         onHide={onHide}
         show={show}
         className='bg-primary text-light'>
-        <Row>
-          <Col md={6} className='mb-3'>
-            <AppSelectOptions
-              label='Catégorie'
-              value={category}
-              disabled={isLoading || isCategoriesLoad}
-              name='category'
-              options={options}
-              onChange={(e) => onSelectAsyncOption(e, setCategory)} />
-          </Col>
-          <AppInputField
-            required
-            autofocus
-            className='col-md-6'
-            disabled={isLoading}
-            name='wording'
-            value={act.wording}
-            onChange={(e) => handleChange(e, act, setAct)}
-            error={apiErrors.wording}
-            label={<>Acte <i className='text-danger'>*</i></>} />
+        <Form onSubmit={onSubmit}>
+          <Row>
+            <Col md={6} className='mb-3'>
+              <AppSelectOptions
+                label='Catégorie'
+                value={category}
+                disabled={isLoading || isCategoriesLoad}
+                name='category'
+                options={options}
+                onChange={(e) => onSelectAsyncOption(e, setCategory)} />
+            </Col>
+            <AppInputField
+              required
+              autofocus
+              className='col-md-6'
+              disabled={isLoading}
+              name='wording'
+              value={act.wording}
+              onChange={(e) => handleChange(e, act, setAct)}
+              error={apiErrors.wording}
+              label={<>Acte <i className='text-danger'>*</i></>} />
+          </Row>
 
-          <Col md={4}>
-            <Form.Label htmlFor='cost'>Coût</Form.Label>
-            <InputGroup>
-              {currency && <InputGroup.Text>{currency.currency}</InputGroup.Text>}
-              <Form.Control
-                id='cost'
-                type='number'
-                className='text-end'
-                disabled={isLoading}
-                name='cost'
-                value={act.cost}
-                onChange={(e) => handleChange(e, act, setAct)}
-                label='Coût' />
-              {currency && <InputGroup.Text className='bg-secondary'>{currency.value}</InputGroup.Text>}
-            </InputGroup>
-
-            <Form.Label htmlFor='price'>Prix</Form.Label>
-            <InputGroup>
-              {currency && <InputGroup.Text>{currency.currency}</InputGroup.Text>}
-              <Form.Control
-                id='price'
-                type='number'
-                className='text-end'
-                disabled={isLoading}
-                name='price'
-                value={act.price}
-                onChange={(e) => handleChange(e, act, setAct)}
-                error={apiErrors.price}
-                label='Prix' />
-              {currency && <InputGroup.Text className='bg-secondary'>{currency.value}</InputGroup.Text>}
-            </InputGroup>
-          </Col>
-
-          {/* ----------------------------------------------------------------------------- */}
-          <Col md={8} className='bg-light pt-3' style={{ borderRadius: 6 }}>
-            <h5 className='text-center card-title' style={cardTitleStyle}>
-              <i className='bi bi-caret-down-fill'/> Procédures
-            </h5> <hr className='mt-0 text-primary'/>
-            {act.procedures && act.procedures.length > 0 &&
-              act.procedures.map((p, idx) =>
-                <Row key={idx} className='mb-3'>
-                  <Col md={4}>
+          <Row className='px-3'>
+            <Col md={4} className='bg-light p-1' style={{ borderRadius: 6, border: '1px solid lightgray' }}>
+              <Row>
+                <Col md={4} className='mb-3'><Form.Label htmlFor='cost'>{requiredField} Coût</Form.Label></Col>
+                <Col md={8} className='mb-3'>
+                  <InputGroup>
+                    {currency && <InputGroup.Text style={{ height: 38 }}>{currency.value}</InputGroup.Text>}
                     <Form.Control
-                      autoComplete='off'
                       required
-                      placeholder='Procédure :'
-                      className='mb-2'
+                      disabled={isLoading}
+                      id='cost'
+                      className='text-end'
+                      type='number'
+                      name='cost'
+                      value={act.cost}
+                      onChange={onChangeActCost} />
+                  </InputGroup>
+                </Col>
+
+                <Col md={4} className='mb-3'><Form.Label htmlFor='cost'>% Marge d'intérêt</Form.Label></Col>
+                <Col md={8} className='mb-3'>
+                  <InputGroup>
+                    {currency && <InputGroup.Text style={{ height: 38 }}>{currency.value}</InputGroup.Text>}
+                    <Form.Control
+                      disabled={isLoading}
+                      id='profit'
+                      className='text-end'
+                      type='number'
+                      name='profitMarge'
+                      value={act.profitMarge}
+                      onChange={onChangeProfitMarge} />
+                    <InputGroup.Text style={{ height: 38 }}>%</InputGroup.Text>
+                  </InputGroup>
+                </Col>
+
+                <Col md={4} className='mb-3'><Form.Label htmlFor='price'>{requiredField} Prix</Form.Label></Col>
+                <Col md={8} className='mb-3'>
+                  <InputGroup>
+                    {currency && <InputGroup.Text style={{ height: 38 }}>{currency.value}</InputGroup.Text>}
+                    <Form.Control
+                      required
+                      disabled={isLoading}
+                      id='price'
+                      className='text-end'
+                      type='number'
+                      name='price'
+                      value={act.price}
+                      onChange={(e) => handleChange(e, act, setAct)} />
+                  </InputGroup>
+                </Col>
+              </Row>
+            </Col>
+
+            <Col md={1} className='mb-3' />
+
+            <Col md={7} className='bg-light p-1' style={{ borderRadius: 6, border: '1px solid lightgray' }}>
+              <h6 className="fw-bold text-center"><i className='bi bi-caret-down-fill'/> Procédure(s)</h6>
+              <div>
+                {act.procedures && act.procedures.length > 0 && act.procedures.map((p, idx) =>
+                  <InputGroup key={idx} className='me-2 mb-2'>
+                    <InputGroup.Text>Libellé</InputGroup.Text>
+                    <Form.Control
+                      required
+                      autoFocus
+                      autoComplete='off'
                       name='item'
                       value={p.item}
-                      onChange={(e) => handleChangePItem(e, idx)}
+                      onChange={(e) => handleChangeActItem(e, idx)}
                       disabled={isLoading} />
-                    <ButtonGroup size='sm' className='mb-2 w-100'>
-                      {act.procedures.length > 1 &&
-                        <Button type='button' variant='dark' disabled={isLoading} onClick={() => onRemovePItem(idx)}>
-                          <i className='bi bi-dash'/>
-                        </Button>}
-                      <Button type='button' variant='secondary' disabled={isLoading} onClick={onAddPItem}>
-                        <i className='bi bi-plus'/>
-                      </Button>
-                    </ButtonGroup>
-                  </Col>
-                  <Col md={8}>
-                    {p.children && p.children.length > 0 && p.children.map((c, i) =>
-                      <Row key={i}>
-                        <Col md={8} className='mb-2'>
-                          <Form.Control
-                            required
-                            autoComplete='off'
-                            placeholder='Libellé'
-                            name='wording'
-                            value={c.wording}
-                            onChange={(e) => handleChangePChildItem(e, idx, i)}
-                            disabled={isLoading} />
-                        </Col>
-                        <Col md={4}>
-                          <ButtonGroup className='w-100'>
-                            <Button type='button' variant='primary' disabled={isLoading} onClick={() => onAddPChildItem(idx)}>
-                              <i className='bi bi-plus'/>
-                            </Button>
-                            {p.children.length > 1 &&
-                              <Button
-                                type='button'
-                                variant='danger'
-                                disabled={isLoading}
-                                onClick={() => onRemovePChildItem(idx, i)}>
-                                <i className='bi bi-x'/>
-                              </Button>}
-                          </ButtonGroup>
-                        </Col>
-                      </Row>)}
-                  </Col>
-                  <hr/>
-                </Row>)}
-          </Col>
-        </Row>
+                    <InputGroup.Text>Qté</InputGroup.Text>
+                    <Form.Control
+                      required
+                      autoComplete='off'
+                      name='quantity'
+                      value={p.quantity}
+                      onChange={(e) => handleChangeActItem(e, idx)}
+                      disabled={isLoading} />
+                    {act.procedures.length > 1 &&
+                      <Button
+                        type='button'
+                        disabled={isLoading}
+                        variant='outline-dark'
+                        onClick={() => onRemoveActItem(idx)}>
+                        <i className='bi bi-x'/>
+                      </Button>}
+                  </InputGroup>)}
+
+                <div>
+                  <Button type='button' variant='info' className='w-100' disabled={isLoading} onClick={onAddActItem}>
+                    <i className='bi bi-plus'/>
+                  </Button>
+                </div>
+              </div>
+            </Col>
+          </Row>
+        </Form>
       </AppLgModal>
     </>
   )

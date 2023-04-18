@@ -4,7 +4,7 @@ import {Col, Row} from "react-bootstrap";
 import {useMemo} from "react";
 import {InvoiceDataTable} from "./InvoiceDataTable";
 
-export const SingleInvoiceDetails = ({ invoice, hospital, loader = false}) => {
+export const SingleInvoiceDetails = ({ invoice, isPrint, setIsPrint, hospital, loader = false}) => {
   let patient
   patient = useMemo(() => invoice && invoice?.patient
     ? invoice.patient
@@ -52,7 +52,7 @@ export const SingleInvoiceDetails = ({ invoice, hospital, loader = false}) => {
         {/* Patient */}
 
         <Col className='mb-3'>
-          {!loader && invoice && <InvoiceDataTable invoice={invoice} />}
+          {!loader && invoice && <InvoiceDataTable isPrint={isPrint} setIsPrint={setIsPrint} invoice={invoice} />}
         </Col>
         {/* Invoice Data */}
       </Row>

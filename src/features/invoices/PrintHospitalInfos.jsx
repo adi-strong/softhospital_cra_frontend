@@ -17,7 +17,7 @@ export const PrintHospitalInfos = ({ hospital, invoice, document, patient, relea
             <Table bordered striped className='w-100' style={{ fontSize: '0.7rem', marginTop: 19 }}>
               <tbody className='text-uppercase fw-bold text-end'>
                 <tr>
-                  <td>N° de facture</td>
+                  <td>N° Dossier</td>
                   <td>{invoice && `#${document}`}</td>
                 </tr>
                 <tr>
@@ -26,10 +26,11 @@ export const PrintHospitalInfos = ({ hospital, invoice, document, patient, relea
                     {patient && patient?.id}
                   </td>
                 </tr>
-                <tr>
-                  <td>Date de facturation</td>
-                  <td>{patient && moment(releasedDate).calendar()}</td>
-                </tr>
+                {patient && releasedDate &&
+                  <tr>
+                    <td>Date de facturation</td>
+                    <td>{moment(releasedDate).calendar()}</td>
+                  </tr>}
                 <tr>
                   <td>Date d'échéance</td>
                   <td>{endDate ? endDate : '--'}</td>

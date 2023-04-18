@@ -23,7 +23,7 @@ const Treatments = () => {
   return (
     <>
       <AppHeadTitle title='Traitements' />
-      <AppBreadcrumb title='Traitements' />
+      <AppBreadcrumb title='Premier(s) soin(s)' />
       <Row>
         <Col md={7}>
           <Card className='border-0'>

@@ -40,6 +40,7 @@ export const actApiSlice = api.injectEndpoints({
         method: 'PATCH',
         body: JSON.stringify({
           ...act,
+          profitMarge: parseFloat(act?.profitMarge),
           category: act?.category ? act.category?.value : null,
           cost: act?.cost ? act.cost.toString() : '0',
           price: act.price ? act.price.toString() : '0'}),

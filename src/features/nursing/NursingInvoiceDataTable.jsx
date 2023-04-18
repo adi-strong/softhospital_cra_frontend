@@ -1,14 +1,13 @@
 import {Table} from "react-bootstrap";
 import {AppTHead} from "../../components";
-import {useEffect, useMemo, useState} from "react";
+import {useMemo} from "react";
 import moment from "moment";
 import {NursingInvoiceSumsData} from "./NursingInvoiceSumsData";
 
-const theadItems = [ {label: 'Date'}, {label: 'TRAITEMENT'}, {label: 'MÉDICAMENT(s)'}, {label: 'COÛT'} ]
+const theadItems = [ {label: 'Date'}, {label: 'TRAITEMENT'}, {label: 'PROCÉDURE(s)'} ]
 
 export const NursingInvoiceDataTable = ({ data, nursing, setNursing, onRefresh }) => {
-  const [sum, setSum] = useState(0)
-  let elements
+  let elements, acts
 
   elements = useMemo(() => {
     if (data?.nursingTreatments && data.nursingTreatments?.length > 0) {
@@ -33,23 +32,40 @@ export const NursingInvoiceDataTable = ({ data, nursing, setNursing, onRefresh }
         }
       })
 
-      let total = 0
-      for (const key in items) {
-        const item = items[key]
-        if (item?.treatment) {
-          total += parseFloat(item.treatment?.price)
-        }
-      }
-      setSum(total)
-
       return Array.from(groups, ([item, values]) => ({ item, values }))
     }
     return []
   }, [data]) // handle get treatment items
 
-  useEffect(() => {
-    if (sum > 0.00) setNursing(prev => { return {...prev, subTotal: sum } })
-  }, [sum, setNursing]) // handle set subtotal
+  acts = useMemo(() => {
+    if (data?.acts && data.acts.length > 0) {
+      const items = data.acts
+      const groups = new Map()
+
+      items?.forEach(item => {
+        if (item?.releasedAt) {
+          const act = item
+          if (groups?.has(act.releasedAt)) {
+            groups.get(act.releasedAt).push({
+              'isDone': act?.isDone,
+              'wording': act?.wording,
+              'procedures': act?.procedures,
+            })
+          }
+          else {
+            groups.set(act?.releasedAt, [{
+              'isDone': act?.isDone,
+              'wording': act?.wording,
+              'procedures': act?.procedures,}])
+          }
+        }
+      })
+
+      return Array.from(groups, ([item, values]) => ({ item, values }))
+    }
+    return null
+  }, [data])
+  console.log(acts)
 
   return (
     <>
@@ -58,7 +74,7 @@ export const NursingInvoiceDataTable = ({ data, nursing, setNursing, onRefresh }
         <tbody>
           {elements && elements?.map((element, idx) =>
             <tr key={idx}>
-              <th>{moment(element?.item).calendar()}</th>
+              <th>{moment(element?.item).format('ll')}</th>
               <th>
                 {element?.values && element.values?.length > 0 && element.values?.map((item, i) =>
                   <p key={i} className='text-capitalize'>
@@ -70,26 +86,35 @@ export const NursingInvoiceDataTable = ({ data, nursing, setNursing, onRefresh }
                   <div key={i} className='text-capitalize'>
                     {item?.medicines && item.medicines?.map((drug, j) =>
                       <p key={j}>
-                        <span className='fw-bold text-decoration-underline' style={{ fontWeight: 800 }}>
-                          <i className='bi bi-capsule'/> {drug?.medicine}
-                        </span> : {drug?.dosage}
+                        <span className='fw-bold' style={{ fontWeight: 800 }}>
+                          <i className='bi bi-capsule'/> {drug?.wording}
+                        </span> : {drug?.quantity}
                       </p>)}
                   </div>)}
               </td>
+            </tr>)}
+
+          {acts && acts?.map((element, idx) =>
+            <tr key={idx}>
+              <th>{element?.item && moment(element.item).format('ll')}</th>
               <th>
-                {element?.values && element.values?.length > 0 && element.values?.map((item, i) =>
-                  <p key={i} className='text-capitalize text-end'>
-                    {item?.price} {data?.currency}
+                {element?.values && element.values?.map((item, key) =>
+                  <p key={key} className='text-capitalize'>
+                    {item?.wording}
                   </p>)}
               </th>
+              <th>
+                {element?.values && element.values?.length > 0 && element.values?.map((item, i) =>
+                  <div key={i} className='text-capitalize'>
+                    {item?.procedures && item.procedures?.map((drug, j) =>
+                      <p key={j}>
+                        <span className='fw-bold' style={{ fontWeight: 800 }}>
+                          <i className='bi bi-capsule'/> {drug?.item}
+                        </span> : {drug?.quantity}
+                      </p>)}
+                  </div>)}
+              </th>
             </tr>)}
-          <tr className='bg-light'>
-            <th>Total</th>
-            <th colSpan={3} className='text-end'>
-              {parseFloat(sum).toFixed(2).toLocaleString()+' '}
-              {data?.currency}
-            </th>
-          </tr>
         </tbody>
       </Table>
 

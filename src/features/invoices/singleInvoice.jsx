@@ -1,4 +1,4 @@
-import {memo, useEffect, useRef} from "react";
+import {memo, useEffect, useState, useRef} from "react";
 import {AppBreadcrumb, AppDropdownFilerMenu, AppHeadTitle, AppMainError} from "../../components";
 import {useDispatch, useSelector} from "react-redux";
 import {onInitSidebarMenu} from "../navigation/navigationSlice";
@@ -21,6 +21,7 @@ export function roundANumber(num1, num2) {
 function SingleInvoice() {
   const dispatch = useDispatch()
   const printRef = useRef()
+  const [isPrint, setIsPrint] = useState(false)
 
   useEffect(() => {
     dispatch(onInitSidebarMenu('/member/finance/invoices'))
@@ -33,7 +34,11 @@ function SingleInvoice() {
   const {data: invoice, isFetching, isError, refetch} = useGetSingleInvoiceQuery(id) // fetching invoice
 
   async function handleDropdownMenuClick(name: string) {
-    if (name === 'refresh') await refetch()
+    setIsPrint(true)
+    if (name === 'refresh') {
+      setIsPrint(false)
+      await refetch()
+    }
     else handlePrint()
   }
 
@@ -51,6 +56,8 @@ function SingleInvoice() {
           <h5 className='card-title' style={cardTitleStyle}><i className='bi bi-file-earmark-medical'/> Facture</h5>
           <div className='container-fluid' ref={printRef}>
             <SingleInvoiceDetails
+              isPrint={isPrint}
+              setIsPrint={setIsPrint}
               hospital={hospital}
               loader={isFetching}
               invoice={invoice} />

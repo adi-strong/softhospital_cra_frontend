@@ -3,9 +3,7 @@ import {requiredField} from "../covenants/addCovenant";
 import {Button, Col, Row, Spinner} from "react-bootstrap";
 import {useLazyHandleLoadAgentsQuery} from "../staff/agentApiSlice";
 import {handleChange} from "../../services/handleFormsFieldsServices";
-import {useGetActsQuery, useLazyHandleLoadActsQuery} from "../acts/actApiSlice";
 import {useGetExamsQuery, useLazyHandleLoadExamsQuery} from "../exams/examApiSlice";
-import {useGetTreatmentsQuery, useLazyHandleLoadTreatmentsQuery} from "../treatments/treatmentApiSlice";
 import {
   AppAsyncSelectOptions,
   AppDatePicker,
@@ -13,6 +11,10 @@ import {
   AppInputGroupField,
   AppRichText
 } from "../../components";
+import {useGetTreatmentsQuery, useLazyHandleLoadTreatmentsQuery} from "../treatments/treatmentApiSlice";
+import {useGetActsQuery, useLazyHandleLoadActsQuery} from "../acts/actApiSlice";
+import toast from "react-hot-toast";
+import BarLoaderSpinner from "../../loaders/BarLoaderSpinner";
 
 const styles = {
   color: 'hsl(0, 0%, 40%)',
@@ -34,11 +36,13 @@ export function ConsultForm1({data, isDataExists = false, consultation, setConsu
     isFetching: isExamsFetching,
     isSuccess: isExamsSuccess,
     isError: isExamsError} = useGetExamsQuery('Exam')
+
   const {
     data: acts = [],
     isFetching: isActsFetching,
     isSuccess: isActsSuccess,
     isError: isActsError} = useGetActsQuery('Act')
+
   const {
     data: treatments = [],
     isFetching: isTreatmentsFetching,
@@ -57,26 +61,27 @@ export function ConsultForm1({data, isDataExists = false, consultation, setConsu
   }) : [], [isExamsSuccess, exams])
 
   if (isTreatmentsError) alert('ERREUR: Erreur lors du chargement des traitements !!!')
-  treatmentOptions = useMemo(() => isTreatmentsSuccess && treatments ? treatments.ids.map(id => {
-    const treatment = treatments?.entities[id]
+  treatmentOptions = useMemo(() => isTreatmentsSuccess && treatments
+    ? treatments.ids?.map(id => {
+      const treatment = treatments?.entities[id]
+      return {
+        id: treatment?.id,
+        label: treatment?.wording,
+        value: treatment['@id'],
+      }
+    })
+    : [], [isTreatmentsSuccess, treatments])
 
-    return {
-      id: treatment?.id,
-      label: treatment?.wording,
-      value: treatment['@id'],
-    }
-
-  }) : [], [isTreatmentsSuccess, treatments])
-
-  if (isActsError) alert('ERREUR: Erreur lors du chargement des actes !!!')
-  actOptions = useMemo(() => isActsSuccess && acts ? acts.map(act => {
-    return {
-      id: act?.id,
-      label: act?.wording,
-      value: act['@id'],
-    }
-
-  }) : [], [isActsSuccess, acts])
+  if (isActsError) alert('ERREUR: Erreur lors du chargement des actes médicaux !!!')
+  actOptions = useMemo(() => isActsSuccess && acts
+    ? acts?.map(act => {
+      return {
+        id: act?.id,
+        label: act?.wording,
+        value: act['@id'],
+      }
+    })
+    : [], [isActsSuccess, acts])
 
   async function onLoadAgents(keyword) {
     const agentsData = handleLoadAgents(keyword).unwrap()
@@ -89,13 +94,13 @@ export function ConsultForm1({data, isDataExists = false, consultation, setConsu
   }
 
   async function onLoadTreatments(keyword) {
-    const treatmentsData = await handleLoadTreatments(keyword).unwrap()
-    if (!treatmentsData?.error) return treatmentsData
+    const examsData = await handleLoadTreatments(keyword).unwrap()
+    if (!examsData?.error) return examsData
   }
 
   async function onLoadActs(keyword) {
-    const actsData = await handleLoadActs(keyword).unwrap()
-    if (!actsData?.error) return actsData
+    const examsData = await handleLoadActs(keyword).unwrap()
+    if (!examsData?.error) return examsData
   }
 
   const handleChangeDiagnostic = (newValue) => {
@@ -103,9 +108,24 @@ export function ConsultForm1({data, isDataExists = false, consultation, setConsu
     setConsultation({...consultation, diagnostic: newValue})
   }
 
-  const handleBlur = () => {
-    console.log(diagnostic)
-    setConsultation({...consultation, diagnostic})
+  const handleBlur = () => setConsultation({...consultation, diagnostic})
+
+  const onAddActItem = () => {
+    if (acts && acts?.length > 0)
+      setConsultation({ ...consultation, actsItems: [...consultation?.actsItems, null] })
+    else toast.error("Aucun acte existant ❗")
+  }
+
+  const onRemoveActItem = index => {
+    const values = [...consultation?.actsItems]
+    values.splice(index, 1)
+    setConsultation({...consultation, actsItems: values})
+  }
+
+  const handleChangeActItem = (event, index) => {
+    const values = [...consultation?.actsItems]
+    values[index] = event
+    setConsultation({...consultation, actsItems: values})
   }
 
   return (
@@ -223,7 +243,7 @@ export function ConsultForm1({data, isDataExists = false, consultation, setConsu
       <Col className="mb-3 me-2" style={styles}>
         <AppAsyncSelectOptions
           isMulti
-          label={<span className='text-primary'><i className='bi bi-hospital'/> Premiers soins</span>}
+          label={<span style={{ color: 'blue' }}><i className='bi bi-plus-circle'/> Premier(s) soin(s)</span>}
           loadOptions={onLoadTreatments}
           defaultOptions={treatmentOptions}
           onChange={(e) => setConsultation({...consultation, treatments: e})}
@@ -233,17 +253,33 @@ export function ConsultForm1({data, isDataExists = false, consultation, setConsu
           className='text-uppercase' />
       </Col>
 
-      <Col className="mb-3 me-2" style={styles}>
-        <AppAsyncSelectOptions
-          isMulti
-          label={<span className='text-dark'><i className='bi bi-file-earmark-medical'/> Actes médicaux</span>}
-          loadOptions={onLoadActs}
-          defaultOptions={actOptions}
-          onChange={(e) => setConsultation({...consultation, acts: e})}
-          value={consultation?.acts}
-          disabled={isActsFetching || loader || (data ? !data?.isPublished : false)}
-          placeholder='Actes médicaux..'
-          className='text-uppercase' />
+      <Col xl={12} className='mb-3 bg-light p-1' style={{ border: '1px solid lightgray', borderRadius: 6 }}>
+        <h6><i className='bi bi-journal-plus'/> Actes médicaux</h6>
+        {consultation?.actsItems && consultation.actsItems?.length > 0 &&
+          <div id='inline-block-items'>
+            {consultation.actsItems?.map((t, idx) =>
+              <div key={idx} className='me-2' style={styles}>
+                <AppAsyncSelectOptions
+                  loadOptions={onLoadActs}
+                  defaultOptions={actOptions}
+                  onChange={(e) => handleChangeActItem(e, idx)}
+                  value={t}
+                  disabled={isActsFetching || loader || !!(data && data?.isComplete)}
+                  placeholder='Acte...'
+                  className='text-uppercase d-inline-block' />
+                <i className='bi bi-x mx-1 text-danger' style={{ cursor: 'pointer' }} onClick={() => onRemoveActItem(idx)}/>
+              </div>)}
+          </div>}
+        {acts && acts.length > 0 &&
+          <Button
+            type='button'
+            variant='info'
+            className='d-block w-100 mt-3'
+            disabled={isActsFetching || loader || !!(data && data?.isComplete)}
+            onClick={onAddActItem}>
+            <i className='bi bi-plus-circle-fill'/>
+          </Button>}
+        {isActsFetching && <BarLoaderSpinner loading={isActsFetching}/>}
       </Col>
 
       {consultation?.exams && consultation.exams?.length > 0 && (
@@ -258,26 +294,8 @@ export function ConsultForm1({data, isDataExists = false, consultation, setConsu
         </>
       )}
 
-      {/*<AppFloatingTextAreaField
-        disabled={loader || (data ? data?.isComplete : false)}
-        placeholder='Votre diagnostic ici...'
-        value={consultation?.diagnostic}
-        onChange={(e) => handleChange(e, consultation, setConsultation)}
-        label='Plaintes & Diagnostic'
-        error={apiErrors?.diagnostic}
-        name='diagnostic'/>*/}
-
-      <AppFloatingTextAreaField
-        disabled={loader || (data ? data?.isComplete : false)}
-        placeholder='Votre commentaire ici...'
-        value={consultation?.comment}
-        onChange={(e) => handleChange(e, consultation, setConsultation)}
-        label='Commentaire(s)'
-        error={apiErrors?.diagnostic}
-        name='comment' />
-
       <div className='mb-3'>
-        <b>Plaintes & dignostics</b>
+        <b>Plaintes & diagnostics</b>
         <AppRichText
           onChange={handleChangeDiagnostic}
           onBlur={handleBlur}
