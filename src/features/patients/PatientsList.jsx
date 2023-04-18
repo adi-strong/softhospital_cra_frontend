@@ -78,23 +78,11 @@ export function PatientsList() {
   // Handle get patients
   useEffect(() => {
     if (!checkPatients.isSearching && !checkPatients.isPaginated && patients && isSuccess)
-      setContents(patients.filter(p => (
-        (p.name.toLowerCase().includes(search.toLowerCase())) ||
-        p?.lastName.toLowerCase().includes(search.toLowerCase()) ||
-        p?.firstName.toLowerCase().includes(search.toLowerCase())
-    )))
+      setContents(patients.filter(p => p?.fullName.toLowerCase().includes(search.toLowerCase())))
     else if (!checkPatients.isSearching && checkPatients.isPaginated && patients)
-      setContents(patientsPaginated.filter(p => (
-        (p.name.toLowerCase().includes(search.toLowerCase())) ||
-        p?.lastName.toLowerCase().includes(search.toLowerCase()) ||
-        p?.firstName.toLowerCase().includes(search.toLowerCase())
-    )))
+      setContents(patientsPaginated.filter(p => p?.fullName.toLowerCase().includes(search.toLowerCase())))
     else if (checkPatients.isSearching && !checkPatients.isPaginated && patients)
-      setContents(researchPatients.filter(p => (
-        (p.name.toLowerCase().includes(search.toLowerCase())) ||
-        p?.lastName.toLowerCase().includes(search.toLowerCase()) ||
-        p?.firstName.toLowerCase().includes(search.toLowerCase())
-    )))
+      setContents(researchPatients.filter(p => p?.fullName.toLowerCase().includes(search.toLowerCase())))
   }, [patients, search, checkPatients, patientsPaginated, isSuccess, researchPatients])
   // End Handle get patients
 
