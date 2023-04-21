@@ -14,7 +14,6 @@ export const SingleConsultSection2 = ({ consult, hospital }) => {
       consult.followed?.forEach(item => {
         if (item.date !== undefined) {
           if (groups.has(item.date)) groups.get(item.date).push({
-            diagnostic: item?.diagnostic ? item.diagnostic : null,
             weight: item?.weight ? item.weight : null,
             temperature: item?.temperature ? item.temperature : null,
             arterialTension: item?.arterialTension ? item.arterialTension : null,
@@ -22,7 +21,6 @@ export const SingleConsultSection2 = ({ consult, hospital }) => {
             oxygenSaturation: item?.oxygenSaturation ? item.oxygenSaturation : null,
             respiratoryFrequency: item?.respiratoryFrequency ? item.respiratoryFrequency : null})
           else groups.set(item.date, [{
-            diagnostic: item?.diagnostic ? item.diagnostic : null,
             weight: item?.weight ? item.weight : null,
             temperature: item?.temperature ? item.temperature : null,
             arterialTension: item?.arterialTension ? item.arterialTension : null,
@@ -113,49 +111,54 @@ export const SingleConsultSection2 = ({ consult, hospital }) => {
             </tbody>
           </Table>
 
-          <Table bordered className='w-100 mt-4'>
-            <tbody>
-              <tr className='text-center'>
-                <th rowSpan={2}>Date</th>
-                <th colSpan={2}>
-                  S. Vitaux
-                </th>
-                <th rowSpan={2} className='pt-4'>Plaintes & Diagnostics</th>
-                <th rowSpan={2} className='pt-4'>C.A.T et Traitement</th>
-              </tr>
+          <Table bordered className='mt-4' id='file-style'>
+            <thead>
+            <tr className='text-center'>
+              <th rowSpan={2}>Date</th>
+              <th colSpan={2}>
+                S. Vitaux
+              </th>
+              <th rowSpan={2} style={{ position: "relative", bottom: 25 }} className='pt-4'>Plaintes & Diagnostics</th>
+              <th rowSpan={2} style={{ position: "relative", bottom: 25 }} className='pt-4'>C.A.T et Traitement</th>
+            </tr>
 
-              <tr>
-                <td className='text-center'>T° C</td>
-                <td className='text-center'>T.A</td>
-              </tr>
+            <tr>
+              <th style={{ width: 100 }} className='text-center'>T° C</th>
+              <th style={{ width: 100 }} className='text-center'>T.A</th>
+            </tr>
+            </thead>
+            <tbody>
 
               {followed && followed?.map((element, idx) =>
-                <tr key={idx}>
-                  <td>{element?.item && moment(element.item).format('D/MM/Y')}</td>
+                <tr key={idx} style={{ borderTop: 'none' }}>
+                  <td style={{ width: 120 }}>{element?.item && moment(element.item).format('D/MM/Y')}</td>
                   <td>
                     {element?.values && element?.values?.map((item, i) => item?.temperature && item.temperature > 0 ?
-                      <div key={i} className='mb-3'>
+                      <div key={i} className='mb-3 text-center'>
                         {item.temperature}
                       </div> : '')}
                   </td>
 
-                  <td>
+                  <td style={{ zIndex: 1000 }}>
                     {element?.values && element?.values?.map((item, i) => item?.arterialTension && item.arterialTension > 0 ?
-                      <div key={i} className='mb-3'>
+                      <div key={i} className='mb-3 text-center'>
                         {item.arterialTension}
                       </div> : '')}
                   </td>
 
-                  <td>
-                    {element?.values && element?.values?.map((item, i) => item?.diagnostic ?
-                      <div key={i} className='mb-4'>
-                        {parser(`${item.diagnostic}`)}
-                      </div> : '')}
-                    {hospital && hospital?.logo &&
-                      <img src={entrypoint+hospital.logo?.contentUrl} className='hosp-logo-wrap' alt=''/>}
-                  </td>
+                  {idx === 0 ?
+                    <td style={{ zIndex: 1000, width: 400, borderBottom: 'none' }}>
+                      {consult?.diagnostic && parser(`${consult?.diagnostic}`)}
+                      {hospital && hospital?.logo &&
+                        <img src={entrypoint+hospital.logo?.contentUrl} className='hosp-logo-wrap' alt=''/>}
+                    </td>
+                    : <td/>}
 
-                  <td />
+                  {idx === 0 ?
+                    <td style={{ zIndex: 1000, width: 400, borderBottom: 'none' }}>
+                      {consult?.treatmentsDescriptions && parser(`${consult.treatmentsDescriptions}`)}
+                    </td>
+                    : <td/>}
                 </tr>)}
             </tbody>
           </Table>

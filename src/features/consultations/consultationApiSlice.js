@@ -76,6 +76,17 @@ export const consultationApiSlice = api.injectEndpoints({
 
     }), // update Consultation
 
+    updateConsultationTreatmentsDescriptions: build.mutation({
+      query: ({ id, treatmentsDescriptions }) => ({
+        headers: patchHeaders,
+        url: pathToApi+`/consultations/${id}`,
+        method: 'PATCH',
+        body: JSON.stringify({ treatmentsDescriptions: treatmentsDescriptions }),
+      }),
+      invalidatesTags: ['Consultations']
+
+    }), // update Consultation
+
     deleteConsultation: build.mutation({
       query: ({ id }) => ({
         headers: patchHeaders,
@@ -146,6 +157,7 @@ export const consultationApiSlice = api.injectEndpoints({
 })
 
 export const {
+  useUpdateConsultationTreatmentsDescriptionsMutation,
   useLazyGetResearchConsultationsByPaginationQuery,
   useLazyGetResearchConsultationsQuery,
   useLazyGetConsultationsByPaginationQuery,

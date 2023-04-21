@@ -1,53 +1,30 @@
-import {useEffect, useState} from "react";
-import {Badge, Button, Card, Col, Form, Row, Spinner} from "react-bootstrap";
-import {AppFloatingTextAreaField, AppRichText} from "../../components";
-import {handleChange} from "../../services/handleFormsFieldsServices";
-import {useUpdateLabMutation} from "./labApiSlice";
+import {useEffect, useMemo, useState} from "react";
 import toast from "react-hot-toast";
-import {Link, useNavigate} from "react-router-dom";
+import {useNavigate} from "react-router-dom";
+import {Button, Card, Col, Form, Row, Spinner} from "react-bootstrap";
+import {RepeatableTableRows} from "../../loaders";
 import {cardTitleStyle} from "../../layouts/AuthLayout";
-import img from '../../assets/app/img/microscopic.jpg';
-import {limitStrTo} from "../../services";
-import BarLoaderSpinner from "../../loaders/BarLoaderSpinner";
-import PatientInfos from "../patients/PatientInfos";
+import {LabVoucher} from "./LabVoucher";
+import {AppRichText} from "../../components";
+import {useUpdateLabMutation} from "./labApiSlice";
 
-export const LabForm = ({ loader, user, isSuccess, data, isFetching, onRefetch }) => {
+export const LabForm = ({ loader, allCategories, categoryLoader, user, isSuccess, data, isFetching, onRefetch }) => {
   const navigate = useNavigate()
-  const [lab, setLab] = useState({
-    id: null,
-    note: '',
-    comment: '',
-    descriptions: '',
-    values: [],
-  })
-  const [updateLab, {isLoading}] = useUpdateLabMutation()
-  const [descriptions, setDescriptions] = useState('')
 
-  // Handle get data
+  let prescriber
+  prescriber = useMemo(() => isSuccess && data && data?.userPrescriber
+    ? data.userPrescriber
+    : null, [data, isSuccess])
+
+  const [values, setValues] = useState([])
+  const [comment, setComment] = useState('')
+  const [draft, setDraft] = useState('')
+  const [updateLab, {isLoading}] = useUpdateLabMutation()
+
   useEffect(() => {
     if (isSuccess && data) {
-      const labResults = data?.labResults
-        ? data.labResults?.map(r => {
-          return {
-            id: r?.exam.id,
-            exam: r?.exam.wording,
-            category: r?.exam ? r.exam?.category ? r.exam.category?.name : null : null
-          }
-        })
-        : null; // Lab's results (Exams)
-
-      setLab(prev => {
-        return {
-          ...prev,
-          id: data?.id,
-          note: data?.note ? data.note : prev.note,
-          comment: data?.comment ? data.comment : prev.comment,
-          values: labResults,
-        }
-      })
-
       if (data?.isPublished) {
-        toast.error('Réultats déjà publiés pour ces examens', {
+        toast.error('😶', {
           icon: '❗',
           style: {
             background: 'orange',
@@ -58,117 +35,107 @@ export const LabForm = ({ loader, user, isSuccess, data, isFetching, onRefetch }
       }
     }
   }, [isSuccess, data, navigate])
-  // End Handle get data
+
+  useEffect(() => {
+    if (isSuccess && data) {
+      const obj = data?.labResults?.map(e => {return {id: e?.exam.id, result: '', wording: e?.exam.wording, normalValue: ''}})
+      setValues(obj)
+    }
+  }, [isSuccess, data])
+
+  function onChange(event, index) {
+    const target = event.target
+    const items = [...values]
+    items[index][target.name] = target.value
+    setValues(items)
+  }
+
+  const handleChangeComment = (newValue) => {
+    setDraft(newValue)
+    setComment(newValue)
+  }
+  const handleBlur = () => setComment(draft)
 
   async function onSubmit(e) {
     e.preventDefault()
-    if (data && lab.id) {
-      const formData = await updateLab(lab)
-      if (!formData.error) {
-        await onRefetch()
-        toast.success('Opération bien efféctuée.')
-        navigate('/member/treatments/lab', {replace: true})
-      }
+    if (data && data?.id) {
+      try {
+        const submit = await updateLab({id: data?.id, comment, values})
+        if (!submit.error) {
+          toast.success('Analyses bien efféctuées.')
+          onRefetch()
+          navigate('/member/treatments/lab', {replace: true})
+        }
+      } catch (e) { }
     }
   }
 
-  const handleResultChange = (value) => {
-    setDescriptions(value)
-    setLab({...lab, descriptions: value})
-  }
-
-  const handleBlur = () => setLab({...lab, descriptions})
-
   return (
     <>
-      <Row>
-        <Col md={7}>
-          <Card className='border-0'>
-            <Card.Body>
-              <h5 className='card-title' style={cardTitleStyle}><i className='bi bi-person'/> Patient(e)</h5>
-              <div className='mb-3'>
-                {!loader && data && data?.patient && <PatientInfos patient={data.patient}/>}
-              </div>
+      <Card className='border-0'>
+        <Card.Body>
+          <h5 className='card-title' style={cardTitleStyle}><i className='fas fa-microscope'/> Laboratoire</h5>
+          {(loader || isFetching) && <RepeatableTableRows />}
+          <Form onSubmit={onSubmit}>
+            {!(loader || isFetching) && data &&
+              <div className='mt-3'>
+                {values && values.length > 0 && values.map((v, idx) =>
+                  <Row key={idx} className='mb-3'>
+                    <Col md={4} className='mb-2' style={{ borderBottom: 'solid lightgray 1px' }}>
+                      <h5 className='text-danger'><i className='fa fa-notes-medical'/> {v?.wording}</h5>
+                    </Col>
 
-              <Form onSubmit={onSubmit}>
-                {/*<AppFloatingTextAreaField
-                  label='Résultats'
-                  onChange={(e) => handleChange(e, lab, setLab)}
-                  disabled={loader || isFetching || isLoading}
-                  value={lab.descriptions}
-                  name='descriptions'
-                  placeholder='Résultats'/>*/}
+                    <Col>
+                      <Row>
+                        <Col className='mb-1'>
+                          <Form.Control
+                            required
+                            disabled={isLoading}
+                            name='result'
+                            placeholder='Résultat(s)'
+                            value={v?.result}
+                            onChange={(e) => onChange(e, idx)} />
+                        </Col>
+                        <Col className='mb-1'>
+                          <Form.Control
+                            disabled={isLoading}
+                            name='normalValue'
+                            placeholder='Valeur normale'
+                            value={v?.normalValue}
+                            onChange={(e) => onChange(e, idx)} />
+                        </Col>
+                      </Row>
+                    </Col>
+                  </Row>)}
+              </div>}
+            <Row className='mt-2'>
+              <Col md={4} />
+              <Col>
+                <Form.Label>Conclusion :</Form.Label>
+                <AppRichText
+                  onChange={handleChangeComment}
+                  onBlur={handleBlur}
+                  value={comment}
+                  disabled={loader || isLoading} />
 
-                <AppFloatingTextAreaField
-                  label={<>Commentaire(s)</>}
-                  onChange={(e) => handleChange(e, lab, setLab)}
-                  disabled={loader || isFetching || isLoading}
-                  value={lab.comment}
-                  name='comment'
-                  placeholder='Commentaire(s)' />
-
-                <div className='mb-3'>
-                  <h5 className='card-title' style={cardTitleStyle}><i className='bi bi-pencil'/> Résultats</h5>
-                  <AppRichText
-                    value={lab.descriptions}
-                    disabled={loader || isFetching || isLoading}
-                    onChange={handleResultChange}
-                    onBlur={handleBlur} />
-                </div>
-
-                <div className='text-end'>
-                  <Button type='button' variant='light' disabled={isFetching || isLoading} onClick={onRefetch}>
-                    {isFetching && <>Chargement en cours <Spinner animation='grow' size='sm'/></>}
-                    {!isFetching && <><i className='bi bi-arrow-clockwise'/> Actualiser</>}
+                <div className='text-end mt-3'>
+                  <Button type='submit' disabled={isLoading || loader}>
+                    <i className='bi bi-check me-1'/>
+                    {!isLoading ? 'Valider' : <>Veuillez patienter <Spinner animation='border' size='sm'/></>}
                   </Button>
-                  <Button type='submit' disabled={loader || isFetching || isLoading} className='mx-1'>
-                    {isLoading ? <>Veuillez patienter <Spinner animation='border' size='sm'/></> : 'Valider'}
-                  </Button>
                 </div>
-              </Form>
-            </Card.Body>
-          </Card>
-        </Col>
+              </Col>
+            </Row>
+          </Form>
+        </Card.Body>
+      </Card>
 
-        <Col>
-          <Card className='border-0'>
-            <Card.Body>
-              <h5 className='card-title' style={cardTitleStyle}>
-                <i className='bi bi-prescription'/> Prescriptions (examens)
-              </h5>
-              {lab.values && lab.values?.map((item, index) => (
-                <Badge key={index} bg='secondary' className='me-1 shadow-lg'>
-                  <i className='bi bi-virus2'/> {limitStrTo(20, item?.exam)}
-                  {item?.category &&
-                    <small className='mx-1 text-info'>
-                      ( {limitStrTo(15, item.category)} <i className='bi bi-tags'/> )
-                    </small>}
-                </Badge>
-              ))}
-              {loader && <BarLoaderSpinner loading={loader}/>}
-
-              <h5 className='card-title mt-4' style={cardTitleStyle}>
-                <i className='bi bi-journal-bookmark'/> Renseignement clinic
-              </h5>
-              {data?.consultation && (
-                <>
-                  {data.consultation?.note && data.consultation.note}
-                  <p className='mb-0 mt-3'>
-                    <Link
-                      to={`/member/treatments/consultations/${data.consultation?.id}/show`}
-                      className='btn btn-success'>
-                      <i className='bi bi-journal-medical'/> Fiche de consultation
-                    </Link>
-                  </p>
-                </>
-              )}
-
-              {loader && <BarLoaderSpinner loading={loader}/>}
-            </Card.Body>
-            <Card.Img src={img} variant='bottom' />
-          </Card>
-        </Col>
-      </Row>
+      <LabVoucher
+        allCategories={allCategories}
+        loader={categoryLoader}
+        prescriber={prescriber}
+        data={data}
+        onRefresh={onRefetch} />
     </>
   )
 }

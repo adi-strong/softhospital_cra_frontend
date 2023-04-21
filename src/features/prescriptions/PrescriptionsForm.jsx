@@ -1,215 +1,258 @@
-import {Button, Card, Col, Form, Modal, Row, Spinner} from "react-bootstrap";
+import {Button, Card, Col, Form, InputGroup, Row, Table} from "react-bootstrap";
 import {cardTitleStyle} from "../../layouts/AuthLayout";
-import BarLoaderSpinner from "../../loaders/BarLoaderSpinner";
-import {AppFloatingTextAreaField, AppMainError} from "../../components";
-import img from '../../assets/app/img/medic_2.jpg';
-import {useState} from "react";
-import {useUpdatePrescriptionMutation} from "./prescriptionApiSlice";
+import {useEffect, useMemo, useState} from "react";
 import {Link, useNavigate} from "react-router-dom";
+import BarLoaderSpinner from "../../loaders/BarLoaderSpinner";
+import {AppAsyncSelectOptions, AppMainError} from "../../components";
 import toast from "react-hot-toast";
-import {OrderItem} from "./OrderItem";
+import {onAddArrayClick, onArrayChange, onRemoveArrayClick} from "../../services/handleFormsFieldsServices";
+import {requiredField} from "../covenants/addCovenant";
+import {useGetMedicinesQuery, useLazyHandleLoadMedicinesOptionsQuery} from "../medicines/medicineApiSlice";
+import {useUpdatePrescriptionMutation} from "./prescriptionApiSlice";
 import PatientInfos from "../patients/PatientInfos";
-import parser from 'html-react-parser';
 
 export function PrescriptionsForm({ data, loader, isError, onRefresh }) {
-  const [prescription, setPrescription] = useState({descriptions: '', orders: [{item: '', value: ''}]})
-  const [updatePrescription, {isLoading}] = useUpdatePrescriptionMutation()
+  let lab, options
+  lab = useMemo(() => {
+    if (data && data?.lab) return data.lab
+    return null
+  }, [data])
 
-  const canSave = [prescription].every(Boolean) && !isLoading
+  const [handleLoadMedicinesOptions] = useLazyHandleLoadMedicinesOptionsQuery()
+  const {data: medicines, isSuccess, isFetching, isError: isErr} = useGetMedicinesQuery('Drugstore')
+  if (isErr) toast.error('Erreur lors du chargement des produits.')
+  options = useMemo(() => {
+    if (isSuccess && medicines) {
+      return medicines?.map(medicine => {
+        return {
+          id: medicine?.id,
+          label: medicine?.wording,
+          value: medicine['@id'],
+        }
+      })
+    }
+    return []
+  }, [isSuccess, medicines])
   const navigate = useNavigate()
 
-  const onAddOrderItem = () => setPrescription(prev => {
-    return {
-      ...prev,
-      orders: [...prev.orders, {item: '', value: ''}]
-    }
-  })
+  const [orders, setOrders] = useState([{medicine: null, dosage: ''}])
+  const [check, setCheck] = useState(false)
+  const [others, setOthers] = useState([])
+  const [descriptions, setDescriptions] = useState('')
+  const [updatePrescription, {isLoading}] = useUpdatePrescriptionMutation()
 
-  const onOrderChange = (event, index) => {
-    const values = [...prescription.orders]
-    values[index][event.target.name] = event.target.value
-    setPrescription({
-      ...prescription,
-      orders: [...values]
-    })
+  async function onLoadExam(keyword) {
+    try {
+      const search = await handleLoadMedicinesOptions(keyword).unwrap()
+      if (!search.error) return search
+    } catch (e) { }
+  }
+  const handleChangeMedicine = (event, index) => {
+    const values = [...orders]
+    values[index]['medicine'] = event
+    setOrders(values)
   }
 
-  const onRemoveOrderItem = (index) => {
-    const values = [...prescription.orders]
-    values.splice(index, 1)
-    setPrescription({...prescription, orders: [...values]})
-  }
+  const onAddItem = () => setOrders([...orders, {medicine: null, dosage: ''}])
+
+  useEffect(() => {
+    if (!check) setOthers([])
+  }, [check])
 
   async function onSubmit(e) {
     e.preventDefault()
-    if (canSave && data) {
-      const formData = await updatePrescription({...prescription, id: data?.id})
-      if (!formData.error) {
-        toast.success('Prescription(s) bien efféctuée(s).')
+    try {
+      const submit = await updatePrescription({
+        id: data?.id,
+        orders: orders && orders.length > 0 ? orders.map(o => o.medicine ? o : null) : null,
+        others: others && others.length > 0 ? others.map(o => o) : null,
+        descriptions})
+      if (!submit.error) {
+        toast.success('Prescription bien efféctuée.')
+        onRefresh()
         navigate('/member/orders', {replace: true})
       }
-    }
-    else alert('Veuillez renseigner ce champ !')
+    } catch (e) { }
   }
-
-  const [show, setShow] = useState(false)
-  const [show2, setShow2] = useState(false)
-  const [show3, setShow3] = useState(false)
-
-  const onToggleShow = () => setShow(!show)
-  const onToggleShow2 = () => setShow2(!show2)
-  const onToggleShow3 = () => setShow3(!show3)
 
   return (
     <>
       <Form onSubmit={onSubmit}>
         <Row>
-          <Col md={7}>
+          <Col md={3}>
             <Card className='border-0'>
               <Card.Body>
-                <h5 className='card-title' style={cardTitleStyle}>
+                <h5 className='card-title text-md-center' style={cardTitleStyle}>
                   <i className='bi bi-person'/> Patient(e)
                 </h5>
-                <div className='mb-3'>
-                  {!loader && data && data?.patient && <PatientInfos patient={data.patient}/>}
-                </div>
-
-                <h5 className='card-title' style={cardTitleStyle}>
-                  <i className='bi bi-pen'/> Prescription médicale (ordonnance)
-                </h5>
-
-                {isError && <AppMainError/>}
-
-                {prescription.orders.map((order, idx) =>
-                  <OrderItem
-                    key={idx}
-                    order={order}
-                    idx={idx}
-                    loader={loader || isLoading}
-                    onOrderChange={onOrderChange}
-                    prescription={prescription}
-                    onRemoveOrderItem={onRemoveOrderItem}/>)}
-
-                <Button
-                  disabled={loader || isLoading}
-                  type='button'
-                  variant='info'
-                  className='mb-3 w-100'
-                  onClick={onAddOrderItem}>
-                  <i className='bi bi-plus'/>
-                </Button>
-
-                <AppFloatingTextAreaField
-                  onChange={({target}) => setPrescription({...prescription, descriptions: target?.value})}
-                  disabled={loader || isLoading}
-                  value={prescription.descriptions}
-                  name='descriptions'
-                  label='Commentaire :'
-                  placeholder='Commentaire :' />
-
-                <div className='text-center'>
-                  <Button type='submit' disabled={isLoading || loader}>
-                    {isLoading ? <>Veuillez patienter <Spinner animation='border' size='sm'/></>: 'Valider'}
-                  </Button>
-                </div>
-
+                {loader && <BarLoaderSpinner loading={loader}/>}
+                {!(loader || isError) && data && data?.patient && <PatientInfos patient={data.patient}/>}
               </Card.Body>
             </Card>
           </Col>
 
-          <Col>
+          <Col md={6}>
             <Card className='border-0'>
               <Card.Body>
-                <h5 className='card-title' style={cardTitleStyle}>
-                  <i className='bi bi-file-medical'/> Résultat des examens
-                </h5>
-                <div className='mb-2'>
-                  <Button
-                    type='button'
-                    variant='dark' className='d-block mb-2 w-100'
-                    onClick={onToggleShow}
-                    disabled={loader || isLoading}>
-                    <i className='bi bi-file-medical-fill'/> Examens prescritent
-                  </Button>
-                  <Button
-                    type='button'
-                    variant='secondary'
-                    className='d-block mb-2 w-100'
-                    onClick={onToggleShow2}
-                    disabled={loader || isLoading}>
-                    <i className='bi bi-virus2'/> Résultat des examens
-                  </Button>
-                  <Button
-                    type='button'
-                    variant='primary'
-                    className='d-block mb-2 w-100'
-                    onClick={onToggleShow3}
-                    disabled={loader || isLoading}>
-                    <i className='bi bi-list-check'/> Commentaire(s)
-                  </Button>
-                  {!loader && data &&
-                    <Link
-                      to={`/member/treatments/consultations/${data?.consultation.id}/show`}
-                      className='d-block mb-2 w-100 btn btn-success'
-                      disabled={loader || isLoading}>
-                      <i className='bi bi-journal-medical'/> Fiche de consultation
-                    </Link>}
-                </div>
+                <h5 className='card-title' style={cardTitleStyle}>Formulaire de prescription</h5>
+                {isError && <AppMainError/>}
                 {loader && <BarLoaderSpinner loading={loader}/>}
+                {!(isError || loader) && lab &&
+                  <>
+                    {orders && orders.length > 0 && orders.map((o, idx) =>
+                      <Row key={idx} className='mb-2'>
+                        <Col className='mb-1'>
+                          <AppAsyncSelectOptions
+                            onChange={(e) => handleChangeMedicine(e, idx)}
+                            className='text-capitalize'
+                            value={o.medicine}
+                            disabled={isFetching || isLoading}
+                            label={<>Produit {requiredField}</>}
+                            loadOptions={onLoadExam}
+                            defaultOptions={options} />
+                        </Col>
+                        <Col className='mb-1'>
+                          <Form.Label htmlFor='dosage'>Dosage / Posologie</Form.Label>
+                          <InputGroup>
+                            <Form.Control
+                              required
+                              disabled={isLoading}
+                              autoComplete='off'
+                              id='dosage'
+                              name='dosage'
+                              value={o.dosage}
+                              onChange={(e) => onArrayChange(e, idx, orders, setOrders)} />
+                            <Button
+                              type='button'
+                              variant='info'
+                              disabled={isFetching || loader || isLoading}
+                              onClick={onAddItem}>
+                              <i className='bi bi-plus'/>
+                            </Button>
+                            {orders.length > 1 &&
+                              <Button
+                                type='button'
+                                variant='dark'
+                                disabled={loader || isFetching || isLoading}
+                                onClick={() => onRemoveArrayClick(idx, orders, setOrders)}>
+                                <i className='bi bi-dash'/>
+                              </Button>}
+                          </InputGroup>
+                        </Col>
+                      </Row>)}
+                  </>}
+
+                <Form.Check
+                  id='check'
+                  name='check'
+                  value={check}
+                  checked={check}
+                  disabled={loader || isFetching || isLoading}
+                  onChange={() => setCheck(!check)}
+                  label='Ajout hors stock (écrire)' />
+                {check &&
+                  <div className='mt-3'>
+                    {others && others.length > 0 && others.map((o, idx) =>
+                      <Row key={idx} className='mb-1'>
+                        <Col className='mb-2'>
+                          <Form.Label htmlFor='medicine'>Produit {requiredField}</Form.Label>
+                          <Form.Control
+                            required
+                            autoComplete='off'
+                            id='medicine'
+                            name='medicine'
+                            value={o?.medicine}
+                            onChange={(e) => onArrayChange(e, idx, others, setOthers)}
+                            disabled={loader || isFetching || isLoading} />
+                        </Col>
+                        <Col className='mb-2'>
+                          <Form.Label htmlFor='medicine'>Dosage / Posologie</Form.Label>
+                          <InputGroup>
+                            <Form.Control
+                              autoComplete='off'
+                              id='dosage'
+                              name='dosage'
+                              value={o?.dosage}
+                              onChange={(e) => onArrayChange(e, idx, others, setOthers)}
+                              disabled={loader || isFetching || isLoading} />
+                            <Button
+                              type='button'
+                              variant='dark'
+                              disabled={isLoading}
+                              onClick={() => onRemoveArrayClick(idx, others, setOthers)}>
+                              <i className='bi bi-dash'/>
+                            </Button>
+                          </InputGroup>
+                        </Col>
+                      </Row>)}
+                    <Button
+                      type='button'
+                      className='d-block mt-2 w-100 mb-3'
+                      variant='info'
+                      disabled={isLoading}
+                      onClick={() => onAddArrayClick({medicine: '', dosage: ''}, others, setOthers)}>
+                      <i className='bi bi-plus'/>
+                    </Button>
+                  </div>} <hr/>
+
+                <div className='mb-3'>
+                  <Form.Label htmlFor='descriptions'>
+                    <i className='bi bi-exclamation-triangle'/> Laisser une remarque (note du médecin) :
+                  </Form.Label>
+                  <Form.Control
+                    as='textarea'
+                    id='descriptions'
+                    name='descriptions'
+                    value={descriptions}
+                    onChange={({target}) => setDescriptions(target.value)}
+                    disabled={isLoading || loader} />
+                </div>
+
+                <div className='text-end'>
+                  <Button type='submit' disabled={isLoading}>
+                    <i className='bi bi-check me-1'/>
+                    Valider
+                  </Button>
+                </div>
               </Card.Body>
-              <Card.Img variant='bottom' src={img} />
+            </Card>
+          </Col>
+
+          <Col md={3}>
+            <Card className='border-0'>
+              <Card.Body>
+                <h5 className='card-title mb-3 text-md-center' style={cardTitleStyle}>Résultats d'analyses</h5>
+                {loader && <BarLoaderSpinner loading={loader}/>}
+
+                {lab && !(loader || isError) &&
+                  <>
+                    <Table borderless striped className='text-center' style={{ fontSize: '0.7rem' }}>
+                      <thead>
+                      <tr>
+                        <th>Examen</th>
+                        <th>Résultat</th>
+                      </tr>
+                      </thead>
+                      <tbody>
+                      {lab?.results && lab.results?.map((r, idx) =>
+                        <tr key={idx}>
+                          <td>{r?.exam}</td>
+                          <td>{r?.result}</td>
+                        </tr>)}
+                      </tbody>
+                    </Table>
+
+                    <div className='text-md-center'>
+                      <Link to={`/member/treatments/lab/${lab?.id}/show`} className='text-decoration-none mt-3 text-center'>
+                        ↪ Voir plus
+                      </Link>
+                    </div>
+                  </>}
+              </Card.Body>
             </Card>
           </Col>
         </Row>
       </Form>
-
-      <Modal show={show} onHide={onToggleShow} size='lg'>
-        <Modal.Header closeButton className='bg-dark text-light'>
-          <Modal.Title><i className='bi bi-file-medical-fill'/> Examens prescritent</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <ul id='prescriptions-lab-exams'>
-            {data && data?.lab && data.lab?.labResults && data.lab.labResults?.map((item, idx) =>
-              <li key={idx}>
-                <i className='bi bi-virus2 me-1'/>
-                {item?.exam.wording}
-              </li>)}
-          </ul>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button type='button' variant='light' onClick={onToggleShow}>
-            <i className='bi bi-x'/> Fermer
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
-      <Modal show={show2} onHide={onToggleShow2} size='lg'>
-        <Modal.Header closeButton className='bg-secondary text-light'>
-          <Modal.Title><i className='bi bi-virus2'/> Résultat des examens</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {data && data?.lab && parser(data.lab?.descriptions)}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button type='button' variant='light' onClick={onToggleShow2}>
-            <i className='bi bi-x'/> Fermer
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
-      <Modal show={show3} onHide={onToggleShow3} size='lg'>
-        <Modal.Header closeButton className='bg-primary text-light'>
-          <Modal.Title><i className='bi bi-list-check'/> Commentaire(s)</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {data && data?.lab && parser(data.lab?.comment)}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button type='button' variant='light' onClick={onToggleShow3}>
-            <i className='bi bi-x'/> Fermer
-          </Button>
-        </Modal.Footer>
-      </Modal>
     </>
   )
 }

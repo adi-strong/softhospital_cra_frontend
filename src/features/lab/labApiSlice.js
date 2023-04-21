@@ -26,7 +26,7 @@ export const labApiSlice = api.injectEndpoints({
     getSingleLab: build.query({
       query: id => pathToApi+`/labs/${id}`,
       transformResponse: res => {
-        return {...res, createdAt: res?.createdAt ? moment(res.createdAt).calendar() : null}
+        return {...res, createdAt: res?.createdAt ? moment(res.createdAt).format('ll') : null}
       },
       providesTags: (result, error, arg) => [{ type: 'SingleLab', id: arg }]
     }),

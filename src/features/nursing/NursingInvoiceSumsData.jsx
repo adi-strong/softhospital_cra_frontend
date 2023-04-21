@@ -2,6 +2,7 @@ import {Button, Col, Form, Row, Spinner} from "react-bootstrap";
 import {useEffect, useState} from "react";
 import {useUpdateNursingMutation} from "./nursingApiSlice";
 import toast from "react-hot-toast";
+import parser from 'html-react-parser';
 
 export const NursingInvoiceSumsData = ({ data, nursing, setNursing, onRefresh }) => {
   const [updateNursing, {isLoading}] = useUpdateNursingMutation()
@@ -48,7 +49,10 @@ export const NursingInvoiceSumsData = ({ data, nursing, setNursing, onRefresh })
         {/* PAYMENT'S FORM */}
         {!data?.isCompleted &&
           <>
-            <Col md={6} />
+            <Col md={6} className='bg-light p-2'>
+              <h6 className='text-primary mt-2'><i className='bi bi-exclamation-triangle'/> Suivi & Commentaire :</h6> <hr/>
+              {data && data?.comment && parser(`${data.comment}`)}
+            </Col>
             {data?.patient && !data.patient?.covenant &&
               <Col md={6}>
                 <Form onSubmit={onSubmit}>

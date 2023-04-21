@@ -10,7 +10,6 @@ import {useNavigate, useParams} from "react-router-dom";
 import BarLoaderSpinner from "../../loaders/BarLoaderSpinner";
 import {OrderPatientInfos} from "./OrderPatientInfos";
 import {SingleOrderSection1} from "./SingleOrderSection1";
-import parser from "html-react-parser";
 import {selectCurrentUser} from "../auth/authSlice";
 import {allowShowOrdersPage} from "../../app/config";
 import toast from "react-hot-toast";
@@ -84,10 +83,10 @@ function SingleOrderPage() {
 
             {!isFetching && isSuccess && order &&
               <div style={{ position: 'relative', bottom: 0 }} className='w-75 m-auto'>
-                <b><i className='bi bi-exclamation-triangle'/> Note : </b>
-                {order?.descriptions && parser(order.descriptions)}
-                <p className='text-end mt-5'>
-                  Date : {order?.updatedAt && order.updatedAt}
+                <b className='text-danger'><i className='bi bi-exclamation-triangle'/> Note : </b>
+                {order?.descriptions && <div style={{ whiteSpace: 'pre-line' }}>{order.descriptions}</div>}
+                <p className='text-end mt-5 text-capitalize'>
+                  Date : {order?.date && order.date}
                 </p>
               </div>}
             {/* ... */}

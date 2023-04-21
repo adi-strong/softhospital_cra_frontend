@@ -35,11 +35,8 @@ export const PrescriptionItem = ({ prescription }) => {
         </td>
         <td className='text-capitalize'>
           {user && user?.name ? usernameFiltered(user.name) : user?.username}
-          {!user && '❓'}
         </td>
-        <td>
-          {updatedAt ? updatedAt : '❓'}
-        </td>
+        <td>{updatedAt && updatedAt}</td>
         <td className='text-end'>
           <ButtonGroup size='sm'>
             <Link to={`/member/treatments/prescriptions/${prescription.id}/edit`} className='btn btn-primary'>

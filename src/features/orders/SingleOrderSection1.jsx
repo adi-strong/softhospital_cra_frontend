@@ -5,8 +5,10 @@ export const SingleOrderSection1 = ({ order }) => {
     <div className='w-75 m-auto'>
       {orders && orders?.map((element, idx) =>
         <div key={idx} className='text-capitalize mb-3 d-flex'>
-          <h6 className='fw-bold'>{element?.item}</h6>
-          <p className='mx-3'>{element?.value}</p>
+          <b className='me-4'>{element?.medicine && element.medicine?.label
+            ? element.medicine.label
+            : element.medicine} :</b>
+          <span>{element?.dosage}</span>
         </div>)}
     </div>
   )

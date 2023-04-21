@@ -42,7 +42,7 @@ export function LabItem({ lab }) {
               </Link>}
             {!lab?.isPublished &&
               <Link to={`/member/treatments/lab/${lab?.id}/edit`} className='btn btn-primary'>
-                <i className='bi bi-pencil'/> Publier les résultats
+                <i className='bi bi-clipboard-plus'/> Analyses
               </Link>}
           </ButtonGroup>
         </td>

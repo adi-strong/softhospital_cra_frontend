@@ -1388,8 +1388,15 @@ ul[class='~dropdown-menu-end dropdown-menu-arrow border-0 dropdown-menu show'] {
 
 .hosp-logo-wrap {
   position: absolute;
-  opacity: 0.4;
-  z-index: 2;
+  opacity: 0.1;
   width: 30%;
-  top: 500px;
+  top: 550px;
+}
+
+#file-style tbody tr {
+  border-bottom: none;
+}
+
+#file-style tbody tr:last-child {
+  border-bottom: 1px solid #dee2e6;
 }

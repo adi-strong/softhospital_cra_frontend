@@ -65,7 +65,6 @@ export const NursingInvoiceDataTable = ({ data, nursing, setNursing, onRefresh }
     }
     return null
   }, [data])
-  console.log(acts)
 
   return (
     <>

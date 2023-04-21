@@ -12,10 +12,10 @@ export const SingleConsultSection1 = ({ consult, hospital }) => {
           alt='Logo' />}
       <div className='w-50 m-auto text-center'>
         <h6 className='fw-bold'>RÉPUBLIQUE DÉMOCRATIQUE DU CONGO</h6>
-        <h6 className='fw-bold'>MINISTÈRE DE LA SANTÉ</h6>
+        <h6 className='fw-bold text-danger'>MINISTÈRE DE LA SANTÉ</h6>
         {hospital &&
           <>
-            <h3 className='text-uppercase' style={{ fontWeight: 900 }}>{hospital?.denomination}</h3>
+            <h3 className='text-uppercase text-primary' style={{ fontWeight: 900 }}>{hospital?.denomination}</h3>
             <b>{hospital?.address && hospital.address}</b>
           </>}
       </div>

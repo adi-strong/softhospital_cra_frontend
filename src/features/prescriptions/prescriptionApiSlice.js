@@ -26,7 +26,9 @@ export const prescriptionApiSlice = api.injectEndpoints({
     getSinglePrescription: build.query({
       query: id => pathToApi+`/prescriptions/${id}`,
       transformResponse: res => {
-        return {...res, updatedAt: res?.updatedAt ? moment(res.updatedAt).calendar() : null}
+        return {...res,
+          date: res?.updatedAt ? moment(res.updatedAt).format('ll') : null,
+          updatedAt: res?.updatedAt ? moment(res.updatedAt).calendar() : null}
       },
       providesTags: (result, error, arg) => [{ type: 'SinglePrescription', id: arg }]
     }),

@@ -6,6 +6,7 @@ import {RepeatableTableRows} from "../../loaders";
 
 const AppDataTableContents = (
   {
+    id = '',
     title,
     thead,
     tbody,
@@ -20,7 +21,7 @@ const AppDataTableContents = (
     <>
       {title && <h5 className="card-title" style={cardTitleStyle}>{title}</h5>}
       <Row className='mb-3'>{overview && overview}</Row>
-      <Table striped={isStriped} borderless={isBorderless} bordered={isBordered} hover={isHover} responsive>
+      <Table id={id} striped={isStriped} borderless={isBorderless} bordered={isBordered} hover={isHover} responsive>
         {thead}
         {!loader && tbody}
       </Table>

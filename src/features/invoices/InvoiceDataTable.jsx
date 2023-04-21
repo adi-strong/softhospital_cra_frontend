@@ -97,7 +97,7 @@ export const InvoiceDataTable = ({ invoice, isPrint, setIsPrint }) => {
 
   return (
     <>
-      <Table bordered className='w-100' style={{ fontSize: '0.7rem' }}>
+      <Table bordered responsive style={{ fontSize: '0.7rem' }}>
         <AppTHead items={theadItems} className='bg-primary text-light text-center' />
         <tbody>
           <tr className='bg-light'>

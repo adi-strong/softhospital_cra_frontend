@@ -8,10 +8,12 @@ function AppDataTableBordered(
     thead,
     tbody,
     overview,
+    id,
     isStriped = false,
   }) {
   return <AppDataTableContents
     isBordered
+    id={id}
     loader={loader}
     title={title}
     thead={thead}

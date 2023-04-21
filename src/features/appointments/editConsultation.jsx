@@ -5,12 +5,15 @@ import {useEffect, useState} from "react";
 import {onInitSidebarMenu} from "../navigation/navigationSlice";
 import toast from "react-hot-toast";
 import {AppBreadcrumb, AppDropdownFilerMenu, AppHeadTitle} from "../../components";
-import {Card, Col, Form, Row} from "react-bootstrap";
+import {Card, Col, Form, Row, Tab, Tabs} from "react-bootstrap";
 import {ConsultForm2} from "../consultations/ConsultForm2";
 import {ConsultForm1} from "../consultations/ConsultForm1";
 import BarLoaderSpinner from "../../loaders/BarLoaderSpinner";
 import {selectCurrentUser} from "../auth/authSlice";
 import {allowShowSingleAppointmentsPage} from "../../app/config";
+import {SingleConsultTreatmentsTab} from "../consultations/SingleConsultTreatmentsTab";
+
+const tabs = [{title: 'Avant première', eventKey: 'details'}, {title: 'Traitements', eventKey: 'treatments'}]
 
 function EditConsultation() {
   const dispatch = useDispatch(), navigate = useNavigate()
@@ -205,7 +208,7 @@ function EditConsultation() {
     if (canSave && id) {
       if (consult && consult?.isComplete) {
         toast.error('Ce dossier est clos 👌')
-        navigate('/member/treatments/consultations', {replace: true})
+        // navigate('/member/treatments/consultations', {replace: true})
       }
       else {
         const data = await updateConsultation(consultation)
@@ -240,6 +243,8 @@ function EditConsultation() {
     }
   }, [user, navigate])
 
+  const [key, setKey] = useState('details')
+
   return (
     <div className='section dashboard'>
       <AppHeadTitle title='Fiche de consultation | Édition' />
@@ -269,15 +274,27 @@ function EditConsultation() {
 
               <Card.Body>
                 {isConsultFetching && <BarLoaderSpinner loading={isConsultFetching}/>}
-                <ConsultForm1
-                  isDataExists
-                  data={consult}
-                  onRefresh={onRefresh}
-                  loader={isLoading || isConsultLoading || isConsultFetching}
-                  onReset={onReset}
-                  setConsultation={setConsultation}
-                  consultation={consultation}
-                  apiErrors={apiErrors}/>
+                <Tabs onSelect={k => setKey(k)} activeKey={key} variant='tabs-bordered'>
+                  {tabs && tabs.length > 0 && tabs.map((tab, idx) =>
+                    <Tab key={idx} title={tab.title} eventKey={tab.eventKey} className='pt-3'>
+                      {tab.eventKey === 'details' &&
+                        <ConsultForm1
+                          isDataExists
+                          data={consult}
+                          onRefresh={onRefresh}
+                          loader={isLoading || isConsultLoading || isConsultFetching}
+                          onReset={onReset}
+                          setConsultation={setConsultation}
+                          consultation={consultation}
+                          apiErrors={apiErrors}/>}
+
+                      {tab.eventKey === 'treatments' &&
+                        <SingleConsultTreatmentsTab
+                          data={consult}
+                          onRefresh={onRefresh}
+                          loader={isLoading || isConsultLoading || isConsultFetching}/>}
+                    </Tab>)}
+                </Tabs>
               </Card.Body>
             </Card>
           </Col>
