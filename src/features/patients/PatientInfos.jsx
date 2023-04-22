@@ -4,7 +4,7 @@ import {entrypoint} from "../../app/store";
 import img from '../../assets/app/img/default_profile.jpg';
 import {Link} from "react-router-dom";
 
-function PatientInfos({ patient }) {
+function PatientInfos({ patient, age = null }) {
   const profile = useMemo(() => patient?.profile
     ? entrypoint+patient.profile?.contentUrl
     : null, [patient])
@@ -34,9 +34,9 @@ function PatientInfos({ patient }) {
             {sex && sex === 'M' && <span className='text-capitalize text-dark'>Masculin</span>}
             {sex && sex === 'F' && <span className='text-capitalize text-dark'>Féminin</span>} <br/>
 
-            {patient?.age && patient.age >= 18
+            {age && age >= 18
               && <span className='text-capitalize text-dark'><i className='bi bi-sort-numeric-up-alt me-3 text-primary'/>Adulte</span>}
-            {patient?.age && patient.age < 18
+            {age && age < 18
               && <span className='text-capitalize text-dark'><i className='bi bi-sort-numeric-down-alt me-3 text-primary'/>Mineur(e)</span>} <br/>
 
             <i className='bi bi-person-bounding-box me-3'/>

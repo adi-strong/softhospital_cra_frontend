@@ -72,7 +72,7 @@ export const SingleConsultSection2 = ({ consult, hospital }) => {
 
                 <td>Âge</td>
                 <td style={{ borderBottom: '2px dotted #000' }}>
-                  : {patient?.age && patient.age+' an(s)'}
+                  : {consult?.age && consult.age+' an(s)'}
                 </td>
 
                 <td>Sexe</td>

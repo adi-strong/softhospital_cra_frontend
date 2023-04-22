@@ -39,7 +39,7 @@ export function NursingForm({ data, onRefresh, isError = false, loader = false})
 
           {data && data?.patient &&
             <div className='mb-4'>
-              <PatientInfos patient={data.patient} />
+              <PatientInfos patient={data.patient} age={data && data?.age ? data.age : null} />
             </div>}
 
           <div>

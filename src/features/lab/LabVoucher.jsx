@@ -59,7 +59,7 @@ export function LabVoucherHeader({ title = 'BON D\'ANALYSE DE LABORATOIRE', hosp
 
           <th>Âge :</th>
           <td style={{ borderBottom: 'dotted #000 2px' }} className='text-primary'>
-            {patient && patient?.age && patient.age} an(s)
+            {data && data?.age && data.age} an(s)
           </td>
 
           <th>Sexe :</th>

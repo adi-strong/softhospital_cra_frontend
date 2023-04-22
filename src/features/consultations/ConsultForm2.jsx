@@ -117,7 +117,10 @@ export const ConsultForm2 = ({ data, consultation, setConsultation, onReset, api
               placeholder='Patient(e)...'
               error={apiErrors?.patient} />
           </div>
-          {consultation?.patient && <PatientInfos patient={consultation.patient?.data} />}
+          {consultation?.patient &&
+            <PatientInfos
+              patient={consultation.patient?.data}
+              age={consultation && consultation?.age ? consultation.age : null} />}
         </Card.Body>
       </Card>
 

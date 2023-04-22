@@ -72,6 +72,7 @@ function EditConsultation() {
         return {
           id: id,
           ...prevState,
+          age: consult?.age ? consult.age : null,
           isPublished: consult ? consult?.isPublished : true,
           comment: consult?.comment ? consult.comment : '',
           weight: consult?.weight ? consult.weight : 0.0,

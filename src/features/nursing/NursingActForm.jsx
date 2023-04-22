@@ -97,8 +97,8 @@ export const NursingActForm = ({ data, onLoad, handleComment, handleBlur, commen
                   <div className="text-end text-primary"><i className='bi bi-arrow-bar-right'/></div>
                 </Col>
 
-                <Col md={8} className='bg-danger-light'>
-                  <h6 className="text-center text-danger mt-2 fw-bold"><i className='bi bi-caret-down-fill'/> Procédure</h6>
+                <Col md={8} className='bg-secondary-light'>
+                  <h6 className="text-center text-primary mt-2 fw-bold"><i className='bi bi-caret-down-fill'/> Procédure</h6>
                   {act?.procedures && act.procedures.length > 0 && act.procedures.map((p, key) =>
                     <div key={key} className='mb-3'>
                       <InputGroup>
