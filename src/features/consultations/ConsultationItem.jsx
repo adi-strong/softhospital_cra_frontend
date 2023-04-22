@@ -35,15 +35,15 @@ export const ConsultationItem = ({ consult }) => {
         <td>{user}</td>
         <td>{date}</td>
         <td className='text-end'>
-          <ButtonGroup size='sm'>
+          <ButtonGroup size='sm' className='w-100'>
             <Link
               to={`/member/treatments/consultations/${consult?.id}/${patient?.slug}`}
-              className='w-100 btn btn-light text-decoration-none'>
-              <i className='bi bi-eye-fill'/>
+              className='btn btn-light text-decoration-none'>
+              <i className='bi bi-eye-fill text-primary'/>  Voir la fiche de consultation
             </Link>
             <Link
               to={`/member/treatments/consultations/edit/${consult?.id}/${patient?.slug}`}
-              className='w-100 btn btn-light text-decoration-none'>
+              className='btn btn-light text-decoration-none'>
               <i className='bi bi-pencil-square text-primary'/>
             </Link>
           </ButtonGroup>

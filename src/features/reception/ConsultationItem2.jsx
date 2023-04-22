@@ -32,8 +32,8 @@ export const ConsultationItem2 = ({ consult }) => {
         <td className='text-end'>
           <Link
             to={`/member/treatments/consultations/${consult?.id}/${patient?.slug}`}
-            className='w-100 btn btn-light btn-sm text-decoration-none'>
-            <i className='bi bi-eye'/>
+            className='btn btn-light btn-sm text-decoration-none'>
+            <i className='bi bi-eye-fill text-primary'/> Voir
           </Link>
         </td>
       </tr>

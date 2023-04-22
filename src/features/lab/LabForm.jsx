@@ -90,6 +90,7 @@ export const LabForm = ({ loader, allCategories, categoryLoader, user, isSuccess
                         <Col className='mb-1'>
                           <Form.Control
                             required
+                            autoComplete='off'
                             disabled={isLoading}
                             name='result'
                             placeholder='Résultat(s)'
@@ -98,6 +99,7 @@ export const LabForm = ({ loader, allCategories, categoryLoader, user, isSuccess
                         </Col>
                         <Col className='mb-1'>
                           <Form.Control
+                            autoComplete='off'
                             disabled={isLoading}
                             name='normalValue'
                             placeholder='Valeur normale'

@@ -6,7 +6,7 @@ import {
   AppMainError, AppPaginationComponent,
   AppTHead
 } from "../../components";
-import {Badge, Button, Card, Col, Form} from "react-bootstrap";
+import {Badge, Button, Card, Col, Form, Row} from "react-bootstrap";
 import {
   outputsPages, researchOutputsPages,
   totalResearchOutputs,
@@ -27,6 +27,14 @@ import {selectCurrentUser} from "../auth/authSlice";
 import {useNavigate} from "react-router-dom";
 import {allowShowFinancesPage} from "../../app/config";
 import toast from "react-hot-toast";
+import {DashSection3Item3} from "../dashboard/sections/section3/DashSection3Item3";
+
+const menus = [
+  {label: 'Ce mois', name: 'this-month', action: '#'},
+  {label: 'Mois passé', name: 'last-month', action: '#'},
+  {label: 'Cette année', name: 'this-year', action: '#'},
+  {label: 'Actualiser', name: 'refresh', action: '#'},
+]
 
 const OutputItem = ({ output, currency }) => {
 
@@ -153,100 +161,109 @@ function Outputs() {
   }, [user, navigate])
 
   return (
-    <>
+    <div className='section dashboard'>
       <AppHeadTitle title='Finances : Sorties' />
       <AppBreadcrumb title='Sorties' />
-      <Card className='border-0'>
-        <Card.Body>
-          <h5 className='card-title mb-3' style={cardTitleStyle}>Liste de sorties</h5>
-          <Box/>
-          <AppDataTableBorderless
-            overview={
-              <>
-                <div className='mb-3'>
-                  {checkItems.isSearching ?
-                    totalResearchOutputs > 0 ?
-                      <p>
-                        Au total
-                        <code className="mx-1 me-1">{totalResearchOutputs.toLocaleString()}</code>
-                        sortie(s) trouvé(s) suite à votre recherche ⏩ <b>{tempSearch}</b> :
-                      </p> : 'Aucune occurence trouvée 🎈' : ''}
-                </div>
 
-                <Col md={4}>
-                  <Button type='button' onClick={toggleModal}>
-                    <i className='bi bi-node-plus'/> Nouvelle sortie
-                  </Button>
-                </Col>
+      <Row>
+        <Col md={8}>
+          <Card className='border-0'>
+            <Card.Body>
+              <h5 className='card-title mb-3' style={cardTitleStyle}>Liste de sorties</h5>
+              <Box/>
+              <AppDataTableBorderless
+                overview={
+                  <>
+                    <div className='mb-3'>
+                      {checkItems.isSearching ?
+                        totalResearchOutputs > 0 ?
+                          <p>
+                            Au total
+                            <code className="mx-1 me-1">{totalResearchOutputs.toLocaleString()}</code>
+                            sortie(s) trouvé(s) suite à votre recherche ⏩ <b>{tempSearch}</b> :
+                          </p> : 'Aucune occurence trouvée 🎈' : ''}
+                    </div>
 
-                <Col md={7} className='mb-3'>
-                  <form onSubmit={handleSubmit}>
-                    <Form.Control
-                      placeholder='Votre recherche ici...'
-                      aria-label='Votre recherche ici...'
-                      autoComplete='off'
-                      disabled={isFetching3}
-                      name='search'
-                      value={search}
-                      onChange={({ target}) => setSearch(target.value)} />
-                  </form>
-                </Col>
-              </>
-            }
-            loader={isLoading || isFetching2 || isFetching4}
-            thead={
-              <AppTHead
-                onRefresh={onRefresh}
-                loader={isLoading}
-                isFetching={isFetching || isFetching3 || isFetching2 || isFetching4}
-                items={[
-                  {label: '#'},
-                  {label: 'Bénéficiaire'},
-                  {label: 'Motif'},
-                  {label: 'Montant'},
-                  {label: 'Catégorie'},
-                  {label: <><i className='bi bi-person'/></>},
-                  {label: 'Date'},
-                ]}
-              />}
-            tbody={
-              <tbody>
-                {!isError && isSuccess && contents.length > 0 &&
-                  contents.map(o => <OutputItem key={o?.id} output={o} currency={fCurrency}/>)}
-              </tbody>} />
+                    <Col md={4}>
+                      <Button type='button' onClick={toggleModal}>
+                        <i className='bi bi-node-plus'/> Nouvelle sortie
+                      </Button>
+                    </Col>
 
-          {isLoading || isFetching || isFetching2 || isFetching3 || isFetching4
-            ? <BarLoaderSpinner loading={isLoading || isFetching || isFetching2 || isFetching3 || isFetching4}/>
-            : (
-              <>
-                {outputsPages > 1 && isSuccess && outputs
-                  && !checkItems.isSearching &&
-                  <AppPaginationComponent
-                    nextLabel=''
-                    previousLabel=''
-                    onPaginate={handlePagination}
-                    currentPage={page - 1}
-                    pageCount={outputsPages} />}
+                    <Col md={7} className='mb-3'>
+                      <form onSubmit={handleSubmit}>
+                        <Form.Control
+                          placeholder='Votre recherche ici...'
+                          aria-label='Votre recherche ici...'
+                          autoComplete='off'
+                          disabled={isFetching3}
+                          name='search'
+                          value={search}
+                          onChange={({ target}) => setSearch(target.value)} />
+                      </form>
+                    </Col>
+                  </>
+                }
+                loader={isLoading || isFetching2 || isFetching4}
+                thead={
+                  <AppTHead
+                    onRefresh={onRefresh}
+                    loader={isLoading}
+                    isFetching={isFetching || isFetching3 || isFetching2 || isFetching4}
+                    items={[
+                      {label: '#'},
+                      {label: 'Bénéficiaire'},
+                      {label: 'Motif'},
+                      {label: 'Montant'},
+                      {label: 'Catégorie'},
+                      {label: <><i className='bi bi-person'/></>},
+                      {label: 'Date'},
+                    ]}
+                  />}
+                tbody={
+                  <tbody>
+                  {!isError && isSuccess && contents.length > 0 &&
+                    contents.map(o => <OutputItem key={o?.id} output={o} currency={fCurrency}/>)}
+                  </tbody>} />
 
-                {researchOutputsPages > 1 && isSuccess && outputs && checkItems.isSearching &&
-                  <AppPaginationComponent
-                    nextLabel=''
-                    previousLabel=''
-                    onPaginate={handlePagination2}
-                    currentPage={page - 1}
-                    pageCount={researchOutputsPages} />}
-              </>
-            )}
+              {isLoading || isFetching || isFetching2 || isFetching3 || isFetching4
+                ? <BarLoaderSpinner loading={isLoading || isFetching || isFetching2 || isFetching3 || isFetching4}/>
+                : (
+                  <>
+                    {outputsPages > 1 && isSuccess && outputs
+                      && !checkItems.isSearching &&
+                      <AppPaginationComponent
+                        nextLabel=''
+                        previousLabel=''
+                        onPaginate={handlePagination}
+                        currentPage={page - 1}
+                        pageCount={outputsPages} />}
 
-          {isError && <div className='mb-3'><AppMainError/></div>}
-          {isError2 && <div className='mb-3'><AppMainError/></div>}
-          {isError3 && <div className='mb-3'><AppMainError/></div>}
-          {isError4 && <div className='mb-3'><AppMainError/></div>}
-        </Card.Body>
-      </Card>
+                    {researchOutputsPages > 1 && isSuccess && outputs && checkItems.isSearching &&
+                      <AppPaginationComponent
+                        nextLabel=''
+                        previousLabel=''
+                        onPaginate={handlePagination2}
+                        currentPage={page - 1}
+                        pageCount={researchOutputsPages} />}
+                  </>
+                )}
+
+              {isError && <div className='mb-3'><AppMainError/></div>}
+              {isError2 && <div className='mb-3'><AppMainError/></div>}
+              {isError3 && <div className='mb-3'><AppMainError/></div>}
+              {isError4 && <div className='mb-3'><AppMainError/></div>}
+            </Card.Body>
+          </Card>
+        </Col>
+
+        <Col>
+          <DashSection3Item3 menus={menus} showBox={false} />
+        </Col>
+      </Row>
 
       <AddOutput show={show} onHide={toggleModal} boxId={boxId} />
-    </>
+    </div>
   )
 }
 

@@ -149,11 +149,8 @@ function EditConsultation() {
   }, [id, isSuccess, consult]) // get hospitalization
 
   useEffect(() => {
-    if (consult && consult?.isComplete) {
-      toast.error('Ce dossier est clos 👌')
-      navigate('/member/treatments/consultations', {replace: true})
-    }
-  }, [consult, navigate])
+    if (consult && consult?.isComplete) toast.error('Ce dossier est clos 👌')
+  }, [consult])
 
   if (isConsultError) alert('ERREUR: Erreur lors du chargement de la consultation ❗')
 
@@ -216,7 +213,7 @@ function EditConsultation() {
           onReset()
           toast.success('Modification bien efféctuée.')
           await refetch()
-          navigate(`/member/treatments/appointments`)
+          // navigate(`/member/treatments/appointments`)
         }
       }
     }

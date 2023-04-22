@@ -51,7 +51,7 @@ export const InBox = ({ fCurrency, boxData, sCurrency }) => {
   )
 }
 
-export const DashSection3Item3 = ({ menus }) => {
+export const DashSection3Item3 = ({ menus, showBox = true }) => {
   const [key, setKey] = useState('Ce mois')
   const [stats, setStats] = useState({
     labels: ['Dépenses', 'Entrées', 'Caisse'],
@@ -75,7 +75,7 @@ export const DashSection3Item3 = ({ menus }) => {
   })
 
   const {fCurrency, sCurrency, rate, fOperation} = useSelector(state => state.parameters)
-  const {data, isFetching: isFetch, isError: isErr} = useGetBoxStatsQuery({ year, month })
+  const {data, isFetching: isFetch, isError: isErr, refetch} = useGetBoxStatsQuery({ year, month })
   const [getBoxByMonth, {isFetching: isFetch2, isError: isErr2}] = useLazyGetBoxByMonthQuery()
   const [getBoxByYear, {isFetching: isFetch3, isError: isErr3}] = useLazyGetBoxByYearQuery()
 
@@ -193,7 +193,20 @@ export const DashSection3Item3 = ({ menus }) => {
         setKey(menus[2].label)
         break
       default:
+        await refetch()
         setKey(menus[0].label)
+        setStats(prev => {
+          return {
+            ...prev,
+            datasets: [{
+              label: prev.datasets[0].label,
+              data,
+              backgroundColor: prev.datasets[0].backgroundColor,
+              borderColor: prev.datasets[0].borderColor,
+              borderWidth: prev.datasets[0].borderWidth,
+            }]
+          }
+        })
         break
     }
   }
@@ -224,7 +237,7 @@ export const DashSection3Item3 = ({ menus }) => {
         </Card.Body>
       </Card>
 
-      <InBox boxData={boxData} fCurrency={fCurrency} sCurrency={sCurrency} />
+      {showBox && <InBox boxData={boxData} fCurrency={fCurrency} sCurrency={sCurrency}/>}
     </>
   )
 }

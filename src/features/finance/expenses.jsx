@@ -14,6 +14,14 @@ import {useNavigate} from "react-router-dom";
 import {allowShowFinancesPage} from "../../app/config";
 import toast from "react-hot-toast";
 import {useEffect} from "react";
+import {DashSection3Item3} from "../dashboard/sections/section3/DashSection3Item3";
+
+const menus = [
+  {label: 'Ce mois', name: 'this-month', action: '#'},
+  {label: 'Mois passé', name: 'last-month', action: '#'},
+  {label: 'Cette année', name: 'this-year', action: '#'},
+  {label: 'Actualiser', name: 'refresh', action: '#'},
+]
 
 function Expenses() {
   const {data: boxes = [], isSuccess: isDone} = useGetBoxQuery('Box')
@@ -29,7 +37,7 @@ function Expenses() {
   }, [user, navigate])
 
   return (
-    <>
+    <div className='section dashboard'>
       <AppHeadTitle title='Finances : Dépenses' />
       <AppBreadcrumb title='Dépenses' />
       <Row>
@@ -49,9 +57,11 @@ function Expenses() {
               <ExpenseCategoriesList/>
             </Card.Body>
           </Card>
+
+          <DashSection3Item3 menus={menus} showBox={false} />
         </Col>
       </Row>
-    </>
+    </div>
   )
 }
 

@@ -86,7 +86,7 @@ export const NursingInvoiceDataTable = ({ data, nursing, setNursing, onRefresh }
                     {item?.medicines && item.medicines?.map((drug, j) =>
                       <p key={j}>
                         <span className='fw-bold' style={{ fontWeight: 800 }}>
-                          <i className='bi bi-capsule'/> {drug?.wording}
+                          {drug?.wording}
                         </span> : {drug?.quantity}
                       </p>)}
                   </div>)}
@@ -108,8 +108,8 @@ export const NursingInvoiceDataTable = ({ data, nursing, setNursing, onRefresh }
                     {item?.procedures && item.procedures?.map((drug, j) =>
                       <p key={j}>
                         <span className='fw-bold' style={{ fontWeight: 800 }}>
-                          <i className='bi bi-capsule'/> {drug?.item}
-                        </span> : {drug?.quantity}
+                          {drug?.item}
+                        </span> {drug?.quantity && `: ${drug.quantity}`}
                       </p>)}
                   </div>)}
               </th>

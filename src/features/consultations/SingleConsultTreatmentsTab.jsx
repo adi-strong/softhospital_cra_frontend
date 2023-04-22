@@ -99,7 +99,10 @@ export const SingleConsultTreatmentsTab = ({ data, onRefresh, loader = false }) 
 
   async function onSubmit() {
     if (data && data?.id) {
-      if (isComplete) toast.success('Ce dossier est clos.')
+      if (isComplete) {
+        toast.success('Ce dossier est clos.')
+        setTreatmentsDescriptions(data?.treatmentsDescriptions ? data.treatmentsDescriptions : '')
+      }
       else {
         const submit = await updateConsultationTreatmentsDescriptions({ id: data.id, treatmentsDescriptions })
         if (!submit?.error) {

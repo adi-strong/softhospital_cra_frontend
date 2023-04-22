@@ -20,6 +20,7 @@ const menus = [
   {label: 'Ce mois', name: 'this-month', action: '#'},
   {label: 'Mois passé', name: 'last-month', action: '#'},
   {label: 'Cette année', name: 'this-year', action: '#'},
+  {label: 'Actualiser', name: 'refresh', action: '#'},
 ]
 
 export const DashSection2 = ( ) => {
@@ -49,6 +50,7 @@ export const DashSection2 = ( ) => {
         setKey(menus[2].label)
         break
       default:
+        await refetch()
         setKey(menus[0].label)
         break
     }
@@ -58,6 +60,7 @@ export const DashSection2 = ( ) => {
     if (key === 'Ce mois') setStats(data)
     else if (key === 'Mois passé') setStats(data2)
     else if (key === 'Cette année') setStats(data3)
+    else if (key === 'Actualiser') setStats(data)
   }, [key, data, data2, data3])
 
   return (

@@ -53,7 +53,7 @@ export const DashSection1Item2 = (
                 ? 'danger'
                 : 'success'
             }
-            title="Chiffre d'affaires"
+            title="Ch. d'affaires"
             label={
               stats && stats?.sum <= stats?.lastSum
                 ? 'baisse'

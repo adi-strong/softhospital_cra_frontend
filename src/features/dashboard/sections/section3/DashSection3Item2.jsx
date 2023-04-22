@@ -34,7 +34,7 @@ export const DashSection3Item2 = ({ menus }) => {
   const [key, setKey] = useState('Ce mois')
   const [stats, setStats] = useState([])
 
-  const {data, isFetching: isFetch, isSuccess: isOk, isError: isErr} = useGetLastsActivitiesQuery({ year, month })
+  const {data, isFetching: isFetch, isSuccess: isOk, isError: isErr, refetch} = useGetLastsActivitiesQuery({ year, month })
   const [getLastsActivitiesByMonth, {isFetching: isFetch2, isError: isErr2}] = useLazyGetLastsActivitiesByMonthQuery()
   const [getLastsActivitiesByLastMonth, {isFetching: isFetch3, isError: isErr3}] = useLazyGetLastsActivitiesByLastMonthQuery()
   const [getLastsActivitiesByYear, {isFetching: isFetch4, isError: isErr4}] = useLazyGetLastsActivitiesByYearQuery()
@@ -61,9 +61,9 @@ export const DashSection3Item2 = ({ menus }) => {
         setKey(menus[2].label)
         break
       default:
-        const statsData4 = await getLastsActivitiesByMonth({ year, month })
-        if (!statsData4.error) setStats(statsData4.data)
+        await refetch()
         setKey(menus[0].label)
+        setStats(data)
         break
     }
   }

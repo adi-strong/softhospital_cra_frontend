@@ -5,6 +5,7 @@ const menus = [
   {label: 'Ce mois', name: 'this-month', action: '#'},
   {label: 'Mois passé', name: 'last-month', action: '#'},
   {label: 'Cette année', name: 'this-year', action: '#'},
+  {label: 'Actualiser', name: 'refresh', action: '#'},
 ]
 
 export const DashSection3 = () => {

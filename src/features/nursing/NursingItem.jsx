@@ -35,10 +35,9 @@ export const NursingItem = ({ nursing }) => {
         </td>
         <td className='text-end'>
           <ButtonGroup size='sm'>
-            {nursing?.isPublished &&
-              <Link to={`/member/treatments/nursing/${nursing?.id}/show`} className='btn btn-light'>
-                <i className='bi bi-eye text-success'/>
-              </Link>}
+            <Link to={`/member/treatments/nursing/${nursing?.id}/show`} className='btn btn-light'>
+              <i className='bi bi-eye-fill text-primary'/> Voir le dossier
+            </Link>
             {!nursing?.isCompleted &&
               <Link to={`/member/treatments/nursing/${nursing?.id}/edit`} className='btn btn-primary'>
                 <i className='bi bi-plus'/>
