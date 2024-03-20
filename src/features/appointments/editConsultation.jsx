@@ -209,7 +209,7 @@ function EditConsultation() {
         // navigate('/member/treatments/consultations', {replace: true})
       }
       else {
-        const data = await updateConsultation(consultation)
+        const data = await updateConsultation({...consultation, acts: consultation.actsItems})
         if (!data?.error) {
           onReset()
           toast.success('Modification bien efféctuée.')
