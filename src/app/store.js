@@ -5,8 +5,9 @@ import authReducer from '../features/auth/authSlice';
 import parametersReducer from '../features/parameters/parametersSlice';
 import agentAppointmentsReducer from '../features/appointments/agentAppointmentsSlice';
 
-export const entrypoint = 'https://localhost:8000'
+export const entrypoint = 'https://softhospital.afracinstitute.net'
 // export const entrypoint = 'https://saintandremedicalcenter.org'
+// softhospital.afracinstitute.net
 // export const entrypoint = 'https://sh-api.dev'
 export const pathToApi = '/api'
 export const patchHeaders = {
