@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/co-cra.iml" filepath="$PROJECT_DIR$/.idea/co-cra.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/softhospital_cra_frontend.iml" filepath="$PROJECT_DIR$/.idea/softhospital_cra_frontend.iml" />
     </modules>
   </component>
 </project>

@@ -9,6 +9,8 @@ export const entrypoint = 'https://softhospital.afracinstitute.net'
 // export const entrypoint = 'https://saintandremedicalcenter.org'
 // softhospital.afracinstitute.net
 // export const entrypoint = 'https://sh-api.dev'
+// export const entrypoint = 'https://localhost:8000'
+
 export const pathToApi = '/api'
 export const patchHeaders = {
   'Accept': 'application/ld+json',
